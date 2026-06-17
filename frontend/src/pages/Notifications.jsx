@@ -1,0 +1,1 @@
+export default function Notifications() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Notifications Center</h2><p className="text-on-surface-variant mt-sm">View all your alerts and updates.</p></div> }

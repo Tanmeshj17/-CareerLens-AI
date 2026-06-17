@@ -1,0 +1,1 @@
+export default function Feedback() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Feedback & Reviews</h2><p className="text-on-surface-variant mt-sm">Submit suggestions or report issues.</p></div> }

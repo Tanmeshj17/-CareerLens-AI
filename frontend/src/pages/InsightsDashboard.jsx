@@ -1,0 +1,1 @@
+export default function InsightsDashboard() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Job Insights Dashboard</h2><p className="text-on-surface-variant mt-sm">Data analytics and market trends.</p></div> }

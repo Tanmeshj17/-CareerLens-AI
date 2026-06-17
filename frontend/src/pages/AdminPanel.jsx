@@ -1,0 +1,1 @@
+export default function AdminPanel() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Admin Panel</h2><p className="text-on-surface-variant mt-sm">Manage system resources and users.</p></div> }

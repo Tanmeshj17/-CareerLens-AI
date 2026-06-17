@@ -1,0 +1,27 @@
+# Core
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Database
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.10
+alembic==1.13.3
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.12
+
+# Email validation
+pydantic[email]==2.9.2
+
+# Environment
+python-dotenv==1.0.1
+
+# Production ASGI server
+gunicorn==23.0.0
+
+# Phase 2 Dependencies
+pdfplumber==0.11.0
+python-docx==1.1.2
+pandas==2.2.2

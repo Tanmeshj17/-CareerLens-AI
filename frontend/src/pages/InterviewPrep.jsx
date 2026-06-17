@@ -1,0 +1,1 @@
+export default function InterviewPrep() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Interview Preparation</h2><p className="text-on-surface-variant mt-sm">Technical questions, HR tips, and mock interviews.</p></div> }

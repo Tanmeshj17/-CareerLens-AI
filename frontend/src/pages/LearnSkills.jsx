@@ -1,0 +1,1 @@
+export default function LearnSkills() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Learn Skills</h2><p className="text-on-surface-variant mt-sm">Explore courses and learning paths.</p></div> }

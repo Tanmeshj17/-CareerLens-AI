@@ -1,0 +1,1 @@
+export default function Profile() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">My Profile</h2><p className="text-on-surface-variant mt-sm">Manage your personal information and preferences.</p></div> }

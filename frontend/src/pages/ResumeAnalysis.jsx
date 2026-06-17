@@ -1,0 +1,1 @@
+export default function ResumeAnalysis() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Resume Analysis</h2><p className="text-on-surface-variant mt-sm">Upload your resume to get instant ATS optimization tips.</p></div> }

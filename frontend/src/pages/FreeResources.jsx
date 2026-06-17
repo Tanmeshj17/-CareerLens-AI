@@ -1,0 +1,1 @@
+export default function FreeResources() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Free Resources</h2><p className="text-on-surface-variant mt-sm">Access free tools, documentation and channels.</p></div> }

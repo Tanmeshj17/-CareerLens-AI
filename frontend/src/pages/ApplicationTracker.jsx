@@ -1,0 +1,1 @@
+export default function ApplicationTracker() { return <div className="p-xl text-center text-on-surface"><h2 className="text-3xl font-bold">Application Tracker</h2><p className="text-on-surface-variant mt-sm">Kanban board to manage your application journey.</p></div> }
