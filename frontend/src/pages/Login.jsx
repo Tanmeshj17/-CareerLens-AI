@@ -1,41 +1,69 @@
 import { useState, useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../App'
+import { loginUser, getCurrentUser, resendVerificationEmail } from '../api'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Alert } from '../components/ui/Alert'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [showResend, setShowResend] = useState(false)
+  const [resendStatus, setResendStatus] = useState('')
   const { login } = useContext(AuthContext)
   const navigate = useNavigate()
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      login(email, password)
-      setLoading(false)
+    setErrorMsg('')
+    setShowResend(false)
+    setResendStatus('')
+    try {
+      await loginUser(email, password)
+      const userData = await getCurrentUser()
+      login(userData)
       navigate('/app')
-    }, 1000)
+    } catch (err) {
+      setErrorMsg(err.message || 'Login failed')
+      if (err.message && err.message.toLowerCase().includes('not verified')) {
+        setShowResend(true)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setResendStatus('Sending...')
+    try {
+      await resendVerificationEmail(email)
+      setResendStatus('Verification email sent! Please check your inbox.')
+    } catch (err) {
+      setResendStatus('Failed to send: ' + err.message)
+    }
   }
 
   return (
-    <div className="bg-surface-bright text-on-surface min-h-screen flex">
+    <div className="bg-surface-bright text-on-surface min-h-screen flex flex-col lg:flex-row">
       {/* Left Side: Branding */}
-      <section className="hidden lg:flex lg:w-1/2 bg-on-background relative overflow-hidden items-center justify-center p-2xl">
-        <div className="relative z-10 max-w-lg">
+      <section className="w-full lg:w-[45%] xl:w-1/2 bg-on-background relative overflow-hidden flex items-center justify-center p-xl md:p-2xl min-w-0 min-h-[350px] lg:min-h-screen">
+        <div className="relative z-10 max-w-lg w-full">
           <div className="mb-xl">
-            <span className="text-2xl font-bold text-primary-fixed">CareerLens AI</span>
+            <span className="text-2xl font-bold text-primary-fixed block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">CareerLens AI</span>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-lg leading-tight">
+          <h1 className="hero-title font-bold text-white mb-lg leading-tight">
             Unlock your career potential with AI.
           </h1>
           <p className="text-lg text-surface-variant mb-2xl">
             Experience the next generation of career growth. We use sophisticated data analysis to match your skills with the world's most ambitious opportunities.
           </p>
           {/* AI Insight */}
-          <div className="glass-effect rounded-xl p-lg shimmer-border max-w-sm">
+          <div className="glass-effect rounded-xl p-lg max-w-sm w-full">
             <div className="flex items-center gap-md mb-sm">
               <span className="material-symbols-outlined text-primary-fixed" style={{fontVariationSettings: "'FILL' 1"}}>auto_awesome</span>
               <span className="text-sm font-medium font-[Geist] text-primary-fixed">AI Insight</span>
@@ -49,7 +77,7 @@ export default function Login() {
       </section>
 
       {/* Right Side: Login Form */}
-      <main className="w-full lg:w-1/2 flex items-center justify-center p-lg sm:p-2xl bg-white relative">
+      <main className="w-full lg:w-[55%] xl:w-1/2 flex items-center justify-center p-lg sm:p-2xl bg-white relative min-w-0">
         <div className="w-full max-w-md animate-fade-in-up">
           <div className="mb-xl lg:hidden">
             <span className="text-2xl font-bold text-primary">CareerLens AI</span>
@@ -59,10 +87,10 @@ export default function Login() {
             <p className="text-base text-on-surface-variant">Please enter your details to sign in.</p>
           </div>
 
-          <button className="w-full flex items-center justify-center gap-md py-md px-lg border border-outline-variant rounded-lg text-sm font-medium font-[Geist] text-on-surface hover:bg-surface-container-low transition-colors duration-200 mb-xl">
-            <img alt="Google Logo" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBub5gEiv-2Vjp98zG-Z7ym0E9Mx_IU-k4Zpr78GhmXkp-flOcePACRGqARUWjYNacLZGlKeA5wIGnU-bvo_3tX6R2_8uboMkzO5uYo5xbeUxRaU_qqkvWPnN1nNMQlhuePfgPvI0haHSe7wm_y2TmHumbPB0wmhXbZg9sQwIDvAR7A4iz8c5nACC2YN5ad7bUpCLuIFglbBp2h73AF-QNTyCqNszGyOR3U7Q9TvE1ZAn0OeEGuOtmCNaBO8ZQNtgQbcHZnzL2-db8" />
-            Continue with Google
-          </button>
+          <Button variant="secondary" disabled className="w-full gap-md mb-xl h-12">
+            <img alt="Google Logo" className="w-5 h-5 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBub5gEiv-2Vjp98zG-Z7ym0E9Mx_IU-k4Zpr78GhmXkp-flOcePACRGqARUWjYNacLZGlKeA5wIGnU-bvo_3tX6R2_8uboMkzO5uYo5xbeUxRaU_qqkvWPnN1nNMQlhuePfgPvI0haHSe7wm_y2TmHumbPB0wmhXbZg9sQwIDvAR7A4iz8c5nACC2YN5ad7bUpCLuIFglbBp2h73AF-QNTyCqNszGyOR3U7Q9TvE1ZAn0OeEGuOtmCNaBO8ZQNtgQbcHZnzL2-db8" />
+            Continue with Google — Coming Soon
+          </Button>
 
           <div className="relative flex items-center mb-xl">
             <div className="flex-grow border-t border-outline-variant"></div>
@@ -70,54 +98,68 @@ export default function Login() {
             <div className="flex-grow border-t border-outline-variant"></div>
           </div>
 
+          {errorMsg && (
+            <Alert 
+              type="error"
+              message={errorMsg}
+              action={showResend && (
+                <div>
+                  <button onClick={handleResend} type="button" className="text-xs font-semibold underline hover:text-error/80 transition focus:outline-none focus:ring-2 focus:ring-error rounded px-1">
+                    Resend Verification Email
+                  </button>
+                  {resendStatus && <p className="mt-1 text-xs opacity-90">{resendStatus}</p>}
+                </div>
+              )}
+            />
+          )}
+
           <form onSubmit={handleLogin} className="space-y-lg">
             <div className="space-y-xs">
-              <label className="text-sm font-medium font-[Geist] text-on-surface" htmlFor="email">Email Address</label>
-              <input 
+              <Input 
                 id="email" 
+                label="Email Address"
                 type="email" 
                 required 
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-md py-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base" 
                 placeholder="alex@company.com" 
               />
             </div>
-            <div className="space-y-xs">
-              <div className="flex justify-between items-center">
+            <div className="space-y-xs relative">
+              <div className="flex justify-between items-center mb-1">
                 <label className="text-sm font-medium font-[Geist] text-on-surface" htmlFor="password">Password</label>
                 <a className="text-xs font-medium font-[Geist] text-primary hover:underline cursor-pointer">Forgot Password?</a>
               </div>
               <div className="relative">
-                <input 
+                <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"} 
                   required 
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-md py-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base" 
                   placeholder="••••••••" 
                 />
                 <button 
                   type="button" 
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-md top-1/2 -translate-y-1/2 text-outline-variant hover:text-outline transition-colors"
+                  className="absolute right-md top-1/2 -translate-y-1/2 text-outline-variant hover:text-outline transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1 flex items-center justify-center"
                 >
                   <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
                 </button>
               </div>
             </div>
             <div className="flex items-center gap-md">
-              <input id="remember" type="checkbox" className="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary" />
+              <input id="remember" type="checkbox" className="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary focus:ring-2 focus:ring-offset-2 transition-all" />
               <label htmlFor="remember" className="text-sm text-on-surface-variant">Remember me for 30 days</label>
             </div>
-            <button 
+            <Button 
               type="submit" 
-              disabled={loading}
-              className="w-full bg-primary-container text-white py-md px-lg rounded-lg text-sm font-medium font-[Geist] hover:bg-primary transition-all active:scale-[0.98] shadow-sm flex items-center justify-center h-12"
+              variant="primary"
+              isLoading={loading}
+              className="w-full h-12"
             >
-              {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : 'Login'}
-            </button>
+              Login
+            </Button>
           </form>
           
           <div className="mt-2xl text-center">

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import Footer from '../components/Footer'
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(0)
@@ -49,10 +50,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section id="home" className="relative pt-2xl pb-3xl px-lg overflow-hidden">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto space-y-md animate-fade-in-up">
-            <div className="inline-flex items-center px-md py-xs rounded-full bg-secondary-container text-on-secondary-container text-xs font-medium font-[Geist] mb-md">
-              <span className="material-symbols-outlined text-[16px] mr-xs" style={{fontVariationSettings: "'FILL' 1"}}>spark</span>
-              Next-Gen Job Matching is Here
-            </div>
+
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-on-background leading-tight">
               Search Once. Learn <span className="text-primary">Smart.</span> Get Hired.
             </h1>
@@ -257,46 +255,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-surface border-t border-outline-variant pt-3xl pb-xl px-lg">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-xl">
-          <div className="col-span-2 md:col-span-1 space-y-md">
-            <div className="text-2xl font-bold text-primary">CareerLens AI</div>
-            <p className="text-sm text-on-surface-variant">
-              Empowering the workforce of tomorrow with intelligent, data-driven career guidance.
-            </p>
-          </div>
-          <div className="space-y-md">
-            <div className="text-sm font-bold font-[Geist] text-on-background">Platform</div>
-            <ul className="space-y-sm">
-              <li><Link className="text-sm text-on-surface-variant hover:text-primary transition-colors" to="/app/opportunities">Jobs Board</Link></li>
-              <li><Link className="text-sm text-on-surface-variant hover:text-primary transition-colors" to="/app/learn">Skills Library</Link></li>
-              <li><Link className="text-sm text-on-surface-variant hover:text-primary transition-colors" to="/app/careers">Careers</Link></li>
-            </ul>
-          </div>
-          <div className="space-y-md">
-            <div className="text-sm font-bold font-[Geist] text-on-background">Company</div>
-            <ul className="space-y-sm">
-              <li><a className="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">About Us</a></li>
-              <li><a className="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact</a></li>
-              <li><a className="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Blog</a></li>
-            </ul>
-          </div>
-          <div className="space-y-md">
-            <div className="text-sm font-bold font-[Geist] text-on-background">Legal</div>
-            <ul className="space-y-sm">
-              <li><a className="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
-              <li><a className="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-[1440px] mx-auto mt-3xl pt-xl border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-md">
-          <p className="text-xs font-medium font-[Geist] text-on-surface-variant">© 2024 CareerLens AI. All rights reserved.</p>
-          <div className="flex items-center gap-sm text-xs font-medium font-[Geist] text-on-surface-variant">
-            Made with <span className="material-symbols-outlined text-error text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>favorite</span> for growth
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

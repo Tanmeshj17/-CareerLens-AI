@@ -1,14 +1,17 @@
 # Dependencies
 node_modules/
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Environment files
 .env
 .env.local
 .env.production
+.env.staging
 
 # Build output
 dist/
@@ -36,12 +39,21 @@ desktop.ini
 # Logs
 *.log
 npm-debug.log*
+mock_email.txt
 
 # Testing
 .coverage
 htmlcov/
 .pytest_cache/
 
-# Misc
+# Agent brain & scratch directories (never commit)
+brain/
+scratch/
+task.md
+
+# Misc temp files
 *.bak
 *.tmp
+out.css
+fix_jsx.py
+patch_free_resources.py

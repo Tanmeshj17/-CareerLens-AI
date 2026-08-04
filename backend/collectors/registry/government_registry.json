@@ -1,0 +1,98 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "CareerLens Government Registry — Centralized registry for Government and PSU organizations.",
+    "total_orgs": 10,
+    "last_updated": "2026-07-20"
+  },
+  "DRDO": {
+    "type": "govt",
+    "career_url": "https://www.drdo.gov.in/careers",
+    "categories": ["jobs", "fellowships", "apprenticeships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Defense",
+    "collector": "generic_govt"
+  },
+  "ISRO": {
+    "type": "govt",
+    "career_url": "https://www.isro.gov.in/Careers.html",
+    "categories": ["jobs", "research"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Space",
+    "collector": "generic_govt"
+  },
+  "CDAC": {
+    "type": "govt",
+    "career_url": "https://www.cdac.in/index.aspx?id=current_jobs",
+    "categories": ["jobs", "internships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "IT",
+    "collector": "generic_govt"
+  },
+  "RBI": {
+    "type": "govt",
+    "career_url": "https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",
+    "categories": ["jobs", "internships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Banking",
+    "collector": "generic_govt"
+  },
+  "SEBI": {
+    "type": "govt",
+    "career_url": "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doCareer=yes",
+    "categories": ["jobs", "internships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Finance",
+    "collector": "generic_govt"
+  },
+  "NABARD": {
+    "type": "govt",
+    "career_url": "https://www.nabard.org/careers-notices.aspx",
+    "categories": ["jobs"],
+    "priority": "medium",
+    "country": "India",
+    "industry": "Banking",
+    "collector": "generic_govt"
+  },
+  "BHEL": {
+    "type": "psu",
+    "career_url": "https://careers.bhel.in/",
+    "categories": ["jobs", "apprenticeships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Manufacturing",
+    "collector": "generic_govt"
+  },
+  "BEL": {
+    "type": "psu",
+    "career_url": "https://bel-india.in/CareersGridbind.aspx",
+    "categories": ["jobs", "apprenticeships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Defense",
+    "collector": "generic_govt"
+  },
+  "HAL": {
+    "type": "psu",
+    "career_url": "https://hal-india.co.in/Careers/M__206",
+    "categories": ["jobs", "apprenticeships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Aerospace",
+    "collector": "generic_govt"
+  },
+  "ONGC": {
+    "type": "psu",
+    "career_url": "https://www.ongcindia.com/web/eng/career",
+    "categories": ["jobs", "apprenticeships"],
+    "priority": "high",
+    "country": "India",
+    "industry": "Energy",
+    "collector": "generic_govt"
+  }
+}

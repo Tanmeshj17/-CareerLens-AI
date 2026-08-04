@@ -1,6 +1,7 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useState, useContext } from 'react'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from '../App'
+import Footer from '../components/Footer'
 
 const navItems = [
   { icon: 'dashboard', label: 'Dashboard', path: '/app' },
@@ -13,6 +14,7 @@ const navItems = [
   { icon: 'quiz', label: 'Interview Prep', path: '/app/interview-prep' },
   { icon: 'fact_check', label: 'Application Tracker', path: '/app/tracker' },
   { icon: 'insights', label: 'Insights', path: '/app/insights' },
+  { icon: 'monitor_heart', label: 'Data Intelligence', path: '/app/data-intelligence' },
 ]
 
 const accountItems = [
@@ -23,9 +25,16 @@ const accountItems = [
 ]
 
 export default function DashboardLayout() {
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useContext(AuthContext)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Ensure sidebar overlay closes on navigation
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
 
   return (
     <div className="flex bg-background min-h-screen">
@@ -99,10 +108,10 @@ export default function DashboardLayout() {
         <div className="p-md border-t border-outline-variant">
           <div className="flex items-center gap-md p-sm rounded-lg hover:bg-surface-container cursor-pointer transition-colors">
             <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-sm">
-              {user?.name?.split(' ').map(n => n[0]).join('')}
+              {user?.full_name?.split(' ').map(n => n[0]).join('')}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold font-[Geist] truncate">{user?.name}</p>
+              <p className="text-sm font-bold font-[Geist] truncate">{user?.full_name}</p>
               <p className="text-xs font-medium text-on-surface-variant font-[Geist]">{user?.role}</p>
             </div>
             <button
@@ -145,14 +154,17 @@ export default function DashboardLayout() {
               <span className="material-symbols-outlined">settings</span>
             </button>
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-xs cursor-pointer" onClick={() => navigate('/app/profile')}>
-              {user?.name?.split(' ').map(n => n[0]).join('')}
+              {user?.full_name?.split(' ').map(n => n[0]).join('')}
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-lg max-w-[1440px] mx-auto w-full">
-          <Outlet />
+        <main className="flex-1 p-lg max-w-[1440px] mx-auto w-full flex flex-col">
+          <div className="flex-1 mb-xl">
+            <Outlet />
+          </div>
+          <Footer />
         </main>
       </div>
     </div>

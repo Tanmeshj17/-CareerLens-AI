@@ -2,25 +2,47 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
+import secrets
+import hashlib
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from . import models, database
 
-# Security configuration - reads from env in production
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+# Security configuration - reads from env; fails if SECRET_KEY is missing
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "FATAL: SECRET_KEY environment variable is not set. "
+        "Set it in your .env file before starting the application."
+    )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+# NOTE: 15-minute expiry is a deliberate MVP security hardening decision.
+# This limits the attack window if a token is stolen after logout.
+# IMPORTANT: This is NOT true server-side token invalidation.
+# After logout the token remains cryptographically valid until expiry.
+# If persistent sessions or true revocation are later required, implement:
+#   - Access tokens (short-lived, e.g. 15m) + Refresh tokens (long-lived)
+#   - Server-side token blocklist (e.g. Redis SET with TTL)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+def generate_secure_token():
+    return secrets.token_urlsafe(32)
+
+def hash_token(token: str):
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -52,3 +74,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if user is None:
         raise credentials_exception
     return user
+

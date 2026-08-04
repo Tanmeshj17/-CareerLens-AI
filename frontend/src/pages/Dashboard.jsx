@@ -1,35 +1,88 @@
-import { Link } from 'react-router-dom'
-import { useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useContext, useState, useEffect } from 'react'
 import { AuthContext } from '../App'
+import { 
+  getDashboardStats, 
+  getInsightsCompanies, 
+  getInsightsLocations, 
+  getInsightsSkills, 
+  getInsightsSalary, 
+  getFastGrowingCareers,
+  getReadiness,
+  getProfileCompleteness
+} from '../api'
+import { Skeleton } from '../components/ui/Skeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext)
+  const navigate = useNavigate()
+  
+  const [dbStats, setDbStats] = useState(null)
+  const [topCompanies, setTopCompanies] = useState([])
+  const [topLocations, setTopLocations] = useState([])
+  const [topSkills, setTopSkills] = useState([])
+  const [salaryTrends, setSalaryTrends] = useState([])
+  const [fastGrowing, setFastGrowing] = useState([])
+  const [readinessData, setReadinessData] = useState([])
+  const [completenessData, setCompletenessData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const promises = [
+          getDashboardStats(),
+          getInsightsCompanies(),
+          getInsightsLocations(),
+          getInsightsSkills(),
+          getInsightsSalary(),
+          getFastGrowingCareers()
+        ]
+        
+        if (user) {
+          promises.push(getReadiness())
+          promises.push(getProfileCompleteness())
+        }
+
+        const results = await Promise.allSettled(promises)
+        
+        if (results[0].status === 'fulfilled') setDbStats(results[0].value)
+        if (results[1].status === 'fulfilled') setTopCompanies(results[1].value)
+        if (results[2].status === 'fulfilled') setTopLocations(results[2].value)
+        if (results[3].status === 'fulfilled') setTopSkills(results[3].value)
+        if (results[4].status === 'fulfilled') setSalaryTrends(results[4].value)
+        if (results[5].status === 'fulfilled') setFastGrowing(results[5].value?.roles || [])
+        
+        if (user && results[6] && results[6].status === 'fulfilled') {
+          setReadinessData(results[6].value.readiness_cards || [])
+        }
+        if (user && results[7] && results[7].status === 'fulfilled') {
+          setCompletenessData(results[7].value)
+        }
+      } catch (e) {
+        console.error("Failed to load dashboard data", e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [user])
 
   const stats = [
-    { title: 'Jobs Found Today', val: '142', icon: 'travel_explore', trend: '+24%', colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success' },
-    { title: 'Internships Found', val: '28', icon: 'school', trend: 'Steady', colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-on-surface-variant' },
-    { title: 'Saved Jobs', val: '12', icon: 'bookmark', trend: '+5', colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success' },
-    { title: 'Applied Jobs', val: '45', icon: 'send', trend: 'Action req.', colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error' },
+    { title: 'Total Opportunities', val: dbStats?.total_opportunities || '0', icon: 'travel_explore', trend: 'Live', colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success' },
+    { title: 'Fresher Openings', val: dbStats?.freshers_jobs || '0', icon: 'school', trend: 'Hiring Now', colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-success' },
+    { title: 'Internships', val: dbStats?.internships || '0', icon: 'local_library', trend: 'Summer Intake', colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success' },
+    { title: 'Applied Jobs', val: dbStats?.applied_opportunities || '0', icon: 'send', trend: 'Track', colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error' },
   ]
 
-  const recentSearches = [
-    { role: 'Senior Product Designer', company: 'Google • California (Remote) • $140k-$180k', match: '98%', matchColor: 'bg-success/10 text-success' },
-    { role: 'UX Researcher', company: 'Airbnb • Seattle, WA • $120k-$160k', match: '85%', matchColor: 'bg-success/10 text-success' },
-    { role: 'Frontend Engineer (React)', company: 'Stripe • Remote • $135k-$175k', match: '76%', matchColor: 'bg-secondary-container text-on-secondary-container' },
-  ]
-
-  const notifications = [
-    { title: 'Interview Invitation', desc: 'Google wants to chat about your Product Designer application.', time: '2 hours ago', icon: 'mark_email_unread', color: 'bg-primary-container/20 text-primary' },
-    { title: 'Skill Gap Detected', desc: 'You\'re missing "Framer" for 4 recent job matches. Try our 5-min guide.', time: '5 hours ago', icon: 'tips_and_updates', color: 'bg-secondary-container/20 text-secondary' },
-    { title: 'Profile Viewed', desc: 'Recruiters from Netflix and Meta viewed your profile today.', time: 'Yesterday', icon: 'person_check', color: 'bg-surface-container-highest/20 text-on-surface-variant' },
-  ]
 
   return (
     <div className="space-y-xl animate-fade-in-up">
       {/* Welcome Message */}
       <section className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-md">
         <div>
-          <h2 className="text-3xl font-semibold text-on-surface">Welcome back, {user?.name?.split(' ')[0]}</h2>
+          <h2 className="text-3xl font-semibold text-on-surface">Welcome back, {user?.full_name?.split(' ')[0]}</h2>
           <p className="text-base text-on-surface-variant">Your career growth is 12% faster than last month. Here's what's happening today.</p>
         </div>
         <Link to="/app/tracker" className="hidden md:flex bg-primary text-on-primary px-lg py-sm rounded-lg text-sm font-medium font-[Geist] shadow-sm hover:brightness-110 transition-all items-center gap-sm">
@@ -97,56 +150,187 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Main Grid: Recent Searches & Notifications */}
+      {/* Career Intelligence Engine Section */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-xl">
-        <div className="lg:col-span-2 bg-surface border border-outline-variant rounded-xl p-lg">
-          <div className="flex justify-between items-center mb-lg">
-            <h3 className="text-2xl font-bold">Recent Searches</h3>
-            <Link to="/app/opportunities" className="text-primary text-sm font-medium font-[Geist]">View All</Link>
-          </div>
-          <div className="space-y-sm">
-            {recentSearches.map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-md border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
-                <div className="flex items-center gap-md">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest flex items-center justify-center">
-                    <span className="material-symbols-outlined text-outline">business</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold font-[Geist]">{item.role}</p>
-                    <p className="text-xs font-medium font-[Geist] text-on-surface-variant">{item.company}</p>
-                  </div>
+        <div className="lg:col-span-2 space-y-xl">
+          {/* Phase 8.5: Career Readiness */}
+          {user && (
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <h3 className="text-2xl font-bold mb-lg">Career Readiness</h3>
+              
+              {(!readinessData || readinessData.length === 0) ? (
+                <EmptyState
+                  icon="person_search"
+                  title="No Readiness Data Yet"
+                  description="Complete your Career Profile and upload a Resume to get your readiness score."
+                  actionLabel="Go to Profile"
+                  onAction={() => navigate('/app/profile')}
+                  className="py-xl"
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                  {readinessData.map((item, i) => (
+                    <div key={i} className="p-md border border-outline-variant rounded-lg bg-surface-container-lowest">
+                      <h4 className="font-bold text-lg mb-xs">{item.target_role}</h4>
+                      <div className="flex items-center justify-between mb-sm">
+                        <span className="text-sm font-medium text-on-surface-variant">Readiness Score</span>
+                        <span className={`text-sm font-bold ${item.readiness_score >= 80 ? 'text-success' : item.readiness_score >= 50 ? 'text-warning' : 'text-error'}`}>{item.readiness_score}%</span>
+                      </div>
+                      {/* Progress Bar */}
+                      <div className="w-full bg-surface-variant rounded-full h-2 mb-md">
+                        <div className={`h-2 rounded-full ${item.readiness_score >= 80 ? 'bg-success' : item.readiness_score >= 50 ? 'bg-warning' : 'bg-error'}`} style={{ width: `${item.readiness_score}%` }}></div>
+                      </div>
+                      
+                      {/* Component Scores */}
+                      <div className="grid grid-cols-3 gap-xs mb-md border-t border-outline-variant/50 pt-sm mt-sm">
+                        <div className="text-center">
+                          <div className="text-[10px] uppercase text-on-surface-variant mb-0.5">Skills</div>
+                          <div className="text-sm font-bold text-primary">{item.components?.skill_coverage || 0}%</div>
+                        </div>
+                        <div className="text-center border-l border-r border-outline-variant/30">
+                          <div className="text-[10px] uppercase text-on-surface-variant mb-0.5">Resume</div>
+                          <div className="text-sm font-bold text-secondary">{item.components?.resume_score || 0}%</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-[10px] uppercase text-on-surface-variant mb-0.5">Experience</div>
+                          <div className="text-sm font-bold text-success">{item.components?.experience_score || 0}%</div>
+                        </div>
+                      </div>
+
+                      {item.recommended_skills && item.recommended_skills.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-on-surface-variant mb-1">Recommended Skills</p>
+                          <div className="flex flex-wrap gap-1">
+                            {item.recommended_skills.map((skill, j) => (
+                              <span key={j} className="text-[10px] px-2 py-0.5 rounded bg-secondary-container/30 text-on-secondary-container">{skill}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-md">
-                  <div className={`px-sm py-xs rounded text-xs font-medium font-[Geist] ${item.matchColor}`}>{item.match}</div>
-                  <span className="material-symbols-outlined text-outline group-hover:text-primary">chevron_right</span>
-                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <h3 className="text-2xl font-bold mb-lg">Fast Growing Careers</h3>
+            {loading ? (
+              <div className="space-y-sm">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
               </div>
-            ))}
+            ) : (
+              <div className="space-y-sm">
+                {fastGrowing.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">No roles with sufficient posting data yet.</p>
+                ) : fastGrowing.map((item, i) => (
+                  <div key={i} className="flex justify-between items-center p-md border border-outline-variant rounded-lg">
+                    <div>
+                      <span className="font-bold">{item.title}</span>
+                      <p className="text-xs text-on-surface-variant">{item.total_postings} postings (last 90 days)</p>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded ${
+                      item.growth_signal === 'Fast Growing' ? 'bg-success/10 text-success' :
+                      item.growth_signal === 'Growing' ? 'bg-secondary/10 text-secondary' :
+                      'bg-surface-variant text-on-surface-variant'
+                    }`}>{item.growth_signal}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-xl">
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <h3 className="text-xl font-bold mb-md">Top Hiring Companies</h3>
+              {loading ? (
+                <div className="space-y-sm">
+                  {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
+                </div>
+              ) : (
+                <ul className="space-y-xs text-sm">
+                  {topCompanies.slice(0, 5).map((c, i) => <li key={i} className="flex justify-between"><span>{c.name}</span> <span className="font-medium">{c.count}</span></li>)}
+                </ul>
+              )}
+            </div>
+            
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <h3 className="text-xl font-bold mb-md">Top Hiring Cities</h3>
+              {loading ? (
+                <div className="space-y-sm">
+                  {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
+                </div>
+              ) : (
+                <ul className="space-y-xs text-sm">
+                  {topLocations.slice(0, 5).map((l, i) => <li key={i} className="flex justify-between"><span>{l.name}</span> <span className="font-medium">{l.count}</span></li>)}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col">
-          <div className="flex justify-between items-center mb-lg">
-            <h3 className="text-2xl font-bold">Notifications</h3>
-            <button className="material-symbols-outlined text-outline hover:text-on-surface transition-colors">more_horiz</button>
-          </div>
-          <div className="space-y-lg flex-1">
-            {notifications.map((n, i) => (
-              <div key={i} className={`flex gap-md relative ${i !== notifications.length - 1 ? 'pb-md after:absolute after:left-[19px] after:top-[40px] after:bottom-0 after:w-[1px] after:bg-outline-variant' : ''}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${n.color}`}>
-                  <span className="material-symbols-outlined text-[20px]">{n.icon}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold font-[Geist]">{n.title}</p>
-                  <p className="text-sm text-on-surface-variant">{n.desc}</p>
-                  <span className="text-xs font-medium font-[Geist] text-outline mt-xs block">{n.time}</span>
-                </div>
+        <div className="space-y-xl">
+          {/* Phase 8.5: Profile Completeness */}
+          {user && completenessData && (
+            <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-lg">
+              <h3 className="text-xl font-bold mb-md">Profile Completeness</h3>
+              <div className="flex items-center justify-between mb-sm">
+                <span className="text-sm font-medium text-on-surface">Overall Score</span>
+                <span className="text-sm font-bold text-primary">{completenessData.completeness_score}%</span>
               </div>
-            ))}
+              <div className="w-full bg-surface-variant rounded-full h-2 mb-md">
+                <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{ width: `${completenessData.completeness_score}%` }}></div>
+              </div>
+              {completenessData.missing_items && completenessData.missing_items.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-on-surface-variant mb-xs uppercase tracking-wider">Next Steps</p>
+                  <ul className="space-y-1">
+                    {completenessData.missing_items.slice(0,3).map((item, i) => (
+                      <li key={i} className="text-sm text-on-surface flex items-center gap-xs">
+                        <span className="material-symbols-outlined text-primary text-[14px]">arrow_right</span> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <h3 className="text-xl font-bold mb-md">Top Skills in Demand</h3>
+            {loading ? (
+              <div className="flex flex-wrap gap-sm">
+                {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-6 w-20 rounded-full" />)}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-sm">
+                {topSkills.slice(0, 10).map((s, i) => (
+                  <span key={i} className="bg-primary/10 text-primary px-sm py-xs rounded text-xs font-medium">
+                    {s.name} ({s.count})
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          <button className="w-full mt-lg py-sm text-primary text-sm font-medium font-[Geist] border border-primary/20 rounded-lg hover:bg-primary-container/5 transition-colors">
-            Clear All Notifications
-          </button>
+          
+          <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <h3 className="text-xl font-bold mb-md">Salary Trends</h3>
+            {loading ? (
+              <div className="space-y-sm">
+                {[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            ) : (
+              <ul className="space-y-sm text-sm">
+                {salaryTrends.map((s, i) => (
+                  <li key={i} className="flex justify-between items-center p-sm bg-surface-container rounded">
+                    <span>{s.range}</span> <span className="font-bold">{s.count}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 

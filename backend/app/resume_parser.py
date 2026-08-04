@@ -330,6 +330,43 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     if len(text.split()) > 600:
         suggestions.append("Ensure your resume is concise and ideally fits within 1-2 pages (keep word count under 600 words).")
 
+    # Phase 7.3: Role matching and Gap Analysis
+    matched_role = "General Software Engineer"
+    missing_skills = []
+    import json, os
+    try:
+        data_file = os.path.join(os.path.dirname(__file__), "..", "data", "roles.json")
+        if os.path.exists(data_file):
+            with open(data_file, 'r', encoding='utf-8') as f:
+                roles = json.load(f)
+            
+            # Simple matching: which role has the most overlapping skills
+            best_match = None
+            max_overlap = 0
+            user_skills_lower = [s.lower() for s in extracted_skills]
+            
+            for r in roles:
+                core_skills = r.get("core_skills", [])
+                core_skills_lower = [s.lower() for s in core_skills]
+                overlap = len(set(user_skills_lower).intersection(set(core_skills_lower)))
+                if overlap > max_overlap:
+                    max_overlap = overlap
+                    best_match = r
+                    
+            if best_match:
+                matched_role = best_match["title"]
+                core_skills_lower = [s.lower() for s in best_match["core_skills"]]
+                missing = set(core_skills_lower) - set(user_skills_lower)
+                # Map back to proper casing
+                for cs in best_match["core_skills"]:
+                    if cs.lower() in missing:
+                        missing_skills.append(cs)
+                
+                if missing_skills:
+                    suggestions.append(f"To be more competitive for {matched_role} roles, consider adding: {', '.join(missing_skills)}")
+    except Exception as e:
+        print(f"Error in gap analysis: {e}")
+
     # Final structure
     return {
         "uploaded_file": filename,
@@ -341,5 +378,7 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
         "ats_score": ats_score,
         "strengths": strengths or ["Formatting conforms to standard ATS guidelines."],
         "weaknesses": weaknesses or ["No significant formatting issues detected."],
-        "suggestions": suggestions or ["Keep updating your resume as you learn new skills."]
+        "suggestions": suggestions or ["Keep updating your resume as you learn new skills."],
+        "target_role": matched_role,
+        "skill_gaps": missing_skills
     }
