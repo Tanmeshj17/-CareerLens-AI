@@ -182,18 +182,34 @@ Visit `http://localhost:5173` to access the application locally.
 
 ---
 
-## ☁️ Production Deployment Guide
+## ☁️ Free Production Deployment Guide (Render + Vercel)
 
-### Deploying to Render
-1. Push your repository to GitHub.
-2. Connect your repository to **Render**.
-3. Render automatically provisions Web Service, Background Worker, and Managed PostgreSQL using `render.yaml`.
-4. Configure production environment variables (`DATABASE_URL`, `SECRET_KEY`, `RESEND_API_KEY`).
+### Step 1: Deploy Backend on Render (Free Tier)
+1. Push repository to GitHub and connect to [Render](https://dashboard.render.com).
+2. Create a **New Blueprint** and select `Tanmeshj17/-CareerLens-AI`. Render automatically reads [`render.yaml`](file:///C:/Users/Tanmesh/.gemini/antigravity/scratch/CareerLens-AI/render.yaml) and provisions:
+   - Managed PostgreSQL 16 (`careerlens-db`)
+   - FastAPI Web Service (`careerlens-api`)
+   - Background Worker (`careerlens-worker`)
+3. Render automatically generates `SECRET_KEY` and injects `DATABASE_URL`. No manual setup required for initial boot!
+4. Verify backend health at `https://<your-render-app>.onrender.com/health`.
 
-### Deploying to Vercel
-1. Connect frontend directory to **Vercel**.
-2. Set Build Command to `npm run build` and Output Directory to `dist`.
-3. Set Environment Variable `VITE_API_URL` to your Render API domain.
+### Step 2: Deploy Frontend on Vercel (Free Tier)
+1. Import repository to [Vercel](https://vercel.com).
+2. Set Root Directory to `frontend`.
+3. Set Framework Preset to **Vite** (`buildCommand: npm run build`, `outputDirectory: dist`).
+4. Set Environment Variable: `VITE_API_URL` = `https://<your-render-app>.onrender.com`.
+5. Deploy.
+
+### Step 3: Update FRONTEND_URL on Render
+1. Go to Render Dashboard -> `careerlens-api` -> **Environment**.
+2. Update `FRONTEND_URL` from the initial placeholder (`http://localhost:5173`) to your live Vercel domain (e.g. `https://careerlens-ai.vercel.app`).
+3. Save changes (Render auto-redeploys CORS config).
+
+### Step 4: Configure Resend (Optional / Later)
+1. When you add a custom domain and obtain a Resend API Key:
+2. Add `RESEND_API_KEY` to Render environment variables.
+3. Update `EMAIL_FROM` to your verified sender address (e.g. `CareerLens AI <noreply@yourdomain.com>`).
+4. *Note: Until `RESEND_API_KEY` is added, registration and password resets log verification links to Render logs without crashing.*
 
 ---
 

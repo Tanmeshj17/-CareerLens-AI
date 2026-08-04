@@ -21,11 +21,9 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: https://careerlens-ai.vercel.app
-      - key: RESEND_API_KEY
-        sync: false
+        value: http://localhost:5173  # Placeholder: Update with your Vercel URL after deploying frontend
       - key: EMAIL_FROM
-        value: CareerLens AI <noreply@careerlens.ai>
+        value: CareerLens AI <onboarding@resend.dev>  # Placeholder: Update after adding custom domain in Resend
 
   # Background Worker (ETL & APScheduler)
   - type: worker

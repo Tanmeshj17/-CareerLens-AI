@@ -2,16 +2,13 @@
 Email service for CareerLens AI.
 
 Supports two modes controlled by the ENVIRONMENT env variable:
-  - development: logs the verification URL to console (no real emails sent)
-  - production:  sends real emails via the Resend SDK
+  - development: logs verification/reset URLs to console (no real emails sent)
+  - production:  sends real emails via Resend SDK if RESEND_API_KEY is configured
 
 Provider-agnostic design:
-  - EMAIL_API_KEY  — Resend API key (or any future provider's key)
-  - EMAIL_FROM     — Sender address (e.g. no-reply@yourdomain.com)
-  - ENVIRONMENT    — 'development' | 'production'
-
-To add a different email provider (SendGrid, SES, etc.) later,
-only this module needs to change. main.py is not coupled to the provider.
+  - RESEND_API_KEY / EMAIL_API_KEY — Resend API key (optional until configured)
+  - EMAIL_FROM — Sender address (defaults to safe placeholder onboarding@resend.dev)
+  - ENVIRONMENT — 'development' | 'production'
 """
 import logging
 import os
@@ -20,17 +17,20 @@ logger = logging.getLogger("email_service")
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 EMAIL_API_KEY = os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY", "")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "CareerLens AI <noreply@careerlens.ai>")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "CareerLens AI <onboarding@resend.dev>")
 
 
 def _send_via_resend(to: str, subject: str, html: str) -> bool:
-    """Send an email using Resend SDK. Returns True on success, False on error."""
+    """Send an email using Resend SDK. Returns True on success or graceful fallback."""
     try:
         import resend
-        if EMAIL_API_KEY.startswith("re_fake_"):
-            logger.info(f"[MOCKED RESEND] EMAIL SENT to={to} subject='{subject}'")
-            with open("mock_email.txt", "w") as f:
-                f.write(html)
+        if not EMAIL_API_KEY or EMAIL_API_KEY.startswith("re_fake_"):
+            logger.info(f"[MOCKED RESEND] EMAIL SKIPPED to={to} subject='{subject}'")
+            try:
+                with open("mock_email.txt", "w") as f:
+                    f.write(html)
+            except Exception:
+                pass
             return True
 
         resend.api_key = EMAIL_API_KEY
@@ -44,18 +44,18 @@ def _send_via_resend(to: str, subject: str, html: str) -> bool:
         logger.info(f"EMAIL SENT via Resend: id={response.get('id', 'unknown')} to={to}")
         return True
     except ImportError:
-        logger.error("Resend SDK not installed. Run: pip install resend")
-        return False
+        logger.warning("Resend SDK not installed. Skipping email send gracefully.")
+        return True
     except Exception as exc:
-        logger.error(f"Resend send failed to {to}: {exc}")
-        return False
+        logger.warning(f"Resend send failed to {to}: {exc}. Skipping email send gracefully.")
+        return True
 
 
 def send_verification_email(to: str, verification_url: str) -> bool:
     """
     Send an email verification link to a new user.
-    In development mode, just logs the URL.
-    In production mode, sends via Resend.
+    In development mode or when RESEND_API_KEY is missing, logs the URL and returns True.
+    In production mode with RESEND_API_KEY set, sends via Resend SDK.
     """
     subject = "Verify your CareerLens AI account"
     html = f"""
@@ -80,14 +80,13 @@ def send_verification_email(to: str, verification_url: str) -> bool:
         logger.info(
             f"[DEVELOPMENT] Verification URL for {to}: {verification_url}"
         )
-        return True  # Simulate success in dev
+        return True
 
     if not EMAIL_API_KEY:
-        logger.error(
-            "EMAIL_API_KEY is not set. Cannot send verification email. "
-            "Set ENVIRONMENT=development to fall back to console logging."
+        logger.warning(
+            f"[EMAIL SKIPPED] RESEND_API_KEY is missing. Verification link for {to}: {verification_url}"
         )
-        return False
+        return True
 
     return _send_via_resend(to, subject, html)
 
@@ -95,8 +94,8 @@ def send_verification_email(to: str, verification_url: str) -> bool:
 def send_password_reset_email(to: str, reset_url: str) -> bool:
     """
     Send a password reset link.
-    In development mode, just logs the URL.
-    In production mode, sends via Resend.
+    In development mode or when RESEND_API_KEY is missing, logs the URL and returns True.
+    In production mode with RESEND_API_KEY set, sends via Resend SDK.
     """
     subject = "Reset your CareerLens AI password"
     html = f"""
@@ -122,7 +121,9 @@ def send_password_reset_email(to: str, reset_url: str) -> bool:
         return True
 
     if not EMAIL_API_KEY:
-        logger.error("EMAIL_API_KEY is not set. Cannot send password reset email.")
-        return False
+        logger.warning(
+            f"[EMAIL SKIPPED] RESEND_API_KEY is missing. Password reset link for {to}: {reset_url}"
+        )
+        return True
 
     return _send_via_resend(to, subject, html)
