@@ -2,11 +2,12 @@ services:
   # Web API Service (FastAPI)
   - type: web
     name: careerlens-api
-    env: python
+    runtime: python
+    rootDir: backend
     region: oregon
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -28,11 +29,12 @@ services:
   # Background Worker (ETL & APScheduler)
   - type: worker
     name: careerlens-worker
-    env: python
+    runtime: python
+    rootDir: backend
     region: oregon
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && python -m app.scheduler.scheduler
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
     autoDeploy: true
     envVars:
       - key: ENVIRONMENT

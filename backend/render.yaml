@@ -1,48 +1,55 @@
-# render.yaml - Infrastructure as Code for Render.com
-# Deploy: Connect your GitHub repo → Render auto-detects this file
-
 services:
-  # Backend API
+  # Web API Service (FastAPI)
   - type: web
     name: careerlens-api
     runtime: python
+    rootDir: backend
+    region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: DATABASE_URL
         fromDatabase:
           name: careerlens-db
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: ENVIRONMENT
-        value: production
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
       - key: FRONTEND_URL
-        value: http://localhost:5173  # Placeholder: Update with your Vercel URL post-deployment
+        value: http://localhost:5173  # Placeholder: Update with your Vercel URL after deploying frontend
       - key: EMAIL_FROM
-        value: CareerLens AI <onboarding@resend.dev>  # Placeholder: Update after verified domain in Resend
-      - key: PYTHON_VERSION
-        value: "3.11.0"
+        value: CareerLens AI <onboarding@resend.dev>  # Placeholder: Update after adding custom domain in Resend
 
-  # Background ETL Worker
+  # Background Worker (ETL & APScheduler)
   - type: worker
     name: careerlens-worker
     runtime: python
+    rootDir: backend
+    region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python worker.py
+    autoDeploy: true
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: DATABASE_URL
         fromDatabase:
           name: careerlens-db
           property: connectionString
-      - key: ENVIRONMENT
-        value: production
+      - key: SECRET_KEY
+        generateValue: true
 
 databases:
+  # Managed PostgreSQL Database
   - name: careerlens-db
-    plan: free
     databaseName: careerlens
-    postgresMajorVersion: "16"
+    user: careerlens_admin
+    region: oregon
+    plan: free
