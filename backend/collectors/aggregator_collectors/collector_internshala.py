@@ -42,77 +42,77 @@ class InternshalaCollector(BaseCollector):
                     return []
 
                 for listing in listings:
-                try:
-                    title_elem = listing.find('h3', class_='heading_4_5')
-                    company_elem = listing.find('div', class_='company_name')
-                    location_elem = listing.find('a', class_='location_link')
-                    
-                    if not title_elem or not company_elem:
-                        continue
+                    try:
+                        title_elem = listing.find('h3', class_='heading_4_5')
+                        company_elem = listing.find('div', class_='company_name')
+                        location_elem = listing.find('a', class_='location_link')
                         
-                    title = title_elem.text.strip()
-                    company = company_elem.text.strip()
-                    location = location_elem.text.strip() if location_elem else "India"
-                    
-                    # Detect remote
-                    if location.lower() in ["work from home", "remote"]:
-                        location = "Remote India"
-                        
-                    # Extract link
-                    link_elem = listing.get('data-href')
-                    apply_url = f"https://internshala.com{link_elem}" if link_elem else None
-                    if not apply_url:
-                        a_tag = listing.find('a', class_='view_detail_button')
-                        if a_tag and a_tag.get('href'):
-                            apply_url = f"https://internshala.com{a_tag['href']}"
-
-                    if not apply_url:
-                        continue
-
-                    # Phase 8.45: Circuit Breaker check
-                    if apply_url in known_urls:
-                        state["consecutive_dupes"] += 1
-                    else:
-                        state["consecutive_dupes"] = 0
-
-                    if state["consecutive_dupes"] >= 20:
-                        logger.info(f"[Internshala] Circuit breaker triggered at {apply_url} on page {page}")
-                        state["stop"] = True
-                        break
-
-                    # Details parsing (stipend, duration, etc.)
-                    stipend = ""
-                    duration = ""
-                    details_items = listing.find_all('div', class_='item_body')
-                    if len(details_items) >= 2:
-                        duration_text = details_items[1].text.strip()
-                        if "Months" in duration_text or "Weeks" in duration_text:
-                            duration = duration_text
+                        if not title_elem or not company_elem:
+                            continue
                             
-                    stipend_elem = listing.find('span', class_='stipend')
-                    if stipend_elem:
-                        stipend = stipend_elem.text.strip()
+                        title = title_elem.text.strip()
+                        company = company_elem.text.strip()
+                        location = location_elem.text.strip() if location_elem else "India"
+                        
+                        # Detect remote
+                        if location.lower() in ["work from home", "remote"]:
+                            location = "Remote India"
+                            
+                        # Extract link
+                        link_elem = listing.get('data-href')
+                        apply_url = f"https://internshala.com{link_elem}" if link_elem else None
+                        if not apply_url:
+                            a_tag = listing.find('a', class_='view_detail_button')
+                            if a_tag and a_tag.get('href'):
+                                apply_url = f"https://internshala.com{a_tag['href']}"
 
-                    job_desc = f"{job_type_label} at {company}."
-                    if stipend:
-                        job_desc += f" Stipend/Salary: {stipend}."
-                    if duration:
-                        job_desc += f" Duration: {duration}."
+                        if not apply_url:
+                            continue
 
-                    jobs.append({
-                        "title": title,
-                        "company": company,
-                        "location": location,
-                        "job_type": job_type_label,
-                        "description": job_desc,
-                        "apply_url": apply_url,
-                        "source_url": "https://internshala.com",
-                        "source": self.source_name,
-                        "ats_type": "Internshala",
-                        "raw_data": {"stipend": stipend, "duration": duration}
-                    })
-                except Exception as e:
-                    logger.debug(f"[Internshala] Error parsing listing: {e}")
+                        # Phase 8.45: Circuit Breaker check
+                        if apply_url in known_urls:
+                            state["consecutive_dupes"] += 1
+                        else:
+                            state["consecutive_dupes"] = 0
+
+                        if state["consecutive_dupes"] >= 20:
+                            logger.info(f"[Internshala] Circuit breaker triggered at {apply_url} on page {page}")
+                            state["stop"] = True
+                            break
+
+                        # Details parsing (stipend, duration, etc.)
+                        stipend = ""
+                        duration = ""
+                        details_items = listing.find_all('div', class_='item_body')
+                        if len(details_items) >= 2:
+                            duration_text = details_items[1].text.strip()
+                            if "Months" in duration_text or "Weeks" in duration_text:
+                                duration = duration_text
+                                
+                        stipend_elem = listing.find('span', class_='stipend')
+                        if stipend_elem:
+                            stipend = stipend_elem.text.strip()
+
+                        job_desc = f"{job_type_label} at {company}."
+                        if stipend:
+                            job_desc += f" Stipend/Salary: {stipend}."
+                        if duration:
+                            job_desc += f" Duration: {duration}."
+
+                        jobs.append({
+                            "title": title,
+                            "company": company,
+                            "location": location,
+                            "job_type": job_type_label,
+                            "description": job_desc,
+                            "apply_url": apply_url,
+                            "source_url": "https://internshala.com",
+                            "source": self.source_name,
+                            "ats_type": "Internshala",
+                            "raw_data": {"stipend": stipend, "duration": duration}
+                        })
+                    except Exception as e:
+                        logger.debug(f"[Internshala] Error parsing listing: {e}")
             finally:
                 soup.decompose()
                     

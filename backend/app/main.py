@@ -198,11 +198,34 @@ async def global_exception_handler(request, exc):
 # To run scheduler embedded (for local dev only), set ENABLE_SCHEDULER=true.
 @app.on_event("startup")
 def startup_event():
+    # 1. Ensure backend directory is in sys.path
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    import sys
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+
+    # 2. Check if database is empty; if so, run initial seeding automatically
+    try:
+        db = database.SessionLocal()
+        opp_count = db.query(models.Opportunity).count()
+        if opp_count == 0:
+            logger.info("Database contains 0 opportunities. Running initial database seed...")
+            try:
+                from seed import seed_db
+                seed_db()
+                logger.info("Initial database seed completed successfully!")
+            except Exception as seed_err:
+                logger.error(f"Initial database seed failed: {seed_err}")
+        else:
+            logger.info(f"Database contains {opp_count} opportunities.")
+        db.close()
+    except Exception as db_err:
+        logger.warning(f"Startup database check failed (non-fatal): {db_err}")
+
+    # 3. Start embedded scheduler
     enable_scheduler = os.environ.get("ENABLE_SCHEDULER", "false").lower() == "true"
     if enable_scheduler:
         try:
-            import sys
-            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             from scheduler import start_scheduler
             start_scheduler()
             logger.info("Embedded scheduler started (ENABLE_SCHEDULER=true).")
@@ -225,6 +248,17 @@ def shutdown_event():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/api/admin/seed")
+def trigger_seed():
+    """Admin endpoint to populate/reset initial database content."""
+    try:
+        from seed import seed_db
+        seed_db()
+        return {"status": "success", "message": "Database successfully seeded with opportunities, users, and resources."}
+    except Exception as e:
+        logger.error(f"Manual database seed failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Database seed failed: {str(e)}")
 
 # --- Scheduler Config ---
 class SchedulerConfig(BaseModel):
