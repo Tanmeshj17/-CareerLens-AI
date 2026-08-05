@@ -121,6 +121,12 @@ def compute_personalized_rank(opp: Opportunity, match_score: int, freshness_scor
         (scaled_company          * 0.05)
     ) - penalty
 
+    # Entry-level / Fresher / Internship priority boost (+150 pts)
+    title_lower = (getattr(opp, 'title', '') or '').lower()
+    job_type_lower = (getattr(opp, 'job_type', '') or '').lower()
+    if any(k in title_lower or k in job_type_lower for k in ['intern', 'internship', 'trainee', 'fresher', 'associate', 'graduate', 'junior', 'entry', 'gte', 'sde-1', 'sde 1']):
+        final_score += 150.0
+
     # Strict exclusion if score drops below 0
     return round(max(final_score, 0.0), 2)
 

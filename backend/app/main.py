@@ -261,20 +261,54 @@ def _safe_seed(db):
             db.add(models.RoleSkillMap(role=r, skill=s, importance=imp, category=cat))
         db.commit()
 
-    # 3. Learning Resources
+    # 3. Learning Resources (Expanded Catalog with India Priority)
     if db.query(models.LearningResource).count() == 0:
         learning_resources_data = [
             models.LearningResource(
-                title="Data Engineering Essentials with Python and SQL",
-                provider="Coursera / Duke",
+                title="NPTEL: Programming, Data Structures And Algorithms Using Python (IIT Madras)",
+                provider="NPTEL / Swayam (IIT Madras)",
                 category="Course",
-                description="Master data engineering fundamentals, SQL queries, pipeline building with Python.",
-                url="https://www.coursera.org/learn/data-engineering-essentials",
+                description="Official IIT Madras course covering Python programming, algorithmic thinking, sorting, searching, and complexity analysis.",
+                url="https://onlinecourses.nptel.ac.in/noc24_cs01/preview",
                 difficulty="Beginner",
-                duration="20 Hours",
+                duration="40 Hours",
                 is_free=True,
-                skills_covered=["Python", "SQL", "ETL", "PostgreSQL"],
-                source="Coursera",
+                skills_covered=["Python", "Data Structures", "Algorithms", "Problem Solving"],
+                source="NPTEL",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Software Engineer", "Data Engineer", "Data Analyst"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="Striver's A2Z DSA Course & SDE Sheet (Take U Forward)",
+                provider="Take U Forward",
+                category="Course",
+                description="Comprehensive Data Structures & Algorithms roadmap for technical interviews at top Indian & global tech companies.",
+                url="https://takeuforward.org/strivers-a2z-dsa-course/strivers-a2z-dsa-course-sheet-2/",
+                difficulty="Intermediate",
+                duration="60 Hours",
+                is_free=True,
+                skills_covered=["Data Structures", "Algorithms", "C++", "Java", "Python", "Problem Solving"],
+                source="Take U Forward",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Software Engineer", "Full Stack Developer", "Backend Engineer"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="Data Engineering Masterclass: PySpark, SQL & Airflow (Krish Naik)",
+                provider="YouTube / Krish Naik",
+                category="YouTube Playlist",
+                description="Complete end-to-end Data Engineering tutorial playlist covering SQL, PySpark, Data Lakes, Snowflake, and Apache Airflow.",
+                url="https://www.youtube.com/playlist?list=PLZoTAELRMXVN7mGv-9iK9L1_L31fW2mS0",
+                difficulty="Intermediate",
+                duration="25 Hours",
+                is_free=True,
+                skills_covered=["Python", "SQL", "Apache Spark", "PySpark", "Airflow", "ETL"],
+                source="YouTube",
                 availability_status="VERIFIED",
                 status="VERIFIED",
                 affordability="FREE",
@@ -282,63 +316,142 @@ def _safe_seed(db):
                 country="India"
             ),
             models.LearningResource(
-                title="Apache Spark & Python for Big Data Engineering",
-                provider="FreeCodeCamp",
-                category="Course",
-                description="Comprehensive guide to PySpark, distributed data processing, and cloud data lakes.",
-                url="https://www.youtube.com/watch?v=_C8kWso474U",
-                difficulty="Intermediate",
-                duration="12 Hours",
-                is_free=True,
-                skills_covered=["Apache Spark", "Python", "PySpark", "Big Data"],
-                source="FreeCodeCamp",
-                availability_status="VERIFIED",
-                status="VERIFIED",
-                affordability="FREE",
-                roles=["Data Engineer"],
-                country="India"
-            ),
-            models.LearningResource(
-                title="React Official Tutorial & Full Stack Crash Course",
-                provider="freeCodeCamp",
-                category="Course",
-                description="Learn modern React, Hooks, TypeScript, and state management for frontend engineering.",
-                url="https://www.freecodecamp.org/news/tag/react/",
-                difficulty="Beginner",
-                duration="15 Hours",
-                is_free=True,
-                skills_covered=["React", "TypeScript", "JavaScript", "HTML"],
-                source="freeCodeCamp",
-                availability_status="VERIFIED",
-                status="VERIFIED",
-                affordability="FREE",
-                roles=["Frontend Engineer", "Full Stack Developer", "Software Engineer"],
-                country="India"
-            ),
-            models.LearningResource(
-                title="Docker and Kubernetes for Beginners",
-                provider="TechWorld with Nana",
+                title="DBMS Complete Gate Smashers Playlist",
+                provider="Gate Smashers",
                 category="YouTube Playlist",
-                description="Hands-on DevOps course covering containers, pod orchestration, and deployment pipelines.",
-                url="https://www.youtube.com/watch?v=X48VuDVv0do",
+                description="Master Relational Database Systems, SQL Queries, Normalization, Indexing, and Transactions for Tech Interviews.",
+                url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8Qvg6-xtyTO158Sk5",
                 difficulty="Beginner",
-                duration="8 Hours",
+                duration="18 Hours",
                 is_free=True,
-                skills_covered=["Docker", "Kubernetes", "DevOps", "CI/CD"],
+                skills_covered=["SQL", "DBMS", "Database", "MySQL", "Normalization"],
                 source="YouTube",
                 availability_status="VERIFIED",
                 status="VERIFIED",
                 affordability="FREE",
-                roles=["DevOps Engineer", "Software Engineer"],
+                roles=["Software Engineer", "Backend Engineer", "Data Engineer", "Data Analyst"],
                 country="India"
+            ),
+            models.LearningResource(
+                title="Python for Beginners & Full Stack Web Development (CodeWithHarry)",
+                provider="CodeWithHarry",
+                category="Course",
+                description="Hindi/English comprehensive Python and Django web development tutorial series with projects.",
+                url="https://www.codewithharry.com/",
+                difficulty="Beginner",
+                duration="30 Hours",
+                is_free=True,
+                skills_covered=["Python", "Django", "JavaScript", "HTML", "CSS"],
+                source="CodeWithHarry",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Software Engineer", "Full Stack Developer", "Backend Engineer"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="AWS Cloud Practitioner Essentials (Official Free Course)",
+                provider="AWS Skill Builder",
+                category="Course",
+                description="Official Amazon Web Services foundational cloud computing course with labs and prep for AWS Cloud Practitioner.",
+                url="https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
+                difficulty="Beginner",
+                duration="6 Hours",
+                is_free=True,
+                skills_covered=["AWS", "Cloud", "DevOps", "EC2", "S3"],
+                source="AWS Skill Builder",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["DevOps Engineer", "Software Engineer", "Cloud Operations Associate"],
+                country="Global"
+            ),
+            models.LearningResource(
+                title="Microsoft Azure Fundamentals (AZ-900) Official Prep",
+                provider="Microsoft Learn",
+                category="Documentation",
+                description="Learn cloud concepts, core Azure services, security, privacy, and compliance directly from Microsoft.",
+                url="https://learn.microsoft.com/en-us/training/paths/az-900-describe-cloud-concepts/",
+                difficulty="Beginner",
+                duration="10 Hours",
+                is_free=True,
+                skills_covered=["Azure", "Cloud", "DevOps", "Security"],
+                source="Microsoft Learn",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["DevOps Engineer", "Software Engineer"],
+                country="Global"
+            ),
+            models.LearningResource(
+                title="freeCodeCamp: Scientific Computing with Python",
+                provider="freeCodeCamp",
+                category="Course",
+                description="Learn Python fundamentals, loops, data structures, algorithms, and build 5 certified coding projects.",
+                url="https://www.freecodecamp.org/learn/scientific-computing-with-python/",
+                difficulty="Beginner",
+                duration="300 Hours",
+                is_free=True,
+                skills_covered=["Python", "Algorithms", "Data Structures", "Problem Solving"],
+                source="freeCodeCamp",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Software Engineer", "Data Engineer", "Data Analyst"],
+                country="Global"
             )
         ]
         db.add_all(learning_resources_data)
         db.commit()
 
-    # 4. Certifications
+    # 4. Certifications (Expanded Catalog with India Priority)
     if db.query(models.Certification).count() == 0:
         certifications_data = [
+            models.Certification(
+                name="TCS iON Career Edge - Young Professional Certificate",
+                provider="TCS iON",
+                url="https://learning.tcsionhub.in/courses/tcs-ion/career-edge-young-professional/",
+                is_free=True,
+                cost="Free",
+                difficulty="Beginner",
+                estimated_hours=15,
+                skills_covered=["Communication", "Corporate Readiness", "Business Etiquette", "Problem Solving"],
+                roles=["Graduate Trainee Engineer (GTE)", "Associate Software Engineer", "Data Analyst Trainee"],
+                availability_status="VERIFIED",
+                price_inr=0,
+                affordability="FREE",
+                free_learning_available=True
+            ),
+            models.Certification(
+                name="Postman API Fundamentals Student Expert",
+                provider="Postman",
+                url="https://www.postman.com/student-program/student-expert/",
+                is_free=True,
+                cost="Free",
+                difficulty="Beginner",
+                estimated_hours=5,
+                skills_covered=["Postman", "REST APIs", "API Testing", "JSON"],
+                roles=["Software Engineer", "Junior QA / Automation Engineer", "Backend Engineer"],
+                availability_status="VERIFIED",
+                price_inr=0,
+                affordability="FREE",
+                free_learning_available=True
+            ),
+            models.Certification(
+                name="NPTEL Online Certification - Data Structures in Python (IIT Madras)",
+                provider="NPTEL / IIT Madras",
+                url="https://nptel.ac.in/",
+                is_free=False,
+                cost="INR 1,000 (Exam Fee)",
+                difficulty="Intermediate",
+                estimated_hours=40,
+                skills_covered=["Python", "Data Structures", "Algorithms"],
+                roles=["Software Engineer", "Data Engineer"],
+                availability_status="VERIFIED",
+                price_inr=1000,
+                affordability="AFFORDABLE",
+                free_learning_available=True
+            ),
             models.Certification(
                 name="Google Cloud Professional Data Engineer",
                 provider="Google Cloud",
@@ -405,8 +518,8 @@ def startup_event():
     try:
         db = database.SessionLocal()
         opp_count = db.query(models.Opportunity).count()
-        if opp_count < 300:
-            logger.info(f"Database contains {opp_count} opportunities (<300). Running safe dataset expansion seed...")
+        if opp_count < 1000:
+            logger.info(f"Database contains {opp_count} opportunities (<1000). Running safe dataset expansion seed...")
             try:
                 _safe_seed(db)
                 logger.info("Database dataset expansion seed completed successfully!")
