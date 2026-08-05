@@ -57,10 +57,10 @@ export default function Register() {
 
           {registrationSuccess ? (
             <div className="text-center bg-primary-container/10 p-lg rounded-xl border border-primary/20">
-              <span className="material-symbols-outlined text-primary text-5xl mb-sm" style={{fontVariationSettings: "'FILL' 1"}}>mark_email_read</span>
-              <h3 className="text-xl font-bold text-on-surface mb-xs">Account created successfully</h3>
+              <span className="material-symbols-outlined text-primary text-5xl mb-sm" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
+              <h3 className="text-xl font-bold text-on-surface mb-xs">Account Created Successfully!</h3>
               <p className="text-sm text-on-surface-variant mb-lg">
-                Please check your email and click the verification link before logging in.
+                Your account is active. You can log in directly below.
               </p>
               <Link to="/login" className="inline-block bg-primary text-white py-sm px-lg rounded-lg text-sm font-medium font-[Geist] hover:bg-primary/90 transition-all">
                 Go to Login
