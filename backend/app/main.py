@@ -262,7 +262,7 @@ def _safe_seed(db):
         db.commit()
 
     # 3. Learning Resources (Expanded Catalog with India Priority)
-    if db.query(models.LearningResource).count() == 0:
+    if db.query(models.LearningResource).count() < 5:
         learning_resources_data = [
             models.LearningResource(
                 title="NPTEL: Programming, Data Structures And Algorithms Using Python (IIT Madras)",
@@ -405,7 +405,7 @@ def _safe_seed(db):
         db.commit()
 
     # 4. Certifications (Expanded Catalog with India Priority)
-    if db.query(models.Certification).count() == 0:
+    if db.query(models.Certification).count() < 3:
         certifications_data = [
             models.Certification(
                 name="TCS iON Career Edge - Young Professional Certificate",
@@ -514,10 +514,12 @@ def startup_event():
     if backend_dir not in sys.path:
         sys.path.insert(0, backend_dir)
 
-    # 2. Check if database is empty; if so, seed initial data (safe — no table drops)
+    # 2. Check if database is empty or below target; seed if needed
     try:
         db = database.SessionLocal()
-        opp_count = db.query(models.Opportunity).count()
+        opp_count = db.query(models.Opportunity).filter(
+            models.Opportunity.is_active == True
+        ).count()
         if opp_count < 1000:
             logger.info(f"Database contains {opp_count} opportunities (<1000). Running safe dataset expansion seed...")
             try:
@@ -527,7 +529,7 @@ def startup_event():
                 logger.error(f"Database dataset expansion seed failed: {seed_err}")
                 db.rollback()
         else:
-            logger.info(f"Database contains {opp_count} opportunities. Dataset fully seeded.")
+            logger.info(f"Database contains {opp_count} active opportunities. Skipping basic seed.")
 
         # 2b. Backfill is_active and lifecycle_status for any rows seeded without them
         try:
@@ -549,6 +551,17 @@ def startup_event():
         except Exception as backfill_err:
             logger.warning(f"Backfill step failed (non-fatal): {backfill_err}")
             db.rollback()
+
+        # 2c. Auto-collector: scale up to 9,000+ India jobs
+        try:
+            from .auto_collector import run_auto_collection
+            result = run_auto_collection(db, target=9000)
+            logger.info(
+                f"Auto-collector completed: inserted={result['inserted']}, "
+                f"stale_marked={result['stale_marked']}, active_jobs={result['active_jobs']}"
+            )
+        except Exception as coll_err:
+            logger.warning(f"Auto-collector failed (non-fatal): {coll_err}")
 
         db.close()
     except Exception as db_err:
@@ -1412,11 +1425,34 @@ def get_roles():
 # --- Personalized Dashboard Stats Route ---
 @app.get("/api/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    # Phase 7.3: Use DashboardStatsCache
-    cache = db.query(models.DashboardStatsCache).order_by(models.DashboardStatsCache.updated_at.desc()).first()
-    total_opps = cache.total_jobs if cache else db.query(models.Opportunity).count()
-    freshers_jobs = cache.freshers_jobs if cache else 0
-    internships = cache.internships if cache else 0
+    # Live counts computed directly from DB (cache was stale — always count live)
+    from sqlalchemy import func, or_
+    total_opps = db.query(models.Opportunity).filter(
+        models.Opportunity.status == "Active",
+        models.Opportunity.is_active == True
+    ).count()
+
+    internships = db.query(models.Opportunity).filter(
+        models.Opportunity.status == "Active",
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.job_type.ilike("%intern%"),
+            models.Opportunity.title.ilike("%intern%")
+        )
+    ).count()
+
+    freshers_jobs = db.query(models.Opportunity).filter(
+        models.Opportunity.status == "Active",
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.title.ilike("%fresher%"),
+            models.Opportunity.title.ilike("%trainee%"),
+            models.Opportunity.title.ilike("%graduate%"),
+            models.Opportunity.title.ilike("%associate%"),
+            models.Opportunity.title.ilike("%junior%"),
+            models.Opportunity.job_type.ilike("%intern%")
+        )
+    ).count()
     
     apps = db.query(models.Application).filter(models.Application.user_id == current_user.id).all()
     saved = len([a for a in apps if a.status == "Saved"])
