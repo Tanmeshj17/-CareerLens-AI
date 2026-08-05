@@ -1,10 +1,10 @@
 // CareerLens AI — Frontend API Client
 // Connects to FastAPI backend at /api/*
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://careerlens-api-f74a.onrender.com').replace(/\/$/, '');
 
-if (!API_BASE) {
-  console.error("VITE_API_URL environment variable is not set!");
+if (!import.meta.env.VITE_API_URL) {
+  console.log("VITE_API_URL environment variable is not set. Defaulting to production backend:", API_BASE);
 }
 
 // ── Token Management ──────────────────────────────────────────
