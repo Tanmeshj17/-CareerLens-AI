@@ -64,12 +64,11 @@ try:
         models.Opportunity.title.ilike("%fresher%")
     ).count()
 
-    print(f"\n{'='*50}")
-    print(f"✅ DONE! Total active jobs: {after}")
+    print(f"\nDONE! Total active jobs: {after}")
     print(f"   Internships:      {interns}")
     print(f"   Fresher roles:    {freshers}")
     print(f"   Entry+Intern%:    {((interns + freshers) * 100 // max(after,1))}%")
-    print(f"{'='*50}")
+    print("="*50)
 
 finally:
     db.close()

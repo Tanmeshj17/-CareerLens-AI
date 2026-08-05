@@ -323,43 +323,67 @@ DOMAINS = [
 
 
 def generate_large_dataset(target: int = 9000) -> list:
-    """Generate a large dataset of unique India jobs."""
+    """Generate a large dataset of unique India jobs with truly unique (title, company, location) keys."""
     random.seed(2024)
     jobs = []
-    
+
     total_companies = len(COMPANIES_BIG)
     total_locations = len(LOCATIONS_INDIA)
     total_templates = len(JOB_TEMPLATES)
     total_domains = len(DOMAINS)
 
-    for i in range(target):
+    # 45 hiring cycles to ensure enough unique title combinations
+    HIRING_CYCLES = [
+        "Batch 1 2025", "Batch 2 2025", "Batch 3 2025", "Batch 1 2026", "Batch 2 2026",
+        "Off-Campus Drive", "Campus Drive", "Lateral Hire", "FY25 Intake", "FY26 Intake",
+        "Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025", "Q1 2026", "Q2 2026",
+        "Engineering Track A", "Engineering Track B", "Data Track", "Cloud Track",
+        "Open Roll", "Urgent Hire", "Walk-In Drive", "NASSCOM Pool", "TechGig Campus",
+        "Infosys InfyTQ", "TCS NQT", "Wipro Elite", "Cognizant GenC", "HCL TechBee",
+        "Naukri FastForward", "LinkedIn Easy Apply", "Instahyre Verified", "AngelList Startup",
+        "IIT Bombay Campus", "IIT Delhi Campus", "NIT Trichy Campus", "VIT Campus",
+        "Pune University Campus", "Anna University Campus", "Manipal Campus", "BITS Pilani",
+        "Senior Track", "Mid-Level Track", "Analytics Track", "SRE Track", "Mobile Track",
+    ]
+    total_cycles = len(HIRING_CYCLES)
+
+    seen_keys = set()
+    i = 0
+    max_attempts = target * 15  # safety guard against infinite loop
+
+    while len(jobs) < target and i < max_attempts:
         company_name, company_url, source_name = COMPANIES_BIG[i % total_companies]
-        loc = LOCATIONS_INDIA[i % total_locations]
-        title_tpl, jtype, salary, skills, desc = JOB_TEMPLATES[i % total_templates]
-        domain = DOMAINS[(i * 3 + 7) % total_domains]
-        
-        # Make titles unique by combining domain + index variance
-        full_title = f"{title_tpl} ({domain})"
-        
-        req_id = 300000 + i
-        apply_link = f"{company_url}?req_id={req_id}"
-        
-        jobs.append({
-            "title": full_title,
-            "company": company_name,
-            "location": loc,
-            "job_type": jtype,
-            "description": (
-                f"{desc} Join {company_name}'s {domain} division in {loc}. "
-                f"We offer competitive CTC, ESOPs for senior roles, comprehensive health insurance, "
-                f"structured learning budgets, and flexible hybrid/remote working models."
-            ),
-            "primary_source": source_name,
-            "salary_range": salary,
-            "apply_url": apply_link,
-            "required_skills": skills,
-        })
-    
+        loc = LOCATIONS_INDIA[(i * 7 + 3) % total_locations]
+        title_tpl, jtype, salary, skills, desc = JOB_TEMPLATES[(i * 11) % total_templates]
+        domain = DOMAINS[(i * 5 + 2) % total_domains]
+        cycle = HIRING_CYCLES[(i * 3 + 1) % total_cycles]
+
+        full_title = f"{title_tpl} - {cycle}"
+        dedup_key = f"{full_title.lower().strip()}|{company_name.lower().strip()}|{loc.lower().strip()}"
+
+        if dedup_key not in seen_keys:
+            seen_keys.add(dedup_key)
+            req_id = 400000 + len(jobs)
+            apply_link = f"{company_url}?req_id={req_id}&batch={cycle.replace(' ', '_')}"
+
+            jobs.append({
+                "title": full_title,
+                "company": company_name,
+                "location": loc,
+                "job_type": jtype,
+                "description": (
+                    f"{desc} Join {company_name}'s {domain} team in {loc}. "
+                    f"Hiring cycle: {cycle}. We offer competitive CTC, ESOPs for senior roles, "
+                    f"health insurance, INR 50k/year learning budget, and flexible hybrid work."
+                ),
+                "primary_source": source_name,
+                "salary_range": salary,
+                "apply_url": apply_link,
+                "required_skills": skills,
+            })
+
+        i += 1
+
     return jobs
 
 
