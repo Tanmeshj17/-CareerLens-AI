@@ -1,0 +1,4 @@
+# Tell Vercel to completely ignore the backend directory during repo scan
+backend/
+backend/**
+render.yaml
