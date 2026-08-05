@@ -405,16 +405,16 @@ def startup_event():
     try:
         db = database.SessionLocal()
         opp_count = db.query(models.Opportunity).count()
-        if opp_count == 0:
-            logger.info("Database contains 0 opportunities. Running safe initial seed...")
+        if opp_count < 300:
+            logger.info(f"Database contains {opp_count} opportunities (<300). Running safe dataset expansion seed...")
             try:
                 _safe_seed(db)
-                logger.info("Initial database seed completed successfully!")
+                logger.info("Database dataset expansion seed completed successfully!")
             except Exception as seed_err:
-                logger.error(f"Initial database seed failed: {seed_err}")
+                logger.error(f"Database dataset expansion seed failed: {seed_err}")
                 db.rollback()
         else:
-            logger.info(f"Database contains {opp_count} opportunities. Skipping seed.")
+            logger.info(f"Database contains {opp_count} opportunities. Dataset fully seeded.")
 
         # 2b. Backfill is_active and lifecycle_status for any rows seeded without them
         try:
