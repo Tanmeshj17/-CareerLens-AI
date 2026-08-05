@@ -199,10 +199,12 @@ async def global_exception_handler(request, exc):
 def _safe_seed(db):
     """Safely seed initial data without dropping existing tables."""
     import random
+    from datetime import datetime, timedelta
     from seed import OPPORTUNITIES
     from collectors.processors.trust_scorer import calculate_trust_score
     from collectors.deduplicators.hash_deduplicator import generate_job_hash
 
+    # 1. Opportunities
     for opp_data in OPPORTUNITIES:
         trust = calculate_trust_score(opp_data["primary_source"])
         h = generate_job_hash(opp_data["title"], opp_data["company"], opp_data["location"])
@@ -219,7 +221,7 @@ def _safe_seed(db):
             description=opp_data["description"],
             trust_score=trust,
             confidence_score=trust,
-            completeness_score=80,
+            completeness_score=85,
             salary_range=opp_data["salary_range"],
             apply_url=opp_data["apply_url"],
             opportunity_hash=h,
@@ -234,6 +236,157 @@ def _safe_seed(db):
         )
         db.add(opp)
     db.commit()
+
+    # 2. Role Skill Maps
+    if db.query(models.RoleSkillMap).count() == 0:
+        role_skills_data = [
+            ("Data Engineer", "Python", "Required", "Programming"),
+            ("Data Engineer", "SQL", "Required", "Database"),
+            ("Data Engineer", "Apache Spark", "Required", "Big Data"),
+            ("Data Engineer", "Airflow", "Preferred", "Orchestration"),
+            ("Software Engineer", "Java", "Required", "Programming"),
+            ("Software Engineer", "Python", "Required", "Programming"),
+            ("Software Engineer", "Data Structures", "Required", "Core CS"),
+            ("Frontend Engineer", "React", "Required", "Frontend"),
+            ("Frontend Engineer", "TypeScript", "Required", "Programming"),
+            ("Frontend Engineer", "CSS", "Required", "Frontend"),
+            ("DevOps Engineer", "Docker", "Required", "Containerization"),
+            ("DevOps Engineer", "Kubernetes", "Required", "Orchestration"),
+            ("DevOps Engineer", "AWS", "Required", "Cloud"),
+            ("Data Analyst", "SQL", "Required", "Database"),
+            ("Data Analyst", "Python", "Required", "Programming"),
+            ("Data Analyst", "Power BI", "Required", "BI Tools"),
+        ]
+        for r, s, imp, cat in role_skills_data:
+            db.add(models.RoleSkillMap(role=r, skill=s, importance=imp, category=cat))
+        db.commit()
+
+    # 3. Learning Resources
+    if db.query(models.LearningResource).count() == 0:
+        learning_resources_data = [
+            models.LearningResource(
+                title="Data Engineering Essentials with Python and SQL",
+                provider="Coursera / Duke",
+                category="Course",
+                description="Master data engineering fundamentals, SQL queries, pipeline building with Python.",
+                url="https://www.coursera.org/learn/data-engineering-essentials",
+                difficulty="Beginner",
+                duration="20 Hours",
+                is_free=True,
+                skills_covered=["Python", "SQL", "ETL", "PostgreSQL"],
+                source="Coursera",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Data Engineer", "Data Analyst"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="Apache Spark & Python for Big Data Engineering",
+                provider="FreeCodeCamp",
+                category="Course",
+                description="Comprehensive guide to PySpark, distributed data processing, and cloud data lakes.",
+                url="https://www.youtube.com/watch?v=_C8kWso474U",
+                difficulty="Intermediate",
+                duration="12 Hours",
+                is_free=True,
+                skills_covered=["Apache Spark", "Python", "PySpark", "Big Data"],
+                source="FreeCodeCamp",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Data Engineer"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="React Official Tutorial & Full Stack Crash Course",
+                provider="freeCodeCamp",
+                category="Course",
+                description="Learn modern React, Hooks, TypeScript, and state management for frontend engineering.",
+                url="https://www.freecodecamp.org/news/tag/react/",
+                difficulty="Beginner",
+                duration="15 Hours",
+                is_free=True,
+                skills_covered=["React", "TypeScript", "JavaScript", "HTML"],
+                source="freeCodeCamp",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["Frontend Engineer", "Full Stack Developer", "Software Engineer"],
+                country="India"
+            ),
+            models.LearningResource(
+                title="Docker and Kubernetes for Beginners",
+                provider="TechWorld with Nana",
+                category="YouTube Playlist",
+                description="Hands-on DevOps course covering containers, pod orchestration, and deployment pipelines.",
+                url="https://www.youtube.com/watch?v=X48VuDVv0do",
+                difficulty="Beginner",
+                duration="8 Hours",
+                is_free=True,
+                skills_covered=["Docker", "Kubernetes", "DevOps", "CI/CD"],
+                source="YouTube",
+                availability_status="VERIFIED",
+                status="VERIFIED",
+                affordability="FREE",
+                roles=["DevOps Engineer", "Software Engineer"],
+                country="India"
+            )
+        ]
+        db.add_all(learning_resources_data)
+        db.commit()
+
+    # 4. Certifications
+    if db.query(models.Certification).count() == 0:
+        certifications_data = [
+            models.Certification(
+                name="Google Cloud Professional Data Engineer",
+                provider="Google Cloud",
+                url="https://cloud.google.com/certification/data-engineer",
+                is_free=False,
+                cost="INR 15,000",
+                difficulty="Advanced",
+                estimated_hours=60,
+                skills_covered=["Google Cloud", "BigQuery", "Dataflow", "Python", "SQL"],
+                roles=["Data Engineer"],
+                availability_status="VERIFIED",
+                price_inr=15000,
+                affordability="PAID",
+                free_learning_available=True
+            ),
+            models.Certification(
+                name="AWS Certified Solutions Architect – Associate",
+                provider="Amazon Web Services",
+                url="https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+                is_free=False,
+                cost="INR 12,500",
+                difficulty="Intermediate",
+                estimated_hours=40,
+                skills_covered=["AWS", "Cloud Architecture", "EC2", "S3", "DevOps"],
+                roles=["DevOps Engineer", "Software Engineer"],
+                availability_status="VERIFIED",
+                price_inr=12500,
+                affordability="PAID",
+                free_learning_available=True
+            ),
+            models.Certification(
+                name="Meta Front-End Developer Professional Certificate",
+                provider="Meta",
+                url="https://www.coursera.org/professional-certificates/meta-front-end-developer",
+                is_free=False,
+                cost="Free with Financial Aid / Subscription",
+                difficulty="Beginner",
+                estimated_hours=80,
+                skills_covered=["React", "JavaScript", "CSS", "HTML", "UI/UX"],
+                roles=["Frontend Engineer", "Full Stack Developer"],
+                availability_status="VERIFIED",
+                price_inr=0,
+                affordability="FREE",
+                financial_aid_available=True
+            )
+        ]
+        db.add_all(certifications_data)
+        db.commit()
 
 # --- Scheduler Events ---
 # IMPORTANT: The scheduler is intentionally NOT started automatically in production.

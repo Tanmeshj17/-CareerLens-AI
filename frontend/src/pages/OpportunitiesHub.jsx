@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getOpportunities, getRecommendedOpportunities, createApplication } from '../api'
 import { AuthContext } from '../App'
 import { Alert } from '../components/ui/Alert'
+import { Badge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
 
