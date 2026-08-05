@@ -218,6 +218,8 @@ def _safe_seed(db):
             job_type=opp_data["job_type"],
             description=opp_data["description"],
             trust_score=trust,
+            confidence_score=trust,
+            completeness_score=80,
             salary_range=opp_data["salary_range"],
             apply_url=opp_data["apply_url"],
             opportunity_hash=h,
@@ -225,7 +227,10 @@ def _safe_seed(db):
             source_trust_score=trust,
             required_skills=opp_data["required_skills"],
             posted_date=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
-            status="Active"
+            status="Active",
+            is_active=True,
+            lifecycle_status="ACTIVE",
+            apply_url_status="VALID"
         )
         db.add(opp)
     db.commit()
@@ -257,9 +262,32 @@ def startup_event():
                 db.rollback()
         else:
             logger.info(f"Database contains {opp_count} opportunities. Skipping seed.")
+
+        # 2b. Backfill is_active and lifecycle_status for any rows seeded without them
+        try:
+            from sqlalchemy import update as sql_update
+            affected = db.execute(
+                sql_update(models.Opportunity)
+                .where(
+                    (models.Opportunity.is_active == None) | (models.Opportunity.lifecycle_status == None)
+                )
+                .values(
+                    is_active=True,
+                    lifecycle_status="ACTIVE",
+                    confidence_score=models.Opportunity.trust_score,
+                    apply_url_status="VALID"
+                )
+            )
+            db.commit()
+            logger.info(f"Backfilled lifecycle/active status on {affected.rowcount} opportunities.")
+        except Exception as backfill_err:
+            logger.warning(f"Backfill step failed (non-fatal): {backfill_err}")
+            db.rollback()
+
         db.close()
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")
+
 
     # 3. Start embedded scheduler
     enable_scheduler = os.environ.get("ENABLE_SCHEDULER", "false").lower() == "true"

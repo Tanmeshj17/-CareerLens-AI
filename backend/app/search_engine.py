@@ -19,7 +19,10 @@ def get_base_active_query(db: Session):
     return db.query(models.Opportunity).filter(
         models.Opportunity.status == "Active", 
         models.Opportunity.is_active == True,
-        models.Opportunity.lifecycle_status.in_(["NEW", "ACTIVE"])
+        or_(
+            models.Opportunity.lifecycle_status.in_(["NEW", "ACTIVE"]),
+            models.Opportunity.lifecycle_status.is_(None)  # include seeded/legacy rows with no lifecycle_status
+        )
     )
 
 def _search_by_roles(db: Session, roles: List[str], limit: int = 50) -> List[models.Opportunity]:
