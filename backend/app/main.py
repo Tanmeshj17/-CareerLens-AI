@@ -49,11 +49,16 @@ app.include_router(admin_router.router)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Configure CORS - use FRONTEND_URL in production or default to localhost
+# Configure CORS - include Vercel frontend domain + FRONTEND_URL env var
 frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 env = os.environ.get("ENVIRONMENT", "development")
 
-allowed_origins = [frontend_url]
+# Always include the production Vercel domain
+allowed_origins = [
+    "https://career-lens-ai-wheat.vercel.app",
+    frontend_url,
+]
+# In development, also allow localhost origins
 if env != "production":
     allowed_origins.extend([
         "http://localhost:5173",
@@ -191,6 +196,40 @@ async def global_exception_handler(request, exc):
         content={"detail": "Internal Server Error. Please try again later."},
     )
 
+def _safe_seed(db):
+    """Safely seed initial data without dropping existing tables."""
+    import random
+    from seed import OPPORTUNITIES
+    from collectors.processors.trust_scorer import calculate_trust_score
+    from collectors.deduplicators.hash_deduplicator import generate_job_hash
+
+    for opp_data in OPPORTUNITIES:
+        trust = calculate_trust_score(opp_data["primary_source"])
+        h = generate_job_hash(opp_data["title"], opp_data["company"], opp_data["location"])
+
+        existing = db.query(models.Opportunity).filter(models.Opportunity.opportunity_hash == h).first()
+        if existing:
+            continue
+
+        opp = models.Opportunity(
+            title=opp_data["title"],
+            company=opp_data["company"],
+            location=opp_data["location"],
+            job_type=opp_data["job_type"],
+            description=opp_data["description"],
+            trust_score=trust,
+            salary_range=opp_data["salary_range"],
+            apply_url=opp_data["apply_url"],
+            opportunity_hash=h,
+            primary_source=opp_data["primary_source"],
+            source_trust_score=trust,
+            required_skills=opp_data["required_skills"],
+            posted_date=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+            status="Active"
+        )
+        db.add(opp)
+    db.commit()
+
 # --- Scheduler Events ---
 # IMPORTANT: The scheduler is intentionally NOT started automatically in production.
 # In production, run the scheduler as a separate process using `python worker.py`.
@@ -204,20 +243,20 @@ def startup_event():
     if backend_dir not in sys.path:
         sys.path.insert(0, backend_dir)
 
-    # 2. Check if database is empty; if so, run initial seeding automatically
+    # 2. Check if database is empty; if so, seed initial data (safe — no table drops)
     try:
         db = database.SessionLocal()
         opp_count = db.query(models.Opportunity).count()
         if opp_count == 0:
-            logger.info("Database contains 0 opportunities. Running initial database seed...")
+            logger.info("Database contains 0 opportunities. Running safe initial seed...")
             try:
-                from seed import seed_db
-                seed_db()
+                _safe_seed(db)
                 logger.info("Initial database seed completed successfully!")
             except Exception as seed_err:
                 logger.error(f"Initial database seed failed: {seed_err}")
+                db.rollback()
         else:
-            logger.info(f"Database contains {opp_count} opportunities.")
+            logger.info(f"Database contains {opp_count} opportunities. Skipping seed.")
         db.close()
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")

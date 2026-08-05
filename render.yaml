@@ -26,7 +26,7 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: http://localhost:5173
+        value: https://career-lens-ai-wheat.vercel.app
       - key: EMAIL_FROM
         value: CareerLens AI <onboarding@resend.dev>
 
