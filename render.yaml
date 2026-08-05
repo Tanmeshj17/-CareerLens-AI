@@ -11,6 +11,8 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
       - key: ENVIRONMENT
         value: production
       - key: ENABLE_SCHEDULER
@@ -24,9 +26,9 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: http://localhost:5173  # Update with your Vercel URL after deploying frontend
+        value: http://localhost:5173
       - key: EMAIL_FROM
-        value: CareerLens AI <onboarding@resend.dev>  # Update after adding verified domain in Resend
+        value: CareerLens AI <onboarding@resend.dev>
 
 databases:
   # Managed PostgreSQL Database (Free Tier)
