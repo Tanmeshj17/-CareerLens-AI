@@ -641,6 +641,9 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(d
     
     hashed_password = auth.get_password_hash(user.password)
     
+    # Determine if strict email verification is required (default: false unless REQUIRE_EMAIL_VERIFICATION=true)
+    require_verification = os.environ.get("REQUIRE_EMAIL_VERIFICATION", "false").lower() == "true"
+    
     # Generate verification token
     raw_token = auth.generate_secure_token()
     token_hash = auth.hash_token(raw_token)
@@ -650,22 +653,29 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(d
         email=email,
         full_name=user.full_name,
         hashed_password=hashed_password,
-        is_verified=False,
-        verification_token=token_hash,
-        verification_expires=expires
+        is_verified=not require_verification,  # Auto-verify if strict verification is disabled
+        verification_token=token_hash if require_verification else None,
+        verification_expires=expires if require_verification else None
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     
     # Send verification email via the email service
-    # In development: logs URL to console. In production: sends real email via Resend.
     from app.email_service import send_verification_email
     frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
     verification_url = f"{frontend_url}/verify?token={raw_token}"
     email_sent = send_verification_email(email, verification_url)
-    if not email_sent:
-        logger.error(f"Failed to send verification email to {email}")
+    
+    # If verification was required but email delivery failed (e.g. Resend unverified domain restriction),
+    # auto-verify the user so they are not locked out of their account.
+    if require_verification and not email_sent:
+        logger.warning(f"Verification email delivery failed for {email} (e.g. unverified Resend domain). Auto-verifying user.")
+        db_user.is_verified = True
+        db_user.verification_token = None
+        db_user.verification_expires = None
+        db.commit()
+        db.refresh(db_user)
     
     return db_user
 
@@ -692,7 +702,13 @@ def resend_verification(request: Request, payload: ResendVerificationRequest, db
         from app.email_service import send_verification_email
         frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
         verification_url = f"{frontend_url}/verify?token={raw_token}"
-        send_verification_email(email, verification_url)
+        email_sent = send_verification_email(email, verification_url)
+        if not email_sent:
+            logger.warning(f"Resend verification email delivery failed for {email}. Auto-verifying account.")
+            user.is_verified = True
+            user.verification_token = None
+            user.verification_expires = None
+            db.commit()
 
     # Return safe generic response to prevent account enumeration
     return {"message": "If the account exists and is not yet verified, a verification email has been sent."}
@@ -760,14 +776,8 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        
-    if not user.is_verified:
-        logger.warning(f"SECURITY ALERT: Login attempt for unverified email: {email}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email address not verified",
-        )
-        
+
+    # First verify password
     pw_valid = auth.verify_password(form_data.password, user.hashed_password)
     if not pw_valid:
         logger.warning(f"SECURITY ALERT: Failed login attempt (bad password) for email: {email}")
@@ -776,6 +786,22 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Handle unverified user gracefully
+    if not user.is_verified:
+        require_verification = os.environ.get("REQUIRE_EMAIL_VERIFICATION", "false").lower() == "true"
+        if not require_verification:
+            logger.info(f"Auto-verifying user {email} on login (REQUIRE_EMAIL_VERIFICATION=false).")
+            user.is_verified = True
+            user.verification_token = None
+            user.verification_expires = None
+            db.commit()
+        else:
+            logger.warning(f"SECURITY ALERT: Login attempt for unverified email: {email}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                )
+        
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires

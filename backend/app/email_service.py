@@ -45,10 +45,10 @@ def _send_via_resend(to: str, subject: str, html: str) -> bool:
         return True
     except ImportError:
         logger.warning("Resend SDK not installed. Skipping email send gracefully.")
-        return True
+        return False
     except Exception as exc:
         logger.warning(f"Resend send failed to {to}: {exc}. Skipping email send gracefully.")
-        return True
+        return False
 
 
 def send_verification_email(to: str, verification_url: str) -> bool:
