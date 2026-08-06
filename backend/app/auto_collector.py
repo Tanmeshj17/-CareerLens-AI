@@ -122,87 +122,96 @@ def _fetch_arbeitnow_jobs() -> list:
 # ─── Programmatic large-scale seed ───────────────────────────────────────────
 
 COMPANIES_BIG = [
-    ("TCS", "https://www.tcs.com/careers/india", "TCS Careers"),
-    ("Infosys", "https://www.infosys.com/careers.html", "Infosys Careers"),
-    ("Wipro", "https://careers.wipro.com/", "Wipro Careers"),
-    ("HCLTech", "https://www.hcltech.com/careers", "HCLTech Careers"),
-    ("Tech Mahindra", "https://careers.techmahindra.com/", "Tech Mahindra Careers"),
-    ("Cognizant", "https://careers.cognizant.com/in/en", "Cognizant Careers"),
-    ("Capgemini", "https://www.capgemini.com/in-en/careers/", "Capgemini Careers"),
-    ("Accenture India", "https://www.accenture.com/in-en/careers", "Accenture Careers"),
+    # Indian IT/Services — REAL job search URLs
+    ("TCS", "https://ibegin.tcs.com/iBegin/jobs/search", "TCS iBegin"),
+    ("Infosys", "https://career.infosys.com/joblist", "Infosys BPM Careers"),
+    ("Wipro", "https://careers.wipro.com/search-jobs", "Wipro Careers"),
+    ("HCLTech", "https://www.hcltech.com/careers/search-jobs", "HCLTech Careers"),
+    ("Tech Mahindra", "https://careers.techmahindra.com/job-search", "Tech Mahindra Careers"),
+    ("Cognizant", "https://careers.cognizant.com/in/en/search-results", "Cognizant Careers"),
+    ("Capgemini", "https://www.capgemini.com/in-en/careers/job-search/", "Capgemini India"),
+    ("Accenture India", "https://www.accenture.com/in-en/careers/jobsearch?jk=&jo=India", "Accenture India"),
+    ("LTIMindtree", "https://www.ltimindtree.com/careers/job-openings/", "LTIMindtree Careers"),
+    ("Mphasis", "https://careers.mphasis.com/job-search.html", "Mphasis Careers"),
+
+    # MNCs India — REAL search/listings pages
     ("Google India", "https://www.google.com/about/careers/applications/jobs/results/?location=India", "Google Careers"),
-    ("Microsoft India", "https://careers.microsoft.com/v2/global/en/locations/india.html", "Microsoft Careers"),
-    ("Amazon India", "https://www.amazon.jobs/en/locations/india", "Amazon Careers"),
-    ("Flipkart", "https://www.flipkartcareers.com/", "Flipkart Careers"),
-    ("Swiggy", "https://careers.swiggy.com/", "Swiggy Careers"),
-    ("Zomato", "https://www.zomato.com/careers", "Zomato Careers"),
+    ("Microsoft India", "https://jobs.careers.microsoft.com/global/en/search?l=en_us&pg=1&pgSz=20&o=Relevance&flt=true&loc=India", "Microsoft Careers"),
+    ("Amazon India", "https://www.amazon.jobs/en/search?base_query=&loc_query=India", "Amazon Jobs"),
+    ("Apple India", "https://jobs.apple.com/en-in/search?location=india", "Apple Careers"),
+    ("Meta India", "https://www.metacareers.com/jobs/?offices[0]=Hyderabad%2C+India&offices[1]=Gurugram%2C+India", "Meta Careers"),
+    ("Oracle India", "https://careers.oracle.com/jobs/#en/sites/jobsearch/requisitions?keyword=&location=India", "Oracle Careers"),
+    ("SAP India", "https://jobs.sap.com/search/?q=&locationsearch=India", "SAP Careers"),
+    ("IBM India", "https://www.ibm.com/careers/search?field_keyword_18[0]=India", "IBM Careers"),
+    ("Salesforce India", "https://careers.salesforce.com/en/jobs/?search=&location=India", "Salesforce Careers"),
+    ("Adobe India", "https://careers.adobe.com/us/en/search-results?keywords=&location=India", "Adobe Careers"),
+
+    # Indian Startups/Unicorns — REAL Lever/Greenhouse/ATS job board URLs
+    ("Flipkart", "https://www.flipkartcareers.com/#!/joblist", "Flipkart Careers"),
+    ("Swiggy", "https://careers.swiggy.com/#/careers?src=careers", "Swiggy Careers"),
+    ("Zomato", "https://www.zomato.com/careers#openings", "Zomato Careers"),
     ("Razorpay", "https://razorpay.com/jobs/", "Razorpay Careers"),
-    ("PhonePe", "https://www.phonepe.com/careers/", "PhonePe Careers"),
-    ("CRED", "https://cred.club/careers", "CRED Careers"),
-    ("Zerodha", "https://zerodha.tech/careers", "Zerodha Careers"),
-    ("Paytm", "https://paytm.com/careers", "Paytm Careers"),
-    ("LTIMindtree", "https://www.ltimindtree.com/careers/", "LTIMindtree Careers"),
-    ("Deloitte India", "https://www2.deloitte.com/in/en/careers/life-at-deloitte.html", "Deloitte Careers"),
-    ("PwC India", "https://www.pwc.in/careers.html", "PwC Careers"),
-    ("EY India", "https://www.ey.com/en_in/careers", "EY Careers"),
-    ("KPMG India", "https://kpmg.com/in/en/home/careers.html", "KPMG Careers"),
-    ("Jio Platforms", "https://careers.jio.com/", "Jio Careers"),
-    ("Airtel", "https://www.airtel.in/careers/", "Airtel Careers"),
-    ("Ola Cabs", "https://www.olacabs.com/careers", "Ola Careers"),
-    ("Meesho", "https://meesho.io/careers", "Meesho Careers"),
-    ("InMobi", "https://www.inmobi.com/company/careers/", "InMobi Careers"),
-    ("Zoho Corporation", "https://www.zoho.com/careers/", "Zoho Careers"),
-    ("Freshworks", "https://www.freshworks.com/company/careers/", "Freshworks Careers"),
-    ("Postman", "https://www.postman.com/careers/", "Postman Careers"),
-    ("BrowserStack", "https://www.browserstack.com/careers", "BrowserStack Careers"),
-    ("Pine Labs", "https://www.pinelabs.com/careers", "Pine Labs Careers"),
-    ("MakeMyTrip", "https://careers.makemytrip.com/", "MakeMyTrip Careers"),
-    ("Urban Company", "https://careers.urbancompany.com/", "Urban Company Careers"),
-    ("Delhivery", "https://www.delhivery.com/careers", "Delhivery Careers"),
-    ("Nykaa", "https://www.nykaa.com/careers", "Nykaa Careers"),
-    ("Lenskart", "https://www.lenskart.com/careers", "Lenskart Careers"),
-    ("Cars24", "https://www.cars24.com/careers", "Cars24 Careers"),
-    ("PolicyBazaar", "https://www.policybazaar.com/careers", "PolicyBazaar Careers"),
-    ("Groww", "https://groww.in/careers", "Groww Careers"),
-    ("Upstox", "https://upstox.com/careers", "Upstox Careers"),
-    ("Unacademy", "https://unacademy.com/careers", "Unacademy Careers"),
-    ("UpGrad", "https://upgrad.com/careers", "UpGrad Careers"),
-    ("Blinkit", "https://blinkit.com/careers", "Blinkit Careers"),
-    ("Zepto", "https://www.zepto.co/careers", "Zepto Careers"),
-    ("Rapido", "https://www.rapido.bike/careers", "Rapido Careers"),
-    ("ShareChat", "https://careers.sharechat.com/", "ShareChat Careers"),
-    ("Dunzo", "https://www.dunzo.com/careers", "Dunzo Careers"),
-    ("Darwinbox", "https://darwinbox.com/about-us/careers", "Darwinbox Careers"),
-    ("Leadsquared", "https://www.leadsquared.com/careers/", "Leadsquared Careers"),
-    ("Browserstack", "https://www.browserstack.com/careers", "BrowserStack Careers"),
-    ("Chargebee", "https://www.chargebee.com/company/careers/", "Chargebee Careers"),
-    ("Druva", "https://www.druva.com/company/careers/", "Druva Careers"),
-    ("Icertis", "https://www.icertis.com/company/careers/", "Icertis Careers"),
-    ("Pubmatic", "https://pubmatic.com/company/careers/", "Pubmatic Careers"),
-    ("Mindtree", "https://www.ltimindtree.com/careers/", "Mindtree Careers"),
-    ("Mphasis", "https://careers.mphasis.com/", "Mphasis Careers"),
-    ("Oracle India", "https://careers.oracle.com/jobs/#en/sites/jobsearch/jobs?location=India", "Oracle Careers"),
-    ("SAP India", "https://jobs.sap.com/search/?q=india", "SAP Careers"),
-    ("IBM India", "https://www.ibm.com/employment/in-en/", "IBM Careers"),
-    ("Salesforce India", "https://salesforce.wd12.myworkdayjobs.com/en-US/External_Career_Site", "Salesforce Careers"),
-    ("Adobe India", "https://careers.adobe.com/us/en/india", "Adobe Careers"),
-    ("Qualcomm India", "https://www.qualcomm.com/company/careers", "Qualcomm Careers"),
-    ("Nvidia India", "https://www.nvidia.com/en-in/about-nvidia/careers/", "Nvidia Careers"),
-    ("Atlassian India", "https://www.atlassian.com/company/careers", "Atlassian Careers"),
-    ("Twilio India", "https://www.twilio.com/en-us/company/jobs", "Twilio Careers"),
-    ("Shopify India", "https://www.shopify.com/careers", "Shopify Careers"),
-    ("Stripe India", "https://stripe.com/jobs", "Stripe Careers"),
-    ("Uber India", "https://www.uber.com/in/en/about/jobs/", "Uber Careers"),
-    ("Airbnb India", "https://careers.airbnb.com/", "Airbnb Careers"),
-    ("LinkedIn India", "https://careers.linkedin.com/", "LinkedIn Careers"),
-    ("Bytedance India", "https://jobs.bytedance.com/en/", "ByteDance Careers"),
-    ("WazirX", "https://wazirx.com/careers", "WazirX Careers"),
-    ("CoinDCX", "https://coindcx.com/careers", "CoinDCX Careers"),
-    ("Oyo India", "https://www.oyorooms.com/careers", "OYO Careers"),
-    ("Vedantu", "https://www.vedantu.com/careers", "Vedantu Careers"),
-    ("Byju's", "https://byjus.com/careers/", "Byju's Careers"),
-    ("Simplilearn", "https://www.simplilearn.com/company/careers", "Simplilearn Careers"),
-    ("Scaler Academy", "https://www.scaler.com/company/careers/", "Scaler Careers"),
+    ("PhonePe", "https://www.phonepe.com/careers/openings/", "PhonePe Careers"),
+    ("CRED", "https://careers.cred.club/openings", "CRED Careers"),
+    ("Zerodha", "https://zerodha.com/careers/#openings", "Zerodha Careers"),
+    ("Paytm", "https://jobs.lever.co/paytm", "Paytm Lever Jobs"),
+    ("Meesho", "https://meesho.io/careers#openPositions", "Meesho Careers"),
+    ("Groww", "https://groww.in/careers#openings", "Groww Careers"),
+
+    # More Indian Unicorns/Scale-ups
+    ("Freshworks", "https://www.freshworks.com/company/careers/jobs/", "Freshworks Careers"),
+    ("Zoho Corporation", "https://www.zoho.com/careers/jobs.html", "Zoho Careers"),
+    ("Postman", "https://www.postman.com/company/careers/open-positions/", "Postman Careers"),
+    ("BrowserStack", "https://www.browserstack.com/careers#openings", "BrowserStack Careers"),
+    ("InMobi", "https://www.inmobi.com/company/careers/openings/", "InMobi Careers"),
+    ("Darwinbox", "https://darwinbox.com/about-us/careers#openings", "Darwinbox Careers"),
+    ("Chargebee", "https://www.chargebee.com/company/careers/openings/", "Chargebee Careers"),
+    ("Druva", "https://www.druva.com/company/careers/openings/", "Druva Careers"),
+    ("Lenskart", "https://jobs.lever.co/lenskart", "Lenskart Lever Jobs"),
+    ("Urban Company", "https://careers.urbancompany.com/openings", "Urban Company Careers"),
+
+    # Consulting/Big4
+    ("Deloitte India", "https://apply.deloitte.com/careers/SearchJobs/?524=2893&524_format=1482&listFilterMode=1", "Deloitte India"),
+    ("PwC India", "https://www.pwc.in/careers/experienced-hire.html", "PwC India"),
+    ("EY India", "https://careers.ey.com/ey/search/?q=&locationsearch=India", "EY India"),
+    ("KPMG India", "https://kpmg.com/in/en/home/careers/search-jobs.html", "KPMG India"),
+
+    # Telecom/Platforms
+    ("Jio Platforms", "https://careers.jio.com/search-jobs", "Jio Careers"),
+    ("Airtel", "https://www.airtel.in/careers/search-jobs", "Airtel Careers"),
+
+    # More Startups
+    ("Blinkit", "https://jobs.lever.co/blinkit", "Blinkit Lever Jobs"),
+    ("Zepto", "https://boards.greenhouse.io/zepto", "Zepto Greenhouse Jobs"),
+    ("Rapido", "https://jobs.lever.co/rapido", "Rapido Lever Jobs"),
+    ("ShareChat", "https://boards.greenhouse.io/sharechat", "ShareChat Greenhouse"),
+    ("Ola Cabs", "https://jobs.lever.co/olacabs", "Ola Lever Jobs"),
+    ("MakeMyTrip", "https://careers.makemytrip.com/jobs", "MakeMyTrip Careers"),
+    ("PolicyBazaar", "https://jobs.lever.co/policybazaar", "PolicyBazaar Lever Jobs"),
+    ("Cars24", "https://jobs.lever.co/cars24", "Cars24 Lever Jobs"),
+    ("Nykaa", "https://jobs.lever.co/nykaa", "Nykaa Lever Jobs"),
+    ("Delhivery", "https://boards.greenhouse.io/delhivery", "Delhivery Greenhouse"),
+    ("Upstox", "https://boards.greenhouse.io/upstox", "Upstox Greenhouse"),
+
+    # More MNCs in India
+    ("Qualcomm India", "https://careers.qualcomm.com/careers?location=India&pid=&domain=&sort_by=relevance", "Qualcomm Careers"),
+    ("Nvidia India", "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite?Location_Country=bc33aa3152ec42d4995f4791a106ed09", "Nvidia India"),
+    ("Atlassian India", "https://www.atlassian.com/company/careers/all-jobs?location=India", "Atlassian India"),
+    ("Uber India", "https://www.uber.com/in/en/careers/list/?query=&location=IND", "Uber India"),
+    ("Stripe India", "https://stripe.com/jobs/search?office_locations=Asia+Pacific--Bangalore", "Stripe India"),
+    ("LinkedIn India", "https://www.linkedin.com/jobs/linkedin-jobs-india/", "LinkedIn India Jobs"),
+    ("Intuit India", "https://jobs.intuit.com/search-jobs/India", "Intuit India"),
+    ("ServiceNow India", "https://careers.servicenow.com/careers/jobs?page=1&location=India", "ServiceNow India"),
+    ("VMware India", "https://careers.vmware.com/main/jobs?location=India", "VMware India"),
+    ("Cisco India", "https://jobs.cisco.com/jobs/SearchJobs/?21180=%5B164%5D&21180_format=6035&listFilterMode=1", "Cisco India"),
+    ("PayPal India", "https://paypal.eightfold.ai/careers?location=India", "PayPal India"),
+    ("Goldman Sachs India", "https://www.goldmansachs.com/careers/students/programs/india/", "Goldman Sachs India"),
+    ("JP Morgan India", "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CandidateExperience/requisitions?location=India", "JP Morgan India"),
+    ("Morgan Stanley India", "https://morganstanley.tal.net/vx/lang-en-GB/mobile-0/brand-2/candidate/jobboard/vacancy/2/adv/?ftq=India", "Morgan Stanley India"),
+    ("Deutsche Bank India", "https://careers.db.com/search-our-roles?search=India", "Deutsche Bank India"),
+    ("Walmart Global Tech India", "https://careers.walmart.com/results?q=&page=1&sort=relevance&expand=brand,department,type,rate&brand=Walmart%20Global%20Tech", "Walmart Tech India"),
+    ("Target India", "https://india.target.com/careers#jobs", "Target India Careers"),
+    ("Grab India", "https://grab.careers/jobs/?search=India", "Grab Careers"),
 ]
 
 LOCATIONS_INDIA = [
@@ -363,8 +372,8 @@ def generate_large_dataset(target: int = 9000) -> list:
 
         if dedup_key not in seen_keys:
             seen_keys.add(dedup_key)
-            req_id = 400000 + len(jobs)
-            apply_link = f"{company_url}?req_id={req_id}&batch={cycle.replace(' ', '_')}"
+            # Use the company's REAL job search/apply URL directly (no fake req_id)
+            apply_link = company_url
 
             jobs.append({
                 "title": full_title,
@@ -372,9 +381,9 @@ def generate_large_dataset(target: int = 9000) -> list:
                 "location": loc,
                 "job_type": jtype,
                 "description": (
-                    f"{desc} Join {company_name}'s {domain} team in {loc}. "
-                    f"Hiring cycle: {cycle}. We offer competitive CTC, ESOPs for senior roles, "
-                    f"health insurance, INR 50k/year learning budget, and flexible hybrid work."
+                    f"{desc} Apply directly on {company_name}'s official careers page. "
+                    f"Location: {loc}. {domain} division. "
+                    f"Click 'Apply Now' to search for '{title_tpl}' on {company_name}'s career portal."
                 ),
                 "primary_source": source_name,
                 "salary_range": salary,
