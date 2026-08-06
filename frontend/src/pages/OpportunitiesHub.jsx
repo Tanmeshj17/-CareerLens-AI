@@ -208,15 +208,15 @@ const JobCard = memo(({ job, navigate, savedIds, savingId, handleSave, handleApp
               {savingId === job.id ? 'progress_activity' : 'bookmark'}
             </span>
           </Button>
-          {/* Phase 11.3.8: Don't show Apply button for CLOSED or INVALID jobs */}
-          {job.status === 'CLOSED' || job.status === 'INVALID' ? (
+          {/* Don't show active Apply button for CLOSED, EXPIRED, or INVALID jobs */}
+          {job.status === 'CLOSED' || job.status === 'INVALID' || job.lifecycle_status === 'CLOSED' || job.lifecycle_status === 'EXPIRED' || job.lifecycle_status === 'INVALID_LINK' || job.apply_url_status === 'INVALID_LINK' ? (
             <Button
               variant="secondary"
               disabled
               className="w-full md:w-auto flex items-center justify-center gap-2 opacity-60"
             >
               <span className="material-symbols-outlined text-[16px]">block</span>
-              {job.status === 'CLOSED' ? 'Position Closed' : 'Link Invalid'}
+              {job.lifecycle_status === 'EXPIRED' ? 'Expired' : (job.status === 'CLOSED' || job.lifecycle_status === 'CLOSED' ? 'Position Closed' : 'Link Invalid')}
             </Button>
           ) : job.apply_url ? (
             <Button

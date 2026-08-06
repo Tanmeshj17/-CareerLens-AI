@@ -1,213 +1,315 @@
+"""
+CareerLens AI — Comprehensive Link & Resource Validator
+========================================================
+Audits, validates, and classifies:
+  1. Opportunities: ACTIVE | STALE | CLOSED | EXPIRED | INVALID_LINK
+  2. Learning Resources: VERIFIED | INVALID_RESOURCE
+
+Detects HTTP status codes (404, 410, 403, 429) & in-page dead strings:
+  - "video isn't available" / "video unavailable" / "this video has been removed" / "private video"
+  - "page not found" / "we were not able to find the page"
+  - "no longer accepting applications" / "job expired" / "applications closed" / "position no longer available"
+"""
+
 import asyncio
 import aiohttp
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
 from urllib.parse import urlparse
 
-logger = logging.getLogger("link_validator")
+logger = logging.getLogger("careerlens.link_validator")
 
-# Keywords that strongly indicate a job is closed
-CLOSED_KEYWORDS = [
-    re.compile(r"applications (are )?closed", re.IGNORECASE),
-    re.compile(r"job (has )?expired", re.IGNORECASE),
-    re.compile(r"position is no longer available", re.IGNORECASE),
-    re.compile(r"no longer accepting applications", re.IGNORECASE),
-    re.compile(r"position (has been )?filled", re.IGNORECASE),
-    re.compile(r"this job is no longer active", re.IGNORECASE)
+# Trusted corporate/platform domains that block automated scrapers
+# If these timeout or return 403/429, treat as VALID (bot protection)
+TRUSTED_DOMAINS = [
+    # Job Board Platforms (Lever, Greenhouse, Workday, Oracle, etc.)
+    "lever.co", "greenhouse.io", "workday.com", "myworkdayjobs.com",
+    "eightfold.ai", "oraclecloud.com", "tal.net", "smartrecruiters.com",
+    # Indian IT Services
+    "tcs.com", "ibegin.tcs.com", "tcsionhub.in", "infosys.com",
+    "wipro.com", "hcltech.com", "techmahindra.com", "cognizant.com",
+    "capgemini.com", "accenture.com", "ltimindtree.com", "mphasis.com",
+    # MNCs
+    "google.com", "microsoft.com", "amazon.jobs", "apple.com",
+    "metacareers.com", "meta.com", "oracle.com", "sap.com",
+    "ibm.com", "salesforce.com", "adobe.com", "qualcomm.com",
+    "nvidia.com", "atlassian.com", "uber.com", "stripe.com",
+    "linkedin.com", "intuit.com", "servicenow.com", "vmware.com",
+    "cisco.com", "paypal.com", "bytedance.com",
+    # Indian Startups/Unicorns
+    "flipkartcareers.com", "swiggy.com", "zomato.com", "razorpay.com",
+    "phonepe.com", "cred.club", "zerodha.com", "paytm.com",
+    "meesho.io", "groww.in", "freshworks.com", "zoho.com",
+    "postman.com", "browserstack.com", "inmobi.com", "darwinbox.com",
+    "chargebee.com", "druva.com", "lenskart.com", "urbancompany.com",
+    # Consulting/Banking
+    "deloitte.com", "pwc.in", "ey.com", "kpmg.com",
+    "goldmansachs.com", "jpmorgan.com", "morganstanley.com",
+    "db.com", "walmart.com", "target.com", "grab.careers",
+    # Telecom / Others
+    "jio.com", "airtel.in", "makemytrip.com",
+    # Learning Platforms
+    "youtube.com", "youtu.be", "github.com", "freecodecamp.org",
+    "nptel.ac.in", "swayam.gov.in", "hackerrank.com",
+    "coursera.org", "skillbuilder.aws", "learn.microsoft.com",
+    "learndigital.withgoogle.com",
 ]
 
+# Regex patterns that indicate a job is CLOSED or EXPIRED
+CLOSED_JOB_PATTERNS = [
+    re.compile(r"applications (are )?closed", re.IGNORECASE),
+    re.compile(r"job (has )?expired", re.IGNORECASE),
+    re.compile(r"position (is )?no longer available", re.IGNORECASE),
+    re.compile(r"no longer accepting applications", re.IGNORECASE),
+    re.compile(r"position (has been )?filled", re.IGNORECASE),
+    re.compile(r"this job is no longer active", re.IGNORECASE),
+    re.compile(r"requisition (is )?closed", re.IGNORECASE),
+    re.compile(r"posting (has )?expired", re.IGNORECASE),
+]
+
+# Regex patterns that indicate a learning resource / video is BROKEN
+INVALID_RESOURCE_PATTERNS = [
+    re.compile(r"this video isn['’]t available (anymore)?", re.IGNORECASE),
+    re.compile(r"video unavailable", re.IGNORECASE),
+    re.compile(r"this video has been removed", re.IGNORECASE),
+    re.compile(r"private video", re.IGNORECASE),
+    re.compile(r"page not found", re.IGNORECASE),
+    re.compile(r"we were not able to find the page", re.IGNORECASE),
+    re.compile(r"404 - page not found", re.IGNORECASE),
+    re.compile(r"course not found", re.IGNORECASE),
+]
+
+
 class ValidationResult:
-    def __init__(self, is_valid: bool, status: str, final_url: str, is_closed: bool = False, error: str = None):
+    def __init__(
+        self,
+        is_valid: bool,
+        classification: str,
+        final_url: str,
+        is_closed: bool = False,
+        error: Optional[str] = None
+    ):
         self.is_valid = is_valid
-        self.status = status
+        self.classification = classification  # ACTIVE | STALE | CLOSED | EXPIRED | INVALID_LINK | INVALID_RESOURCE
         self.final_url = final_url
         self.is_closed = is_closed
         self.error = error
 
-async def _fetch_url(session: aiohttp.ClientSession, url: str, retries: int = 2) -> ValidationResult:
-    for attempt in range(retries + 1):
-        try:
-            # 1. Try HEAD first
-            try:
-                async with session.head(url, allow_redirects=True, timeout=10) as resp:
-                    if resp.status in (404, 410):
-                        return ValidationResult(False, "BROKEN", str(resp.url), error=f"HTTP {resp.status}")
-                    if resp.status == 403 or resp.status == 429:
-                        # Cloudflare or rate limit - fallback to GET if possible, or mark as blocked
-                        pass
-                    elif resp.status < 400:
-                        # Success, but we can't read text for closed keywords
-                        final_url = str(resp.url)
-                        return ValidationResult(True, "VERIFIED_DIRECT", final_url)
-            except Exception:
-                pass # Fallback to GET
 
-            # 2. Try GET to read body for 'closed' keywords
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-            async with session.get(url, allow_redirects=True, timeout=15, headers=headers) as resp:
-                final_url = str(resp.url)
-                
-                if resp.status in (404, 410):
-                    return ValidationResult(False, "BROKEN", final_url, error=f"HTTP {resp.status}")
-                
-                if resp.status >= 500:
-                    if attempt < retries:
-                        await asyncio.sleep(2 ** attempt)
-                        continue
-                    return ValidationResult(False, "UNKNOWN", final_url, error=f"HTTP {resp.status}")
-                    
-                if resp.status in (403, 429):
-                    # Probably bot protection.
-                    return ValidationResult(True, "BROWSER_VERIFICATION_REQUIRED", final_url)
-                    
-                # Read text to check for closed keywords
-                try:
-                    text = await resp.text()
-                    for keyword_re in CLOSED_KEYWORDS:
-                        if keyword_re.search(text):
-                            return ValidationResult(False, "CLOSED", final_url, is_closed=True)
-                except Exception:
-                    pass # If can't read text, assume valid if status < 400
-                    
-                return ValidationResult(True, "VERIFIED_DIRECT", final_url)
+async def _fetch_url(session: aiohttp.ClientSession, url: str, is_resource: bool = False) -> ValidationResult:
+    """Fetch URL and classify its status based on HTTP code and body text."""
+    if not url or not url.startswith(("http://", "https://")):
+        cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+        return ValidationResult(False, cls, url or "", error="Malformed URL")
 
-        except asyncio.TimeoutError:
-            if attempt < retries:
-                await asyncio.sleep(2 ** attempt)
-                continue
-            return ValidationResult(False, "UNKNOWN", url, error="Timeout")
-        except Exception as e:
-            if attempt < retries:
-                await asyncio.sleep(2 ** attempt)
-                continue
-            return ValidationResult(False, "BROKEN", url, error=str(e))
-    return ValidationResult(False, "UNKNOWN", url, error="Max retries reached")
+    # Quick check for legacy fake req_id URLs
+    if "?req_id=" in url:
+        clean_url = url.split("?req_id=")[0]
+    else:
+        clean_url = url
 
-async def validate_links_async(urls: List[str], concurrency: int = 20) -> List[ValidationResult]:
-    connector = aiohttp.TCPConnector(limit=concurrency, ssl=False)
-    async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = [_fetch_url(session, url) for url in urls]
-        return await asyncio.gather(*tasks)
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
 
-def run_tier_validation(db):
-    """
-    Tiered strategy:
-    0-3 days: 6 hours
-    4-7 days: 12 hours
-    8-30 days: 24 hours
-    >30 days: archived (handled separately)
-    """
-    from app.models import Opportunity
-    from datetime import datetime, timedelta
-    
-    now = datetime.utcnow()
-    
-    # Tier 1: 0-3 days, validated > 6h ago
-    tier1_limit_time = now - timedelta(hours=6)
-    tier1_age_limit = now - timedelta(days=3)
-    
-    # Tier 2: 4-7 days, validated > 12h ago
-    tier2_limit_time = now - timedelta(hours=12)
-    tier2_age_limit = now - timedelta(days=7)
-    
-    # Tier 3: 8-30 days, validated > 24h ago
-    tier3_limit_time = now - timedelta(hours=24)
-    tier3_age_limit = now - timedelta(days=30)
-    
-    # Find records to validate
-    # This is a simplified logic, we should ideally fetch records falling in each bucket
-    
-    # A generic query that fetches any active record needing validation based on the tier
-    # Using SQLAlchemy OR logic
-    from sqlalchemy import or_, and_
-    
-    # Age is (now - first_seen)
-    opps = db.query(Opportunity).filter(
-        Opportunity.status == "ACTIVE",
-        Opportunity.apply_url.isnot(None),
-        or_(
-            # Tier 1
-            and_(Opportunity.first_seen >= tier1_age_limit, 
-                 or_(Opportunity.last_url_verified_at < tier1_limit_time, Opportunity.last_url_verified_at.is_(None))),
-            # Tier 2
-            and_(Opportunity.first_seen < tier1_age_limit, Opportunity.first_seen >= tier2_age_limit, 
-                 or_(Opportunity.last_url_verified_at < tier2_limit_time, Opportunity.last_url_verified_at.is_(None))),
-            # Tier 3
-            and_(Opportunity.first_seen < tier2_age_limit, Opportunity.first_seen >= tier3_age_limit, 
-                 or_(Opportunity.last_url_verified_at < tier3_limit_time, Opportunity.last_url_verified_at.is_(None)))
-        )
-    ).limit(500).all()
-    
-    if not opps:
-        return 0
-        
-    urls = [opp.apply_url for opp in opps]
-    results = asyncio.run(validate_links_async(urls))
-    
-    for opp, result in zip(opps, results):
-        opp.last_url_verified_at = now
-        opp.last_verified_at = now
-        opp.apply_url_status = result.status
-        opp.verified_apply_url = result.final_url
-        
-        if result.is_closed:
-            opp.status = "CLOSED"
-            opp.lifecycle_status = "CLOSED"
-        elif not result.is_valid and result.status == "BROKEN":
-            # For simplicity, if it's broken, mark as INVALID.
-            opp.status = "INVALID"
-            opp.lifecycle_status = "INVALID"
-            
-    db.commit()
-    return len(opps)
-
-async def _fetch_resource_url(session: aiohttp.ClientSession, url: str) -> ValidationResult:
     try:
-        async with session.get(url, allow_redirects=True, timeout=15) as resp:
+        async with session.get(clean_url, allow_redirects=True, timeout=12, headers=headers) as resp:
             final_url = str(resp.url)
-            if resp.status in (404, 410, 403):
-                return ValidationResult(False, "INVALID_RESOURCE", final_url, error=f"HTTP {resp.status}")
-            
-            # Simple check for youtube video unavailable
-            if "youtube.com" in url or "youtu.be" in url:
-                try:
-                    text = await resp.text()
-                    if "Video unavailable" in text or "Private video" in text:
-                        return ValidationResult(False, "INVALID_RESOURCE", final_url, error="Video Unavailable")
-                except Exception:
-                    pass
-            
-            return ValidationResult(True, "VERIFIED", final_url)
-    except Exception as e:
-        return ValidationResult(False, "INVALID_RESOURCE", url, error=str(e))
+            status_code = resp.status
 
-async def validate_resources_async(urls: List[str], concurrency: int = 10) -> List[ValidationResult]:
+            if status_code in (403, 429):
+                # Bot protection / Cloudflare challenge: URL exists, treat as valid active URL
+                cls = "VERIFIED" if is_resource else "ACTIVE"
+                return ValidationResult(True, cls, final_url)
+
+            if status_code in (404, 410):
+                cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+                return ValidationResult(False, cls, final_url, error=f"HTTP {status_code}")
+
+            if status_code >= 500:
+                cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+                return ValidationResult(False, cls, final_url, error=f"HTTP {status_code}")
+
+            # If HTTP 200/302, check body text for dead resource / closed job keywords
+            try:
+                content_type = resp.headers.get("Content-Type", "")
+                if "text/html" in content_type or "text/plain" in content_type:
+                    body_text = await resp.text()
+
+                    if is_resource:
+                        for pat in INVALID_RESOURCE_PATTERNS:
+                            if pat.search(body_text):
+                                return ValidationResult(False, "INVALID_RESOURCE", final_url, error="Broken resource text detected")
+                    else:
+                        for pat in CLOSED_JOB_PATTERNS:
+                            if pat.search(body_text):
+                                return ValidationResult(False, "CLOSED", final_url, is_closed=True, error="Closed job text detected")
+            except Exception:
+                pass  # If reading body fails, rely on status code
+
+            cls = "VERIFIED" if is_resource else "ACTIVE"
+            return ValidationResult(True, cls, final_url)
+
+    except asyncio.TimeoutError:
+        # Timeout — check if it's a known trusted domain (bot protection)
+        parsed = urlparse(clean_url)
+        domain = parsed.netloc.lower()
+        if any(d in domain for d in TRUSTED_DOMAINS):
+            cls = "VERIFIED" if is_resource else "ACTIVE"
+            return ValidationResult(True, cls, clean_url)
+        cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+        return ValidationResult(False, cls, clean_url, error="Connection Timeout")
+    except Exception as e:
+        # Connection error — check if it's a known trusted domain
+        parsed = urlparse(clean_url)
+        domain = parsed.netloc.lower()
+        if any(d in domain for d in TRUSTED_DOMAINS):
+            cls = "VERIFIED" if is_resource else "ACTIVE"
+            return ValidationResult(True, cls, clean_url)
+        cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+        return ValidationResult(False, cls, clean_url, error=str(e))
+
+
+async def validate_urls_async(urls: List[str], is_resource: bool = False, concurrency: int = 15) -> List[ValidationResult]:
+    """Validate a batch of URLs asynchronously."""
     connector = aiohttp.TCPConnector(limit=concurrency, ssl=False)
-    async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = [_fetch_resource_url(session, url) for url in urls]
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+        tasks = [_fetch_url(session, url, is_resource=is_resource) for url in urls]
         return await asyncio.gather(*tasks)
 
-def run_learning_validation(db):
-    """Validates learning resources and marks broken ones as INVALID_RESOURCE"""
-    from app.models import LearningResource
-    
-    resources = db.query(LearningResource).filter(
-        LearningResource.status == "VERIFIED"
-    ).limit(100).all()
-    
-    if not resources:
-        return 0
-        
-    urls = [res.url for res in resources]
-    results = asyncio.run(validate_resources_async(urls))
-    
-    for res, result in zip(resources, results):
-        if not result.is_valid:
-            res.status = "INVALID_RESOURCE"
-            
+
+def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
+    """
+    Complete audit and cleanup task:
+    1. Audits all Opportunities & Learning Resources in PostgreSQL
+    2. Sanitizes legacy ?req_id= query strings
+    3. Classifies invalid/closed/expired/stale records
+    4. Updates DB statuses
+    5. Returns statistics dictionary
+    """
+    try:
+        from app import models
+    except ImportError:
+        from backend.app import models
+
+    now = datetime.utcnow()
+    expired_cutoff = now - timedelta(days=45)
+    stale_cutoff = now - timedelta(days=30)
+
+    stats = {
+        "audited_at": now.isoformat(),
+        "total_jobs_audited": 0,
+        "jobs_invalid_link": 0,
+        "jobs_closed": 0,
+        "jobs_expired": 0,
+        "jobs_stale": 0,
+        "jobs_active": 0,
+        "legacy_urls_sanitized": 0,
+        "total_resources_audited": 0,
+        "resources_invalid": 0,
+        "resources_verified": 0,
+        "noisy_sources": {}
+    }
+
+    # Step 1: Sanitize legacy ?req_id= URLs across DB
+    bad_urls = db.query(models.Opportunity).filter(models.Opportunity.apply_url.like("%?req_id=%")).all()
+    if bad_urls:
+        stats["legacy_urls_sanitized"] = len(bad_urls)
+        for row in bad_urls:
+            row.apply_url = row.apply_url.split("?req_id=")[0]
+        db.commit()
+
+    # Step 2: Classify Expired jobs (>45 days old)
+    expired_jobs = db.query(models.Opportunity).filter(
+        models.Opportunity.posted_date < expired_cutoff,
+        models.Opportunity.is_active == True
+    ).all()
+    for j in expired_jobs:
+        j.lifecycle_status = "EXPIRED"
+        j.is_active = False
+        j.status = "Expired"
+        stats["jobs_expired"] += 1
     db.commit()
-    return len(resources)
+
+    # Step 3: Classify Stale jobs (30-45 days old)
+    stale_jobs = db.query(models.Opportunity).filter(
+        models.Opportunity.posted_date >= expired_cutoff,
+        models.Opportunity.posted_date < stale_cutoff,
+        models.Opportunity.lifecycle_status.in_(["ACTIVE", "NEW", None])
+    ).all()
+    for j in stale_jobs:
+        j.lifecycle_status = "STALE"
+        stats["jobs_stale"] += 1
+    db.commit()
+
+    # Step 4: Audit & validate active jobs
+    active_jobs = db.query(models.Opportunity).filter(
+        models.Opportunity.is_active == True,
+        models.Opportunity.lifecycle_status.in_(["ACTIVE", "NEW", None])
+    ).limit(500).all()
+
+    stats["total_jobs_audited"] = len(active_jobs)
+
+    if active_jobs:
+        urls = [j.apply_url for j in active_jobs]
+        results = asyncio.run(validate_urls_async(urls, is_resource=False))
+
+        for job, res in zip(active_jobs, results):
+            job.last_url_verified_at = now
+            job.last_verified_at = now
+
+            if not res.is_valid:
+                src = job.primary_source or "Unknown"
+                stats["noisy_sources"][src] = stats["noisy_sources"].get(src, 0) + 1
+
+                if res.classification == "CLOSED" or res.is_closed:
+                    job.lifecycle_status = "CLOSED"
+                    job.apply_url_status = "CLOSED"
+                    job.is_active = False
+                    job.status = "Closed"
+                    stats["jobs_closed"] += 1
+                else:
+                    job.lifecycle_status = "INVALID_LINK"
+                    job.apply_url_status = "INVALID_LINK"
+                    job.is_active = False
+                    job.status = "Invalid Link"
+                    stats["jobs_invalid_link"] += 1
+            else:
+                job.lifecycle_status = "ACTIVE"
+                job.apply_url_status = "VALID"
+                job.verified_apply_url = res.final_url
+                job.is_active = True
+                job.status = "Active"
+                stats["jobs_active"] += 1
+
+        db.commit()
+
+    # Step 5: Audit Learning Resources
+    resources = db.query(models.LearningResource).all()
+    stats["total_resources_audited"] = len(resources)
+
+    if resources:
+        res_urls = [r.url for r in resources]
+        res_results = asyncio.run(validate_urls_async(res_urls, is_resource=True))
+
+        for res, val in zip(resources, res_results):
+            if not val.is_valid or val.classification == "INVALID_RESOURCE":
+                res.status = "INVALID_RESOURCE"
+                res.availability_status = "INVALID"
+                stats["resources_invalid"] += 1
+            else:
+                res.status = "VERIFIED"
+                res.availability_status = "VERIFIED"
+                stats["resources_verified"] += 1
+
+        db.commit()
+
+    return stats

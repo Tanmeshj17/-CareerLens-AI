@@ -21,7 +21,11 @@ def get_base_active_query(db: Session):
         models.Opportunity.is_active == True,
         or_(
             models.Opportunity.lifecycle_status.in_(["NEW", "ACTIVE"]),
-            models.Opportunity.lifecycle_status.is_(None)  # include seeded/legacy rows with no lifecycle_status
+            models.Opportunity.lifecycle_status.is_(None)
+        ),
+        or_(
+            models.Opportunity.apply_url_status != "INVALID_LINK",
+            models.Opportunity.apply_url_status.is_(None)
         )
     )
 

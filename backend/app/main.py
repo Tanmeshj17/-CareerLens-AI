@@ -640,7 +640,6 @@ def startup_event():
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")
 
-
     # 3. Start embedded scheduler
     enable_scheduler = os.environ.get("ENABLE_SCHEDULER", "false").lower() == "true"
     if enable_scheduler:
@@ -652,6 +651,14 @@ def startup_event():
             logger.warning(f"Scheduler failed to start (non-fatal): {e}")
     else:
         logger.info("Scheduler NOT started in API process. Run `python worker.py` separately.")
+
+@app.post("/api/admin/audit-links")
+def audit_and_cleanup_links(db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin permissions required")
+    from app.link_validator import run_full_audit_and_cleanup
+    stats = run_full_audit_and_cleanup(db)
+    return {"message": "Audit and cleanup completed successfully", "stats": stats}
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -1687,7 +1694,14 @@ def read_resources(
     limit: int = 50,
     db: Session = Depends(database.get_db)
 ):
-    query = db.query(models.LearningResource)
+    # Only return VERIFIED learning resources (hide INVALID_RESOURCE entries by default)
+    query = db.query(models.LearningResource).filter(
+        models.LearningResource.status == "VERIFIED",
+        or_(
+            models.LearningResource.availability_status != "INVALID",
+            models.LearningResource.availability_status.is_(None)
+        )
+    )
     
     if q:
         search_filter = (

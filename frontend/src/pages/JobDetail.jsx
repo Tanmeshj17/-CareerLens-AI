@@ -147,12 +147,12 @@ export default function JobDetail() {
           </div>
           {/* Action Buttons */}
           <div className="flex gap-sm shrink-0 md:flex-col">
-            {/* Phase 11.3.8: Hide apply for CLOSED/INVALID */}
-            {job.status === 'CLOSED' || job.status === 'INVALID' ? (
+            {/* Phase 11.3.8: Disable apply button for CLOSED, EXPIRED, or INVALID jobs */}
+            {job.status === 'CLOSED' || job.status === 'INVALID' || job.lifecycle_status === 'CLOSED' || job.lifecycle_status === 'EXPIRED' || job.lifecycle_status === 'INVALID_LINK' || job.apply_url_status === 'INVALID_LINK' ? (
               <button disabled
                 className="px-xl py-sm bg-surface-container text-on-surface-variant rounded-lg text-sm font-bold font-[Geist] cursor-not-allowed flex items-center gap-2 opacity-60">
                 <span className="material-symbols-outlined text-[16px]">block</span>
-                {job.status === 'CLOSED' ? 'Position Closed' : 'Link Invalid'}
+                {job.lifecycle_status === 'EXPIRED' ? 'Expired' : (job.status === 'CLOSED' || job.lifecycle_status === 'CLOSED' ? 'Position Closed' : 'Link Invalid')}
               </button>
             ) : job.apply_url ? (
               <button onClick={handleApply}
