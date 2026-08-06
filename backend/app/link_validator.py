@@ -21,42 +21,6 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger("careerlens.link_validator")
 
-# Trusted corporate/platform domains that block automated scrapers
-# If these timeout or return 403/429, treat as VALID (bot protection)
-TRUSTED_DOMAINS = [
-    # Job Board Platforms (Lever, Greenhouse, Workday, Oracle, etc.)
-    "lever.co", "greenhouse.io", "workday.com", "myworkdayjobs.com",
-    "eightfold.ai", "oraclecloud.com", "tal.net", "smartrecruiters.com",
-    # Indian IT Services
-    "tcs.com", "ibegin.tcs.com", "tcsionhub.in", "infosys.com",
-    "wipro.com", "hcltech.com", "techmahindra.com", "cognizant.com",
-    "capgemini.com", "accenture.com", "ltimindtree.com", "mphasis.com",
-    # MNCs
-    "google.com", "microsoft.com", "amazon.jobs", "apple.com",
-    "metacareers.com", "meta.com", "oracle.com", "sap.com",
-    "ibm.com", "salesforce.com", "adobe.com", "qualcomm.com",
-    "nvidia.com", "atlassian.com", "uber.com", "stripe.com",
-    "linkedin.com", "intuit.com", "servicenow.com", "vmware.com",
-    "cisco.com", "paypal.com", "bytedance.com",
-    # Indian Startups/Unicorns
-    "flipkartcareers.com", "swiggy.com", "zomato.com", "razorpay.com",
-    "phonepe.com", "cred.club", "zerodha.com", "paytm.com",
-    "meesho.io", "groww.in", "freshworks.com", "zoho.com",
-    "postman.com", "browserstack.com", "inmobi.com", "darwinbox.com",
-    "chargebee.com", "druva.com", "lenskart.com", "urbancompany.com",
-    # Consulting/Banking
-    "deloitte.com", "pwc.in", "ey.com", "kpmg.com",
-    "goldmansachs.com", "jpmorgan.com", "morganstanley.com",
-    "db.com", "walmart.com", "target.com", "grab.careers",
-    # Telecom / Others
-    "jio.com", "airtel.in", "makemytrip.com",
-    # Learning Platforms
-    "youtube.com", "youtu.be", "github.com", "freecodecamp.org",
-    "nptel.ac.in", "swayam.gov.in", "hackerrank.com",
-    "coursera.org", "skillbuilder.aws", "learn.microsoft.com",
-    "learndigital.withgoogle.com",
-]
-
 # Regex patterns that indicate a job is CLOSED or EXPIRED
 CLOSED_JOB_PATTERNS = [
     re.compile(r"applications (are )?closed", re.IGNORECASE),
@@ -158,23 +122,62 @@ async def _fetch_url(session: aiohttp.ClientSession, url: str, is_resource: bool
             return ValidationResult(True, cls, final_url)
 
     except asyncio.TimeoutError:
-        # Timeout — check if it's a known trusted domain (bot protection)
+        # Timeout on GET — check if it's a known trusted domain before marking invalid
         parsed = urlparse(clean_url)
         domain = parsed.netloc.lower()
-        if any(d in domain for d in TRUSTED_DOMAINS):
+        if _is_trusted_domain(domain):
             cls = "VERIFIED" if is_resource else "ACTIVE"
             return ValidationResult(True, cls, clean_url)
         cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
         return ValidationResult(False, cls, clean_url, error="Connection Timeout")
     except Exception as e:
-        # Connection error — check if it's a known trusted domain
         parsed = urlparse(clean_url)
         domain = parsed.netloc.lower()
-        if any(d in domain for d in TRUSTED_DOMAINS):
+        if _is_trusted_domain(domain):
             cls = "VERIFIED" if is_resource else "ACTIVE"
             return ValidationResult(True, cls, clean_url)
         cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
         return ValidationResult(False, cls, clean_url, error=str(e))
+
+
+# Trusted domains — known corporate career portals and learning platforms that may block bots
+TRUSTED_DOMAINS = [
+    # Major tech companies
+    "google.com", "microsoft.com", "amazon.jobs", "apple.com", "meta.com", "metacareers.com",
+    "oracle.com", "sap.com", "ibm.com", "salesforce.com", "adobe.com", "qualcomm.com",
+    "nvidia.com", "atlassian.com", "uber.com", "stripe.com", "linkedin.com", "intuit.com",
+    "servicenow.com", "vmware.com", "cisco.com", "paypal.com", "bytedance.com",
+    # Indian IT/Services
+    "tcs.com", "ibegin.tcs.com", "infosys.com", "wipro.com", "hcltech.com",
+    "techmahindra.com", "cognizant.com", "capgemini.com", "accenture.com",
+    "ltimindtree.com", "mphasis.com",
+    # Indian Startups/Unicorns
+    "flipkartcareers.com", "swiggy.com", "zomato.com", "razorpay.com", "phonepe.com",
+    "cred.club", "zerodha.com", "meesho.io", "groww.in", "freshworks.com", "zoho.com",
+    "postman.com", "browserstack.com", "inmobi.com", "darwinbox.com", "chargebee.com",
+    "druva.com", "urbancompany.com", "makemytrip.com",
+    # Lever/Greenhouse ATS (used by startups)
+    "lever.co", "jobs.lever.co", "greenhouse.io", "boards.greenhouse.io",
+    # Consulting/Big4
+    "deloitte.com", "pwc.in", "ey.com", "kpmg.com",
+    # Telecom
+    "jio.com", "airtel.in",
+    # Finance
+    "goldmansachs.com", "jpmc.fa.oraclecloud.com", "morganstanley.tal.net", "db.com",
+    # Other MNCs
+    "walmart.com", "target.com", "grab.careers",
+    # Learning platforms
+    "youtube.com", "youtu.be", "github.com", "freecodecamp.org", "nptel.ac.in",
+    "swayam.gov.in", "hackerrank.com", "tcsionhub.in", "skillbuilder.aws",
+    "learn.microsoft.com", "coursera.org", "udemy.com",
+    # Workday / ATS
+    "myworkdayjobs.com", "eightfold.ai", "oraclecloud.com", "tal.net",
+]
+
+
+def _is_trusted_domain(domain: str) -> bool:
+    """Check if a domain belongs to a known trusted career portal or learning platform."""
+    return any(td in domain for td in TRUSTED_DOMAINS)
 
 
 async def validate_urls_async(urls: List[str], is_resource: bool = False, concurrency: int = 15) -> List[ValidationResult]:
