@@ -331,8 +331,73 @@ DOMAINS = [
 ]
 
 
+def build_smart_apply_url(company_name: str, base_url: str, title: str, location: str) -> str:
+    """
+    Constructs a title-specific pre-filled search/apply URL for employer career portals.
+    Candidates land directly on a search page pre-filtered for their exact job title & location.
+    """
+    import urllib.parse
+    clean_title = title.split(" - ")[0].strip()  # strip batch suffix
+    q_title = urllib.parse.quote_plus(clean_title)
+
+    url_lower = base_url.lower()
+
+    if "google.com" in url_lower:
+        return f"https://www.google.com/about/careers/applications/jobs/results/?q={q_title}&location=India"
+    elif "microsoft.com" in url_lower:
+        return f"https://jobs.careers.microsoft.com/global/en/search?q={q_title}&lc=India"
+    elif "amazon.jobs" in url_lower:
+        return f"https://www.amazon.jobs/en/search?base_query={q_title}&loc_query=India"
+    elif "apple.com" in url_lower:
+        return f"https://jobs.apple.com/en-in/search?search={q_title}&location=india"
+    elif "oracle.com" in url_lower:
+        return f"https://careers.oracle.com/jobs/#en/sites/jobsearch/requisitions?keyword={q_title}&location=India"
+    elif "sap.com" in url_lower:
+        return f"https://jobs.sap.com/search/?q={q_title}&locationsearch=India"
+    elif "ibm.com" in url_lower:
+        return f"https://www.ibm.com/careers/search?field_keyword_0[0]={q_title}"
+    elif "salesforce.com" in url_lower:
+        return f"https://careers.salesforce.com/en/jobs/?search={q_title}&location=India"
+    elif "adobe.com" in url_lower:
+        return f"https://careers.adobe.com/us/en/search-results?keywords={q_title}&location=India"
+    elif "accenture.com" in url_lower:
+        return f"https://www.accenture.com/in-en/careers/jobsearch?jk={q_title}&jo=India"
+    elif "tcs.com" in url_lower or "ibegin" in url_lower:
+        return f"https://ibegin.tcs.com/iBegin/jobs/search?keyword={q_title}"
+    elif "infosys.com" in url_lower:
+        return f"https://career.infosys.com/joblist?keyword={q_title}"
+    elif "wipro.com" in url_lower:
+        return f"https://careers.wipro.com/search-jobs/{q_title}"
+    elif "hcltech.com" in url_lower:
+        return f"https://www.hcltech.com/careers/search-jobs?keywords={q_title}"
+    elif "techmahindra.com" in url_lower:
+        return f"https://careers.techmahindra.com/job-search?keyword={q_title}"
+    elif "cognizant.com" in url_lower:
+        return f"https://careers.cognizant.com/in/en/search-results?keywords={q_title}"
+    elif "capgemini.com" in url_lower:
+        return f"https://www.capgemini.com/in-en/careers/job-search/?keyword={q_title}"
+    elif "swiggy.com" in url_lower:
+        return f"https://careers.swiggy.com/#/careers?search={q_title}"
+    elif "freshworks.com" in url_lower:
+        return f"https://www.freshworks.com/company/careers/jobs/?search={q_title}"
+    elif "zoho.com" in url_lower:
+        return f"https://www.zoho.com/careers/jobs.html?query={q_title}"
+    elif "ey.com" in url_lower:
+        return f"https://careers.ey.com/ey/search/?q={q_title}&locationsearch=India"
+    elif "kpmg.com" in url_lower:
+        return f"https://kpmg.com/in/en/home/careers/search-jobs.html?q={q_title}"
+    elif "jio.com" in url_lower:
+        return f"https://careers.jio.com/search-jobs?keyword={q_title}"
+    elif "airtel.in" in url_lower:
+        return f"https://www.airtel.in/careers/search-jobs?keyword={q_title}"
+    elif "lever.co" in url_lower or "greenhouse.io" in url_lower:
+        return base_url  # Lever & Greenhouse ATS boards list all active roles directly on page
+    else:
+        return f"{base_url}?q={q_title}"
+
+
 def generate_large_dataset(target: int = 9000) -> list:
-    """Generate a large dataset of unique India jobs with truly unique (title, company, location) keys."""
+    """Generate a large dataset of unique India jobs with title-specific pre-filtered apply URLs."""
     random.seed(2024)
     jobs = []
 
@@ -341,7 +406,6 @@ def generate_large_dataset(target: int = 9000) -> list:
     total_templates = len(JOB_TEMPLATES)
     total_domains = len(DOMAINS)
 
-    # 45 hiring cycles to ensure enough unique title combinations
     HIRING_CYCLES = [
         "Batch 1 2025", "Batch 2 2025", "Batch 3 2025", "Batch 1 2026", "Batch 2 2026",
         "Off-Campus Drive", "Campus Drive", "Lateral Hire", "FY25 Intake", "FY26 Intake",
@@ -358,7 +422,7 @@ def generate_large_dataset(target: int = 9000) -> list:
 
     seen_keys = set()
     i = 0
-    max_attempts = target * 15  # safety guard against infinite loop
+    max_attempts = target * 15
 
     while len(jobs) < target and i < max_attempts:
         company_name, company_url, source_name = COMPANIES_BIG[i % total_companies]
@@ -372,8 +436,9 @@ def generate_large_dataset(target: int = 9000) -> list:
 
         if dedup_key not in seen_keys:
             seen_keys.add(dedup_key)
-            # Use the company's REAL job search/apply URL directly (no fake req_id)
-            apply_link = company_url
+
+            # Construct title-specific pre-filtered apply URL
+            smart_apply_link = build_smart_apply_url(company_name, company_url, title_tpl, loc)
 
             jobs.append({
                 "title": full_title,
@@ -381,13 +446,13 @@ def generate_large_dataset(target: int = 9000) -> list:
                 "location": loc,
                 "job_type": jtype,
                 "description": (
-                    f"{desc} Apply directly on {company_name}'s official careers page. "
+                    f"{desc} Apply directly on {company_name}'s official careers page for '{title_tpl}'. "
                     f"Location: {loc}. {domain} division. "
-                    f"Click 'Apply Now' to search for '{title_tpl}' on {company_name}'s career portal."
+                    f"Click 'Apply Now' to view openings for '{title_tpl}' on {company_name}'s portal."
                 ),
                 "primary_source": source_name,
                 "salary_range": salary,
-                "apply_url": apply_link,
+                "apply_url": smart_apply_link,
                 "required_skills": skills,
             })
 

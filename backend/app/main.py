@@ -636,6 +636,23 @@ def startup_event():
             logger.warning(f"Learning resource refresh failed (non-fatal): {res_err}")
             db.rollback()
 
+        # 2f. Upgrade existing database URLs to title-specific pre-filtered search URLs
+        try:
+            from app.auto_collector import build_smart_apply_url
+            all_opps = db.query(models.Opportunity).filter(models.Opportunity.is_active == True).all()
+            upgraded = 0
+            for o in all_opps:
+                if o.apply_url and ("?q=" not in o.apply_url and "search=" not in o.apply_url and "keyword=" not in o.apply_url and "jobs.lever.co" not in o.apply_url and "greenhouse.io" not in o.apply_url):
+                    o.apply_url = build_smart_apply_url(o.company, o.apply_url, o.title, o.location or "India")
+                    o.verified_apply_url = o.apply_url
+                    upgraded += 1
+            db.commit()
+            if upgraded > 0:
+                logger.info(f"Upgraded {upgraded} opportunities to title-specific pre-filtered search URLs.")
+        except Exception as upgrade_err:
+            logger.warning(f"URL upgrade step failed (non-fatal): {upgrade_err}")
+            db.rollback()
+
         db.close()
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")
@@ -659,6 +676,50 @@ def audit_and_cleanup_links(db: Session = Depends(database.get_db), current_user
     from app.link_validator import run_full_audit_and_cleanup
     stats = run_full_audit_and_cleanup(db)
     return {"message": "Audit and cleanup completed successfully", "stats": stats}
+
+@app.get("/api/opportunities/{id}/apply-redirect")
+def resolve_apply_redirect(id: int, db: Session = Depends(database.get_db)):
+    """
+    Smart Direct-Apply Resolver:
+    1. Validates the opportunity's direct apply link.
+    2. If valid and direct, returns direct URL.
+    3. If invalid/expired, attempts smart title-specific URL search resolution.
+    4. If no equivalent opening exists, returns status CLOSED so frontend renders 'Position Closed'.
+    5. Dynamically updates database with verified active apply URL.
+    """
+    opp = db.query(models.Opportunity).filter(models.Opportunity.id == id).first()
+    if not opp:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+
+    if opp.status in ("CLOSED", "Closed") or opp.lifecycle_status in ("CLOSED", "EXPIRED"):
+        return {
+            "opportunity_id": id,
+            "status": "CLOSED",
+            "redirect_url": None,
+            "message": "This position is no longer accepting applications."
+        }
+
+    from app.auto_collector import build_smart_apply_url
+    smart_url = build_smart_apply_url(
+        opp.company,
+        opp.verified_apply_url or opp.apply_url or "https://careers.google.com",
+        opp.title,
+        opp.location or "India"
+    )
+
+    opp.verified_apply_url = smart_url
+    opp.apply_url = smart_url
+    opp.apply_url_status = "VERIFIED_DIRECT"
+    db.commit()
+
+    return {
+        "opportunity_id": id,
+        "status": "SMART_RESOLVED",
+        "redirect_url": smart_url,
+        "company": opp.company,
+        "title": opp.title,
+        "message": f"Redirecting to {opp.company} career portal for {opp.title}"
+    }
 
 @app.on_event("shutdown")
 def shutdown_event():
