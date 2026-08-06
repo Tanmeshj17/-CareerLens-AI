@@ -613,6 +613,29 @@ def startup_event():
         except Exception as coll_err:
             logger.warning(f"Auto-collector failed (non-fatal): {coll_err}")
 
+        # 2d. Clean up legacy fake ?req_id= query parameters from existing database rows (cross-db safe)
+        try:
+            bad_url_rows = db.query(models.Opportunity).filter(models.Opportunity.apply_url.like("%?req_id=%")).all()
+            if bad_url_rows:
+                for row in bad_url_rows:
+                    row.apply_url = row.apply_url.split("?req_id=")[0]
+                db.commit()
+                logger.info(f"Sanitized {len(bad_url_rows)} legacy fake URLs in database.")
+        except Exception as clean_err:
+            logger.warning(f"URL cleanup failed (non-fatal): {clean_err}")
+            db.rollback()
+
+        # 2e. Refresh learning resources and certifications with verified working URLs
+        try:
+            db.query(models.LearningResource).delete()
+            db.query(models.Certification).delete()
+            db.commit()
+            _safe_seed(db)
+            logger.info("Refreshed learning resources and certifications with verified working URLs.")
+        except Exception as res_err:
+            logger.warning(f"Learning resource refresh failed (non-fatal): {res_err}")
+            db.rollback()
+
         db.close()
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")
