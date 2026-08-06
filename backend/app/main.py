@@ -653,6 +653,41 @@ def startup_event():
             logger.warning(f"URL upgrade step failed (non-fatal): {upgrade_err}")
             db.rollback()
 
+        # 2g. Data Integrity Repair: Fix any corrupted/mismatched title vs company records
+        try:
+            import re
+            from app.auto_collector import build_smart_apply_url
+            BRAND_KEYWORDS = [
+                "Infosys", "TCS", "Wipro", "Cognizant", "HCL", "Accenture", "Capgemini",
+                "Google", "Microsoft", "Amazon", "Flipkart", "Swiggy", "Zomato", "Razorpay",
+                "PhonePe", "CRED", "Zerodha", "Paytm", "Meesho", "Uber", "Apple", "Meta"
+            ]
+            all_opps = db.query(models.Opportunity).all()
+            repaired_count = 0
+            for o in all_opps:
+                if not o.title or not o.company:
+                    continue
+                has_mismatch = False
+                for brand in BRAND_KEYWORDS:
+                    if brand.lower() in o.title.lower() and brand.lower() not in o.company.lower():
+                        o.title = re.sub(re.escape(brand), "", o.title, flags=re.IGNORECASE)
+                        o.title = re.sub(r"\s+-\s*$", "", o.title.strip())
+                        o.title = re.sub(r"\s+", " ", o.title).strip()
+                        has_mismatch = True
+
+                if has_mismatch or not o.primary_source or o.company.lower() not in (o.primary_source or "").lower():
+                    o.primary_source = f"{o.company} Careers"
+                    o.apply_url = build_smart_apply_url(o.company, o.apply_url or "https://careers.google.com", o.title, o.location or "India")
+                    o.verified_apply_url = o.apply_url
+                    repaired_count += 1
+
+            db.commit()
+            if repaired_count > 0:
+                logger.info(f"Data Integrity Repair: Cleaned {repaired_count} mismatched opportunity records.")
+        except Exception as repair_err:
+            logger.warning(f"Data integrity repair step failed (non-fatal): {repair_err}")
+            db.rollback()
+
         db.close()
     except Exception as db_err:
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")

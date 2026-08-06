@@ -406,16 +406,16 @@ def generate_large_dataset(target: int = 9000) -> list:
     total_templates = len(JOB_TEMPLATES)
     total_domains = len(DOMAINS)
 
+    # Generic hiring cycles only — NEVER include company brand names here to prevent cross-company title corruption
     HIRING_CYCLES = [
         "Batch 1 2025", "Batch 2 2025", "Batch 3 2025", "Batch 1 2026", "Batch 2 2026",
         "Off-Campus Drive", "Campus Drive", "Lateral Hire", "FY25 Intake", "FY26 Intake",
         "Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025", "Q1 2026", "Q2 2026",
         "Engineering Track A", "Engineering Track B", "Data Track", "Cloud Track",
-        "Open Roll", "Urgent Hire", "Walk-In Drive", "NASSCOM Pool", "TechGig Campus",
-        "Infosys InfyTQ", "TCS NQT", "Wipro Elite", "Cognizant GenC", "HCL TechBee",
-        "Naukri FastForward", "LinkedIn Easy Apply", "Instahyre Verified", "AngelList Startup",
-        "IIT Bombay Campus", "IIT Delhi Campus", "NIT Trichy Campus", "VIT Campus",
-        "Pune University Campus", "Anna University Campus", "Manipal Campus", "BITS Pilani",
+        "Open Roll", "Urgent Hire", "Walk-In Drive", "National Talent Pool", "Tech Placement Drive",
+        "FastForward Track", "Early Career Intake", "Verified Opening", "Startup Track",
+        "IIT Bombay Drive", "IIT Delhi Drive", "NIT Trichy Drive", "VIT Drive",
+        "Pune Campus", "Anna Univ Campus", "Manipal Campus", "BITS Pilani Drive",
         "Senior Track", "Mid-Level Track", "Analytics Track", "SRE Track", "Mobile Track",
     ]
     total_cycles = len(HIRING_CYCLES)
@@ -424,6 +424,12 @@ def generate_large_dataset(target: int = 9000) -> list:
     i = 0
     max_attempts = target * 15
 
+    BRAND_KEYWORDS = [
+        "Infosys", "TCS", "Wipro", "Cognizant", "HCL", "Accenture", "Capgemini",
+        "Google", "Microsoft", "Amazon", "Flipkart", "Swiggy", "Zomato", "Razorpay",
+        "PhonePe", "CRED", "Zerodha", "Paytm", "Meesho", "Uber", "Apple", "Meta"
+    ]
+
     while len(jobs) < target and i < max_attempts:
         company_name, company_url, source_name = COMPANIES_BIG[i % total_companies]
         loc = LOCATIONS_INDIA[(i * 7 + 3) % total_locations]
@@ -431,14 +437,20 @@ def generate_large_dataset(target: int = 9000) -> list:
         domain = DOMAINS[(i * 5 + 2) % total_domains]
         cycle = HIRING_CYCLES[(i * 3 + 1) % total_cycles]
 
-        full_title = f"{title_tpl} - {cycle}"
+        # Clean title_tpl to remove any mismatched brand names if present
+        clean_title_tpl = title_tpl
+        for brand in BRAND_KEYWORDS:
+            if brand.lower() in clean_title_tpl.lower() and brand.lower() not in company_name.lower():
+                clean_title_tpl = re.sub(re.escape(brand), company_name, clean_title_tpl, flags=re.IGNORECASE)
+
+        full_title = f"{clean_title_tpl} - {cycle}"
         dedup_key = f"{full_title.lower().strip()}|{company_name.lower().strip()}|{loc.lower().strip()}"
 
         if dedup_key not in seen_keys:
             seen_keys.add(dedup_key)
 
-            # Construct title-specific pre-filtered apply URL
-            smart_apply_link = build_smart_apply_url(company_name, company_url, title_tpl, loc)
+            # Construct title-specific pre-filtered apply URL matching company 100%
+            smart_apply_link = build_smart_apply_url(company_name, company_url, clean_title_tpl, loc)
 
             jobs.append({
                 "title": full_title,
@@ -446,9 +458,9 @@ def generate_large_dataset(target: int = 9000) -> list:
                 "location": loc,
                 "job_type": jtype,
                 "description": (
-                    f"{desc} Apply directly on {company_name}'s official careers page for '{title_tpl}'. "
+                    f"{desc} Apply directly on {company_name}'s official careers page for '{clean_title_tpl}'. "
                     f"Location: {loc}. {domain} division. "
-                    f"Click 'Apply Now' to view openings for '{title_tpl}' on {company_name}'s portal."
+                    f"Click 'Apply Now' to view openings for '{clean_title_tpl}' on {company_name}'s portal."
                 ),
                 "primary_source": source_name,
                 "salary_range": salary,
