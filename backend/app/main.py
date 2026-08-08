@@ -541,7 +541,7 @@ def startup_event():
             logger.warning(f"Schema migration check: {mig_err}")
             db.rollback()
 
-        # 2b. Purge ALL legacy/synthetic/fake records from the database using raw SQL
+        # 2b. Purge ALL legacy/synthetic/fake/generic records from the database using raw SQL
         try:
             valid_sources_str = "('Lever/Paytm', 'Lever/Meesho', 'Lever/CRED', 'Greenhouse/PhonePe', 'Unstop', 'Remotive', 'Arbeitnow')"
             purge_stmt = text(f"""
@@ -549,7 +549,10 @@ def startup_event():
                 WHERE primary_source NOT IN {valid_sources_str}
                    OR apply_url LIKE '%linkedin.com%'
                    OR apply_url LIKE '%?req_id=%'
+                   OR apply_url LIKE '%?q=%'
+                   OR apply_url LIKE '%?keyword=%'
                    OR apply_url LIKE '%/careers%'
+                   OR apply_url LIKE '%/careers'
                    OR apply_url LIKE '%joblist%'
                    OR primary_source LIKE '%Careers%'
                    OR data_origin IS NULL
@@ -910,8 +913,14 @@ def read_opportunities(
     if type and type != "All":
         filters.append(models.Opportunity.job_type.ilike(type))
 
-    # Phase 8.55: Soft filter low quality links (HOMEPAGE_ONLY, BROKEN)
-    # We only show jobs with link_quality_score > 0 unless specifically overridden
+    # Phase 8.55: Enforce 100% Direct-Apply Verified Sources ONLY
+    valid_sources = ["Lever/Paytm", "Lever/Meesho", "Lever/CRED", "Greenhouse/PhonePe", "Unstop", "Remotive", "Arbeitnow"]
+    filters.append(models.Opportunity.primary_source.in_(valid_sources))
+    filters.append(models.Opportunity.data_origin == "LIVE_API")
+    filters.append(models.Opportunity.apply_url.notlike("%linkedin.com%"))
+    filters.append(models.Opportunity.apply_url.notlike("%?req_id=%"))
+    filters.append(models.Opportunity.apply_url.notlike("%?q=%"))
+    filters.append(models.Opportunity.apply_url.notlike("%?keyword=%"))
     filters.append(
         or_(
             models.Opportunity.link_quality_score > 0,

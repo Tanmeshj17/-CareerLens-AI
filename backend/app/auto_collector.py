@@ -329,8 +329,21 @@ def _insert_jobs(db, jobs: list) -> int:
         if not title or not company or not apply_url:
             continue
 
-        # INTEGRITY CHECK: apply_url must be a real URL, not a placeholder
+        # INTEGRITY CHECK: apply_url must be a real direct-apply URL
         if not apply_url.startswith("http"):
+            continue
+
+        u_lower = apply_url.lower()
+        if (
+            "linkedin.com" in u_lower or
+            "?req_id=" in u_lower or
+            "?q=" in u_lower or
+            "?keyword=" in u_lower or
+            u_lower.endswith("/careers") or
+            u_lower.endswith("/careers/") or
+            u_lower.endswith("/jobs") or
+            u_lower.endswith("/jobs/")
+        ):
             continue
 
         h = _hash(title, company, location)
