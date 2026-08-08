@@ -27,9 +27,14 @@ export default function ResumeAnalysis() {
         setResult({
           score: analyzeRes.ats_score,
           skills: analyzeRes.extracted_skills || [],
-          strengths: ['Formatting looks generally solid', 'Contains relevant keywords'],
-          weaknesses: ['Some bullet points could be quantified'],
-          suggestions: ['Add specific metrics to achievements']
+          strengths: analyzeRes.strengths || ['Formatting looks generally solid', 'Contains relevant keywords'],
+          weaknesses: analyzeRes.weaknesses || ['Some bullet points could be quantified'],
+          suggestions: analyzeRes.suggestions || ['Add specific metrics to achievements'],
+          targetRole: analyzeRes.target_role || 'Software Engineer',
+          skillGaps: analyzeRes.skill_gaps || [],
+          certs: analyzeRes.extracted_certifications || [],
+          experience: analyzeRes.extracted_experience || [],
+          education: analyzeRes.extracted_education || [],
         });
         setGapData(gapRes);
         setReadinessData(readinessRes);
@@ -76,6 +81,11 @@ export default function ResumeAnalysis() {
               </div>
             </div>
             
+            <div className="glass-effect p-md rounded-xl text-center border border-outline-variant">
+              <h3 className="font-bold text-on-surface-variant uppercase tracking-wider text-xs mb-1">Target Role Match</h3>
+              <div className="text-lg font-bold text-primary">{result.targetRole}</div>
+            </div>
+
             {readinessData && (
               <div className="glass-effect p-lg rounded-xl text-center bg-surface-container-low border border-outline-variant">
                 <h3 className="font-bold text-on-surface-variant uppercase tracking-wider text-sm mb-2">Market Readiness</h3>
@@ -87,7 +97,7 @@ export default function ResumeAnalysis() {
             )}
 
             <div className="glass-effect p-md rounded-xl">
-              <h3 className="font-bold text-on-surface-variant mb-sm">Extracted Skills</h3>
+              <h3 className="font-bold text-on-surface-variant mb-sm">Extracted Skills ({result.skills.length})</h3>
               <div className="flex flex-wrap gap-2">
                 {result.skills.map(s => <span key={s} className="px-3 py-1 bg-surface-container-high text-on-surface rounded-full text-xs font-medium border border-outline-variant">{s}</span>)}
               </div>

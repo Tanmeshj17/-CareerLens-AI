@@ -568,26 +568,27 @@ def startup_event():
     try:
         db = database.SessionLocal()
 
-        # 2a. Check if database still has synthetic data (data_origin != 'LIVE_API')
-        # If so, purge it and replace with real scraped jobs
-        total_opps = db.query(models.Opportunity).count()
-        live_opps = db.query(models.Opportunity).filter(
-            models.Opportunity.data_origin == "LIVE_API"
+        # 2a. Purge ALL legacy/synthetic/fake records from the database
+        valid_sources = ["Lever/Paytm", "Lever/Meesho", "Lever/CRED", "Greenhouse/PhonePe", "Unstop", "Remotive", "Arbeitnow"]
+        bad_opps = db.query(models.Opportunity).filter(
+            (models.Opportunity.primary_source.not_in(valid_sources)) |
+            (models.Opportunity.apply_url.like("%linkedin.com%")) |
+            (models.Opportunity.apply_url.like("%?req_id=%")) |
+            (models.Opportunity.data_origin != "LIVE_API") |
+            (models.Opportunity.data_origin == None)
         ).count()
-        synthetic_opps = total_opps - live_opps
 
-        if synthetic_opps > 0:
-            logger.info(
-                f"Found {synthetic_opps} synthetic/generated jobs in database. "
-                f"Purging ALL synthetic data and replacing with real API-sourced jobs only..."
-            )
-            # Delete only synthetic records (keep any real LIVE_API records)
+        if bad_opps > 0:
+            logger.info(f"Purging {bad_opps} legacy/synthetic/fake job records from database...")
             db.query(models.Opportunity).filter(
-                (models.Opportunity.data_origin != "LIVE_API") | (models.Opportunity.data_origin == None)
+                (models.Opportunity.primary_source.not_in(valid_sources)) |
+                (models.Opportunity.apply_url.like("%linkedin.com%")) |
+                (models.Opportunity.apply_url.like("%?req_id=%")) |
+                (models.Opportunity.data_origin != "LIVE_API") |
+                (models.Opportunity.data_origin == None)
             ).delete(synchronize_session=False)
             db.commit()
-            remaining = db.query(models.Opportunity).count()
-            logger.info(f"Purged {synthetic_opps} synthetic jobs. {remaining} real jobs remain.")
+            logger.info(f"Purge complete. Remaining real jobs: {db.query(models.Opportunity).count()}")
 
         # 2b. Run live API collector to fetch/refresh real jobs
         try:
