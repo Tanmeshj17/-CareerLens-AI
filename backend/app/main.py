@@ -564,128 +564,53 @@ def startup_event():
     if backend_dir not in sys.path:
         sys.path.insert(0, backend_dir)
 
-    # 2. Check if database is empty or below target; seed if needed
+    # 2. Database initialization with REAL DATA ONLY
     try:
         db = database.SessionLocal()
-        opp_count = db.query(models.Opportunity).filter(
-            models.Opportunity.is_active == True
+
+        # 2a. Check if database still has synthetic data (data_origin != 'LIVE_API')
+        # If so, purge it and replace with real scraped jobs
+        total_opps = db.query(models.Opportunity).count()
+        live_opps = db.query(models.Opportunity).filter(
+            models.Opportunity.data_origin == "LIVE_API"
         ).count()
-        if opp_count < 1000:
-            logger.info(f"Database contains {opp_count} opportunities (<1000). Running safe dataset expansion seed...")
-            try:
-                _safe_seed(db)
-                logger.info("Database dataset expansion seed completed successfully!")
-            except Exception as seed_err:
-                logger.error(f"Database dataset expansion seed failed: {seed_err}")
-                db.rollback()
-        else:
-            logger.info(f"Database contains {opp_count} active opportunities. Skipping basic seed.")
+        synthetic_opps = total_opps - live_opps
 
-        # 2b. Backfill is_active and lifecycle_status for any rows seeded without them
-        try:
-            from sqlalchemy import update as sql_update
-            affected = db.execute(
-                sql_update(models.Opportunity)
-                .where(
-                    (models.Opportunity.is_active == None) | (models.Opportunity.lifecycle_status == None)
-                )
-                .values(
-                    is_active=True,
-                    lifecycle_status="ACTIVE",
-                    confidence_score=models.Opportunity.trust_score,
-                    apply_url_status="VALID"
-                )
+        if synthetic_opps > 0:
+            logger.info(
+                f"Found {synthetic_opps} synthetic/generated jobs in database. "
+                f"Purging ALL synthetic data and replacing with real API-sourced jobs only..."
             )
+            # Delete only synthetic records (keep any real LIVE_API records)
+            db.query(models.Opportunity).filter(
+                (models.Opportunity.data_origin != "LIVE_API") | (models.Opportunity.data_origin == None)
+            ).delete(synchronize_session=False)
             db.commit()
-            logger.info(f"Backfilled lifecycle/active status on {affected.rowcount} opportunities.")
-        except Exception as backfill_err:
-            logger.warning(f"Backfill step failed (non-fatal): {backfill_err}")
-            db.rollback()
+            remaining = db.query(models.Opportunity).count()
+            logger.info(f"Purged {synthetic_opps} synthetic jobs. {remaining} real jobs remain.")
 
-        # 2c. Auto-collector: scale up to 9,000+ India jobs
+        # 2b. Run live API collector to fetch/refresh real jobs
         try:
             from .auto_collector import run_auto_collection
-            result = run_auto_collection(db, target=9000)
+            result = run_auto_collection(db)
             logger.info(
-                f"Auto-collector completed: inserted={result['inserted']}, "
-                f"stale_marked={result['stale_marked']}, active_jobs={result['active_jobs']}"
+                f"Live API collector completed: "
+                f"inserted={result['inserted']}, "
+                f"active_jobs={result['active_jobs']}, "
+                f"sources={result.get('sources', {})}"
             )
         except Exception as coll_err:
-            logger.warning(f"Auto-collector failed (non-fatal): {coll_err}")
+            logger.warning(f"Live API collector failed (non-fatal): {coll_err}")
 
-        # 2d. Clean up legacy fake ?req_id= query parameters from existing database rows (cross-db safe)
-        try:
-            bad_url_rows = db.query(models.Opportunity).filter(models.Opportunity.apply_url.like("%?req_id=%")).all()
-            if bad_url_rows:
-                for row in bad_url_rows:
-                    row.apply_url = row.apply_url.split("?req_id=")[0]
-                db.commit()
-                logger.info(f"Sanitized {len(bad_url_rows)} legacy fake URLs in database.")
-        except Exception as clean_err:
-            logger.warning(f"URL cleanup failed (non-fatal): {clean_err}")
-            db.rollback()
-
-        # 2e. Refresh learning resources and certifications with verified working URLs
+        # 2c. Refresh learning resources and certifications
         try:
             db.query(models.LearningResource).delete()
             db.query(models.Certification).delete()
             db.commit()
             _safe_seed(db)
-            logger.info("Refreshed learning resources and certifications with verified working URLs.")
+            logger.info("Refreshed learning resources and certifications with verified URLs.")
         except Exception as res_err:
             logger.warning(f"Learning resource refresh failed (non-fatal): {res_err}")
-            db.rollback()
-
-        # 2f. Upgrade existing database URLs to title-specific pre-filtered search URLs
-        try:
-            from app.auto_collector import build_smart_apply_url
-            all_opps = db.query(models.Opportunity).filter(models.Opportunity.is_active == True).all()
-            upgraded = 0
-            for o in all_opps:
-                if o.apply_url and ("?q=" not in o.apply_url and "search=" not in o.apply_url and "keyword=" not in o.apply_url and "jobs.lever.co" not in o.apply_url and "greenhouse.io" not in o.apply_url):
-                    o.apply_url = build_smart_apply_url(o.company, o.apply_url, o.title, o.location or "India")
-                    o.verified_apply_url = o.apply_url
-                    upgraded += 1
-            db.commit()
-            if upgraded > 0:
-                logger.info(f"Upgraded {upgraded} opportunities to title-specific pre-filtered search URLs.")
-        except Exception as upgrade_err:
-            logger.warning(f"URL upgrade step failed (non-fatal): {upgrade_err}")
-            db.rollback()
-
-        # 2g. Data Integrity Repair: Fix any corrupted/mismatched title vs company records
-        try:
-            import re
-            from app.auto_collector import build_smart_apply_url
-            BRAND_KEYWORDS = [
-                "Infosys", "TCS", "Wipro", "Cognizant", "HCL", "Accenture", "Capgemini",
-                "Google", "Microsoft", "Amazon", "Flipkart", "Swiggy", "Zomato", "Razorpay",
-                "PhonePe", "CRED", "Zerodha", "Paytm", "Meesho", "Uber", "Apple", "Meta"
-            ]
-            all_opps = db.query(models.Opportunity).all()
-            repaired_count = 0
-            for o in all_opps:
-                if not o.title or not o.company:
-                    continue
-                has_mismatch = False
-                for brand in BRAND_KEYWORDS:
-                    if brand.lower() in o.title.lower() and brand.lower() not in o.company.lower():
-                        o.title = re.sub(re.escape(brand), "", o.title, flags=re.IGNORECASE)
-                        o.title = re.sub(r"\s+-\s*$", "", o.title.strip())
-                        o.title = re.sub(r"\s+", " ", o.title).strip()
-                        has_mismatch = True
-
-                if has_mismatch or not o.primary_source or o.company.lower() not in (o.primary_source or "").lower():
-                    o.primary_source = f"{o.company} Careers"
-                    o.apply_url = build_smart_apply_url(o.company, o.apply_url or "https://careers.google.com", o.title, o.location or "India")
-                    o.verified_apply_url = o.apply_url
-                    repaired_count += 1
-
-            db.commit()
-            if repaired_count > 0:
-                logger.info(f"Data Integrity Repair: Cleaned {repaired_count} mismatched opportunity records.")
-        except Exception as repair_err:
-            logger.warning(f"Data integrity repair step failed (non-fatal): {repair_err}")
             db.rollback()
 
         db.close()
@@ -715,18 +640,15 @@ def audit_and_cleanup_links(db: Session = Depends(database.get_db), current_user
 @app.get("/api/opportunities/{id}/apply-redirect")
 def resolve_apply_redirect(id: int, db: Session = Depends(database.get_db)):
     """
-    Smart Direct-Apply Resolver:
-    1. Validates the opportunity's direct apply link.
-    2. If valid and direct, returns direct URL.
-    3. If invalid/expired, attempts smart title-specific URL search resolution.
-    4. If no equivalent opening exists, returns status CLOSED so frontend renders 'Position Closed'.
-    5. Dynamically updates database with verified active apply URL.
+    Direct-Apply Resolver:
+    Returns the real, verified apply URL from the source API (Lever/Greenhouse/etc).
+    If the job is closed/expired, returns CLOSED status.
     """
     opp = db.query(models.Opportunity).filter(models.Opportunity.id == id).first()
     if not opp:
         raise HTTPException(status_code=404, detail="Opportunity not found")
 
-    if opp.status in ("CLOSED", "Closed") or opp.lifecycle_status in ("CLOSED", "EXPIRED"):
+    if opp.status in ("CLOSED", "Closed", "Stale") or opp.lifecycle_status in ("CLOSED", "EXPIRED", "STALE"):
         return {
             "opportunity_id": id,
             "status": "CLOSED",
@@ -734,26 +656,15 @@ def resolve_apply_redirect(id: int, db: Session = Depends(database.get_db)):
             "message": "This position is no longer accepting applications."
         }
 
-    from app.auto_collector import build_smart_apply_url
-    smart_url = build_smart_apply_url(
-        opp.company,
-        opp.verified_apply_url or opp.apply_url or "https://careers.google.com",
-        opp.title,
-        opp.location or "India"
-    )
-
-    opp.verified_apply_url = smart_url
-    opp.apply_url = smart_url
-    opp.apply_url_status = "VERIFIED_DIRECT"
-    db.commit()
-
+    # All jobs now have real direct apply URLs from source APIs
     return {
         "opportunity_id": id,
-        "status": "SMART_RESOLVED",
-        "redirect_url": smart_url,
+        "status": "DIRECT",
+        "redirect_url": opp.verified_apply_url or opp.apply_url,
         "company": opp.company,
         "title": opp.title,
-        "message": f"Redirecting to {opp.company} career portal for {opp.title}"
+        "source": opp.primary_source,
+        "data_origin": opp.data_origin,
     }
 
 @app.on_event("shutdown")
