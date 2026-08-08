@@ -111,46 +111,8 @@ SENIOR_ROLES = [
     ('Lead ML Engineer (LLMs & MLOps)', 'Full-time', 'INR 22.0L - 42.0L PA', 'Python, PyTorch, LangChain, MLflow, Docker, CUDA, Ray', '4-8 years experience. Lead the deployment of Generative AI and LLM applications into production environments.')
 ]
 
-def generate_opportunities(total_count=1000):
-    random.seed(1337)
-    jobs = []
-    
-    domains = [
-        "Engineering", "FinTech", "E-Commerce", "HealthTech", "EdTech", 
-        "Cloud Services", "Logistics", "AI Labs", "Enterprise Software", "Security"
-    ]
-    
-    for i in range(total_count):
-        company_name, company_url, source_name = COMPANIES[i % len(COMPANIES)]
-        loc = LOCATIONS[i % len(LOCATIONS)]
-        
-        # Distribution: 22% Internships, 43% Entry/Freshers, 27% Mid-Level, 8% Senior
-        r = (i * 7 + 13) % 100
-        if r < 22:
-            title, jtype, salary, skills, desc = INTERNSHIPS[i % len(INTERNSHIPS)]
-        elif r < 65:
-            title, jtype, salary, skills, desc = ENTRY_ROLES[i % len(ENTRY_ROLES)]
-        elif r < 92:
-            title, jtype, salary, skills, desc = MID_ROLES[i % len(MID_ROLES)]
-        else:
-            title, jtype, salary, skills, desc = SENIOR_ROLES[i % len(SENIOR_ROLES)]
-            
-        domain = domains[i % len(domains)]
-        full_title = f"{title} ({domain})" if not ("Freshers" in title or "Trainee" in title) else f"{title} - {company_name}"
-        req_id = 200000 + i
-        apply_link = f"{company_url}?req_id={req_id}"
-        
-        jobs.append({
-            "title": full_title,
-            "company": company_name,
-            "location": loc,
-            "job_type": jtype,
-            "description": f"{desc} Join {company_name}'s {domain} team in {loc}. We offer industry-leading compensation, comprehensive health benefits, fast-track career growth, and flexible working models.",
-            "primary_source": source_name,
-            "salary_range": salary,
-            "apply_url": apply_link,
-            "required_skills": skills
-        })
-    return jobs
+def generate_opportunities(total_count=0):
+    return []
 
-OPPORTUNITIES = generate_opportunities(1000)
+OPPORTUNITIES = []
+

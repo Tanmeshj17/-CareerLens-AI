@@ -197,47 +197,9 @@ async def global_exception_handler(request, exc):
     )
 
 def _safe_seed(db):
-    """Safely seed initial data without dropping existing tables."""
-    import random
-    from datetime import datetime, timedelta
-    from seed import OPPORTUNITIES
-    from collectors.processors.trust_scorer import calculate_trust_score
-    from collectors.deduplicators.hash_deduplicator import generate_job_hash
+    """Safely seed initial data (skills, certs, learning resources) without synthetic jobs."""
+    # 1. Role Skill Maps
 
-    # 1. Opportunities
-    for opp_data in OPPORTUNITIES:
-        trust = calculate_trust_score(opp_data["primary_source"])
-        h = generate_job_hash(opp_data["title"], opp_data["company"], opp_data["location"])
-
-        existing = db.query(models.Opportunity).filter(models.Opportunity.opportunity_hash == h).first()
-        if existing:
-            continue
-
-        opp = models.Opportunity(
-            title=opp_data["title"],
-            company=opp_data["company"],
-            location=opp_data["location"],
-            job_type=opp_data["job_type"],
-            description=opp_data["description"],
-            trust_score=trust,
-            confidence_score=trust,
-            completeness_score=85,
-            salary_range=opp_data["salary_range"],
-            apply_url=opp_data["apply_url"],
-            opportunity_hash=h,
-            primary_source=opp_data["primary_source"],
-            source_trust_score=trust,
-            required_skills=opp_data["required_skills"],
-            posted_date=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
-            status="Active",
-            is_active=True,
-            lifecycle_status="ACTIVE",
-            apply_url_status="VALID"
-        )
-        db.add(opp)
-    db.commit()
-
-    # 2. Role Skill Maps
     if db.query(models.RoleSkillMap).count() == 0:
         role_skills_data = [
             ("Data Engineer", "Python", "Required", "Programming"),
@@ -567,30 +529,40 @@ def startup_event():
     # 2. Database initialization with REAL DATA ONLY
     try:
         db = database.SessionLocal()
+        from sqlalchemy import text
 
-        # 2a. Purge ALL legacy/synthetic/fake records from the database
-        valid_sources = ["Lever/Paytm", "Lever/Meesho", "Lever/CRED", "Greenhouse/PhonePe", "Unstop", "Remotive", "Arbeitnow"]
-        bad_opps = db.query(models.Opportunity).filter(
-            (models.Opportunity.primary_source.not_in(valid_sources)) |
-            (models.Opportunity.apply_url.like("%linkedin.com%")) |
-            (models.Opportunity.apply_url.like("%?req_id=%")) |
-            (models.Opportunity.data_origin != "LIVE_API") |
-            (models.Opportunity.data_origin == None)
-        ).count()
-
-        if bad_opps > 0:
-            logger.info(f"Purging {bad_opps} legacy/synthetic/fake job records from database...")
-            db.query(models.Opportunity).filter(
-                (models.Opportunity.primary_source.not_in(valid_sources)) |
-                (models.Opportunity.apply_url.like("%linkedin.com%")) |
-                (models.Opportunity.apply_url.like("%?req_id=%")) |
-                (models.Opportunity.data_origin != "LIVE_API") |
-                (models.Opportunity.data_origin == None)
-            ).delete(synchronize_session=False)
+        # 2a. Schema column safety
+        try:
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS data_origin VARCHAR;"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS apply_url_status VARCHAR;"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS verified_apply_url VARCHAR;"))
             db.commit()
-            logger.info(f"Purge complete. Remaining real jobs: {db.query(models.Opportunity).count()}")
+        except Exception as mig_err:
+            logger.warning(f"Schema migration check: {mig_err}")
+            db.rollback()
 
-        # 2b. Run live API collector to fetch/refresh real jobs
+        # 2b. Purge ALL legacy/synthetic/fake records from the database using raw SQL
+        try:
+            valid_sources_str = "('Lever/Paytm', 'Lever/Meesho', 'Lever/CRED', 'Greenhouse/PhonePe', 'Unstop', 'Remotive', 'Arbeitnow')"
+            purge_stmt = text(f"""
+                DELETE FROM opportunities 
+                WHERE primary_source NOT IN {valid_sources_str}
+                   OR apply_url LIKE '%linkedin.com%'
+                   OR apply_url LIKE '%?req_id=%'
+                   OR apply_url LIKE '%/careers%'
+                   OR apply_url LIKE '%joblist%'
+                   OR primary_source LIKE '%Careers%'
+                   OR data_origin IS NULL
+                   OR data_origin != 'LIVE_API';
+            """)
+            res = db.execute(purge_stmt)
+            db.commit()
+            logger.info(f"Database purge complete. Rows deleted: {res.rowcount}")
+        except Exception as purge_err:
+            logger.warning(f"Database purge error: {purge_err}")
+            db.rollback()
+
+        # 2c. Run live API collector to fetch/refresh real jobs
         try:
             from .auto_collector import run_auto_collection
             result = run_auto_collection(db)
@@ -603,7 +575,7 @@ def startup_event():
         except Exception as coll_err:
             logger.warning(f"Live API collector failed (non-fatal): {coll_err}")
 
-        # 2c. Refresh learning resources and certifications
+        # 2d. Refresh learning resources and certifications
         try:
             db.query(models.LearningResource).delete()
             db.query(models.Certification).delete()
