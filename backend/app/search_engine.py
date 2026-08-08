@@ -17,7 +17,11 @@ def detect_search_intent(query: str) -> dict:
 
 def get_base_active_query(db: Session):
     return db.query(models.Opportunity).filter(
-        models.Opportunity.status == "Active", 
+        or_(
+            models.Opportunity.status == "Active",
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status.is_(None)
+        ),
         models.Opportunity.is_active == True,
         or_(
             models.Opportunity.lifecycle_status.in_(["NEW", "ACTIVE"]),

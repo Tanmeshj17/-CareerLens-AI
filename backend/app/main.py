@@ -948,14 +948,28 @@ def read_opportunities(
     )
     
     # Lightweight count query (no ORDER BY, no joins)
-    count_q = db.query(sqla_func.count(models.Opportunity.id)).filter(models.Opportunity.status == "ACTIVE", models.Opportunity.is_active == True)
+    count_q = db.query(sqla_func.count(models.Opportunity.id)).filter(
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        )
+    )
     if filters:
         count_q = count_q.filter(*filters)
     total = count_q.scalar()
     
     # Results query with ordering and pagination
     skip = (page - 1) * limit
-    results_q = db.query(models.Opportunity).filter(models.Opportunity.status == "ACTIVE", models.Opportunity.is_active == True)
+    results_q = db.query(models.Opportunity).filter(
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        )
+    )
     if filters:
         results_q = results_q.filter(*filters)
     results = results_q.order_by(
