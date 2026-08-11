@@ -278,82 +278,139 @@ def _safe_seed(db):
         db.commit()
 
     # 4. Certifications (Expanded Catalog with Verified URLs)
-    if db.query(models.Certification).count() < 10:
+    if db.query(models.Certification).count() < 30:
         db.query(models.Certification).delete()
         db.commit()
         certifications_data = [
+            # Cloud Certifications
             models.Certification(
-                name="TCS iON Career Edge - Young Professional", provider="TCS iON",
-                url="https://learning.tcsionhub.in/hub/career-edge/", is_free=True, cost="Free",
-                difficulty="Beginner", estimated_hours=15,
-                skills_covered=["Communication", "Corporate Readiness", "Problem Solving"],
-                roles=["Graduate Trainee", "Associate Software Engineer"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
-            ),
-            models.Certification(
-                name="Postman API Fundamentals Student Expert", provider="Postman",
-                url="https://www.postman.com/company/student-program/", is_free=True, cost="Free",
-                difficulty="Beginner", estimated_hours=5,
-                skills_covered=["REST APIs", "API Testing", "Postman", "JSON"],
-                roles=["Software Engineer", "QA Engineer", "Backend Engineer"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
-            ),
-            models.Certification(
-                name="Google Digital Garage - Digital Marketing Certificate", provider="Google",
-                url="https://learndigital.withgoogle.com/digitalgarage", is_free=True, cost="Free",
-                difficulty="Beginner", estimated_hours=40,
-                skills_covered=["Digital Marketing", "SEO", "SEM", "Analytics"],
-                roles=["Product Manager", "Marketing Analyst"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
+                name="AWS Certified Solutions Architect - Associate", provider="AWS",
+                url="https://aws.amazon.com/certification/certified-solutions-architect-associate/", is_free=False, cost="USD 150",
+                difficulty="Intermediate", estimated_hours=40,
+                skills_covered=["AWS", "Cloud Architecture", "EC2", "S3", "VPC", "IAM"],
+                roles=["Cloud Engineer", "Solutions Architect", "DevOps Engineer", "Backend Developer"],
+                availability_status="VERIFIED", price_inr=12500, affordability="PAID", free_learning_available=True
             ),
             models.Certification(
                 name="AWS Certified Cloud Practitioner", provider="AWS",
-                url="https://aws.amazon.com/certification/certified-cloud-practitioner/", is_free=False, cost="INR 8,500",
+                url="https://aws.amazon.com/certification/certified-cloud-practitioner/", is_free=False, cost="USD 100",
                 difficulty="Beginner", estimated_hours=20,
-                skills_covered=["AWS", "Cloud", "EC2", "S3"],
-                roles=["DevOps Engineer", "Cloud Engineer"],
-                availability_status="VERIFIED", price_inr=8500, affordability="PAID", free_learning_available=True
+                skills_covered=["AWS Basics", "Cloud Fundamentals", "Billing and Pricing"],
+                roles=["Cloud Engineer", "DevOps Engineer", "Product Manager"],
+                availability_status="VERIFIED", price_inr=8300, affordability="PAID", free_learning_available=True
             ),
             models.Certification(
-                name="Microsoft Azure Fundamentals (AZ-900)", provider="Microsoft",
-                url="https://learn.microsoft.com/en-us/certifications/azure-fundamentals/", is_free=False, cost="INR 3,800",
-                difficulty="Beginner", estimated_hours=10,
-                skills_covered=["Azure", "Cloud", "Security"],
-                roles=["DevOps Engineer", "Cloud Engineer"],
-                availability_status="VERIFIED", price_inr=3800, affordability="AFFORDABLE", free_learning_available=True
+                name="Microsoft Certified: Azure Fundamentals (AZ-900)", provider="Microsoft",
+                url="https://learn.microsoft.com/en-us/certifications/azure-fundamentals/", is_free=False, cost="USD 99",
+                difficulty="Beginner", estimated_hours=15,
+                skills_covered=["Azure", "Cloud Concepts", "Security", "Privacy"],
+                roles=["Cloud Engineer", "DevOps Engineer"],
+                availability_status="VERIFIED", price_inr=3696, affordability="AFFORDABLE", free_learning_available=True
             ),
             models.Certification(
-                name="NPTEL Online Certification (IIT/IISc)", provider="NPTEL",
-                url="https://nptel.ac.in/courses", is_free=False, cost="INR 1,000 (Exam)",
-                difficulty="Intermediate", estimated_hours=40,
-                skills_covered=["CS Fundamentals", "DSA", "ML", "DBMS"],
-                roles=["Software Engineer", "Data Engineer"],
-                availability_status="VERIFIED", price_inr=1000, affordability="AFFORDABLE", free_learning_available=True
+                name="Microsoft Certified: Azure Developer Associate (AZ-204)", provider="Microsoft",
+                url="https://learn.microsoft.com/en-us/certifications/azure-developer/", is_free=False, cost="USD 165",
+                difficulty="Intermediate", estimated_hours=60,
+                skills_covered=["Azure Compute", "Azure Storage", "Azure Security", "Troubleshooting"],
+                roles=["Backend Developer", "Cloud Engineer", "Software Engineer"],
+                availability_status="VERIFIED", price_inr=4800, affordability="PAID", free_learning_available=True
             ),
             models.Certification(
-                name="HackerRank Skills Certification (Python/Java/SQL)", provider="HackerRank",
-                url="https://www.hackerrank.com/skills-verification", is_free=True, cost="Free",
-                difficulty="Intermediate", estimated_hours=5,
-                skills_covered=["Python", "Java", "SQL", "Problem Solving"],
-                roles=["Software Engineer", "Data Analyst"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
+                name="Google Cloud Professional Cloud Architect", provider="Google Cloud",
+                url="https://cloud.google.com/learn/certification/cloud-architect", is_free=False, cost="USD 200",
+                difficulty="Advanced", estimated_hours=80,
+                skills_covered=["GCP", "Cloud Architecture", "Infrastructure Design", "Security"],
+                roles=["Cloud Architect", "Cloud Engineer", "DevOps Engineer"],
+                availability_status="VERIFIED", price_inr=16600, affordability="PAID", free_learning_available=True
+            ),
+            
+            # Networking and Security
+            models.Certification(
+                name="Cisco Certified Network Associate (CCNA)", provider="Cisco",
+                url="https://www.cisco.com/c/en/us/training-events/training-certifications/certifications/associate/ccna.html", is_free=False, cost="USD 300",
+                difficulty="Intermediate", estimated_hours=120,
+                skills_covered=["Networking", "IP Connectivity", "Security Fundamentals", "Automation"],
+                roles=["Network Engineer", "Systems Engineer", "Security Analyst"],
+                availability_status="VERIFIED", price_inr=24900, affordability="PAID", free_learning_available=False
             ),
             models.Certification(
-                name="freeCodeCamp Full Stack Developer Certification", provider="freeCodeCamp",
-                url="https://www.freecodecamp.org/learn/", is_free=True, cost="Free",
-                difficulty="Intermediate", estimated_hours=1500,
-                skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js", "Python"],
-                roles=["Full Stack Developer", "Frontend Developer"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
+                name="CompTIA Security+", provider="CompTIA",
+                url="https://www.comptia.org/certifications/security", is_free=False, cost="USD 392",
+                difficulty="Intermediate", estimated_hours=80,
+                skills_covered=["Cybersecurity", "Threats", "Vulnerabilities", "Risk Management"],
+                roles=["Security Analyst", "Systems Administrator", "Network Engineer"],
+                availability_status="VERIFIED", price_inr=32500, affordability="PAID", free_learning_available=False
             ),
             models.Certification(
-                name="LinkedIn Learning Free Courses", provider="LinkedIn",
-                url="https://www.linkedin.com/learning/", is_free=False, cost="Free 1-month trial",
-                difficulty="Beginner", estimated_hours=50,
-                skills_covered=["Programming", "Business", "Design", "Marketing"],
-                roles=["All Roles"],
-                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
+                name="Certified Information Systems Security Professional (CISSP)", provider="ISC2",
+                url="https://www.isc2.org/Certifications/CISSP", is_free=False, cost="USD 749",
+                difficulty="Advanced", estimated_hours=200,
+                skills_covered=["Security and Risk Management", "Asset Security", "Security Engineering"],
+                roles=["Security Manager", "Security Architect", "CISO"],
+                availability_status="VERIFIED", price_inr=62000, affordability="PAID", free_learning_available=False
             ),
+
+            # DevOps & Containers
+            models.Certification(
+                name="Certified Kubernetes Administrator (CKA)", provider="Cloud Native Computing Foundation (CNCF)",
+                url="https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/", is_free=False, cost="USD 395",
+                difficulty="Advanced", estimated_hours=100,
+                skills_covered=["Kubernetes", "Cluster Architecture", "Workloads & Scheduling", "Troubleshooting"],
+                roles=["DevOps Engineer", "Site Reliability Engineer", "Platform Engineer"],
+                availability_status="VERIFIED", price_inr=32700, affordability="PAID", free_learning_available=False
+            ),
+            models.Certification(
+                name="HashiCorp Certified: Terraform Associate", provider="HashiCorp",
+                url="https://developer.hashicorp.com/terraform/certification", is_free=False, cost="USD 70.50",
+                difficulty="Beginner", estimated_hours=30,
+                skills_covered=["Infrastructure as Code (IaC)", "Terraform CLI", "Modules", "State Management"],
+                roles=["DevOps Engineer", "Cloud Engineer", "Platform Engineer"],
+                availability_status="VERIFIED", price_inr=5850, affordability="AFFORDABLE", free_learning_available=True
+            ),
+
+            # Software Engineering & Data
+            models.Certification(
+                name="Oracle Certified Professional: Java SE 17 Developer", provider="Oracle",
+                url="https://education.oracle.com/oracle-certified-professional-java-se-17-developer/trackp_OCPJSE17", is_free=False, cost="USD 245",
+                difficulty="Advanced", estimated_hours=120,
+                skills_covered=["Java SE 17", "Object-Oriented Programming", "Generics", "Collections", "Concurrency"],
+                roles=["Backend Developer", "Java Developer", "Software Engineer"],
+                availability_status="VERIFIED", price_inr=20300, affordability="PAID", free_learning_available=False
+            ),
+            models.Certification(
+                name="Snowflake SnowPro Core Certification", provider="Snowflake",
+                url="https://www.snowflake.com/en/learn/certification/snowpro-core/", is_free=False, cost="USD 175",
+                difficulty="Intermediate", estimated_hours=50,
+                skills_covered=["Data Warehousing", "Snowflake Architecture", "Data Movement", "Performance Tuning"],
+                roles=["Data Engineer", "Data Architect", "Data Analyst"],
+                availability_status="VERIFIED", price_inr=14500, affordability="PAID", free_learning_available=True
+            ),
+            models.Certification(
+                name="Databricks Certified Data Engineer Associate", provider="Databricks",
+                url="https://www.databricks.com/learn/certification/data-engineer-associate", is_free=False, cost="USD 200",
+                difficulty="Intermediate", estimated_hours=60,
+                skills_covered=["Databricks Lakehouse Platform", "Apache Spark", "Delta Lake", "Data Pipelines"],
+                roles=["Data Engineer", "Data Scientist"],
+                availability_status="VERIFIED", price_inr=16600, affordability="PAID", free_learning_available=True
+            ),
+
+            # Agile & Management
+            models.Certification(
+                name="Project Management Professional (PMP)", provider="PMI",
+                url="https://www.pmi.org/certifications/project-management-pmp", is_free=False, cost="USD 595",
+                difficulty="Advanced", estimated_hours=150,
+                skills_covered=["Project Management", "Agile", "Risk Management", "Leadership"],
+                roles=["Project Manager", "Scrum Master", "Product Manager"],
+                availability_status="VERIFIED", price_inr=49300, affordability="PAID", free_learning_available=False
+            ),
+            models.Certification(
+                name="Certified ScrumMaster (CSM)", provider="Scrum Alliance",
+                url="https://www.scrumalliance.org/get-certified/scrum-master-track/certified-scrummaster", is_free=False, cost="Varies (approx USD 1000 with course)",
+                difficulty="Beginner", estimated_hours=16,
+                skills_covered=["Scrum Framework", "Agile Methodologies", "Sprint Planning", "Facilitation"],
+                roles=["Scrum Master", "Project Manager", "Agile Coach"],
+                availability_status="VERIFIED", price_inr=83000, affordability="PAID", free_learning_available=False
+            )
         ]
         db.add_all(certifications_data)
         db.commit()
