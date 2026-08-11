@@ -230,6 +230,11 @@ export async function getFastGrowingCareers() {
   return request('/api/insights/fast-growing');
 }
 
+// ── Certifications ────────────────────────────────────────────
+export async function getCertifications() {
+  return request('/api/certifications');
+}
+
 // ── Dashboard ─────────────────────────────────────────────────
 export async function getDashboardStats() {
   return request('/api/dashboard/stats');
