@@ -12,13 +12,14 @@ def get_recommended_opportunities(
     search: Optional[str] = None,
     type: Optional[str] = None,
     location: Optional[str] = None,
+    sort: Optional[str] = "newest",
     skip: int = 0, 
     limit: int = 20, 
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(database.get_db)
 ):
     """
-    Returns personalized opportunity feed sorted by Final Score, with search filtering.
+    Returns personalized opportunity feed sorted by Final Score, Newest, or Quality, with search filtering.
     """
     user_profile = db.query(models.ResumeProfile).filter(models.ResumeProfile.user_id == current_user.id).first()
     prefs = db.query(models.UserPreference).filter(models.UserPreference.user_id == current_user.id).first()
@@ -34,7 +35,7 @@ def get_recommended_opportunities(
         }
 
         # Phase 8.65: Multi-level Search Filtering
-        search_results, search_metadata = search_engine.search_opportunities(db, search, limit=100)
+        search_results, search_metadata = search_engine.search_opportunities(db, search, limit=200)
         
         scored = []
         for result in search_results:
@@ -74,7 +75,9 @@ def get_recommended_opportunities(
                     "completeness_score": opp.completeness_score,
                     "lifecycle_status": opp.lifecycle_status,
                     "apply_url_status": opp.apply_url_status,
-                    "posted_date": opp.posted_date.isoformat() if opp.posted_date else None,
+                    "posted_date": opp.posted_date.isoformat() if opp.posted_date else "1970-01-01T00:00:00",
+                    "last_seen": opp.last_seen.isoformat() if opp.last_seen else "1970-01-01T00:00:00",
+                    "link_quality_score": opp.link_quality_score or 0.0,
                     "required_skills": opp.required_skills
                 },
                 "final_score": final_score,
@@ -82,11 +85,17 @@ def get_recommended_opportunities(
                 "search_level": search_level
             })
             
-        scored.sort(key=lambda x: x["final_score"], reverse=True)
+        if sort == "newest":
+            scored.sort(key=lambda x: (x["opportunity"]["last_seen"], x["opportunity"]["posted_date"], x["opportunity"]["id"]), reverse=True)
+        elif sort == "quality":
+            scored.sort(key=lambda x: (x["opportunity"]["link_quality_score"], x["opportunity"]["trust_score"]), reverse=True)
+        else: # relevance
+            scored.sort(key=lambda x: (x["final_score"], x["opportunity"]["last_seen"]), reverse=True)
+            
         return scored, search_metadata
 
     safe_search = (search or "").lower().strip()
-    cache_key = f"user_recs_{current_user.id}_{safe_search}_{type}_{location}"
+    cache_key = f"user_recs_{current_user.id}_{safe_search}_{type}_{location}_{sort}"
     
     # get_or_compute doesn't support returning tuples directly if we expect just the list, 
     # but we can cache the combined dict.
