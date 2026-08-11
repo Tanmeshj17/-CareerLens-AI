@@ -460,6 +460,8 @@ class CareerRoadmap(BaseModel):
     role: str
     description: Optional[str] = None
     total_weeks: Optional[int] = None
+    strategies: Optional[List[str]] = None
+    what_to_learn: Optional[List[str]] = None
     steps: List[RoadmapStep]
 
 class InterviewQuestion(BaseModel):

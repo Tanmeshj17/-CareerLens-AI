@@ -1370,7 +1370,7 @@ def get_insights_fast_growing(db: Session = Depends(database.get_db)):
     import datetime as dt
     from app.role_taxonomy import ROLE_TAXONOMY
     
-    MIN_POSTINGS = 10  # Evidence threshold
+    MIN_POSTINGS = 1  # Evidence threshold
     LOOKBACK_DAYS = 90  # How far back to look for historical data
     RECENT_DAYS = 30    # What counts as "recent"
     
@@ -1670,7 +1670,24 @@ def get_career_roadmap(role: str):
             {"step_number": 4, "title": "ETL & Pipelines", "description": "Build robust data pipelines and orchestration", "skills": ["Airflow", "dbt", "Kafka"], "estimated_weeks": 5},
             {"step_number": 5, "title": "Cloud Computing", "description": "Deploy to the cloud and manage infrastructure", "skills": ["AWS", "GCP", "Docker"], "estimated_weeks": 4}
         ]
-        return {"role": "Data Engineer", "description": "Build systems that collect, manage, and convert raw data.", "total_weeks": 20, "steps": steps}
+        return {
+            "role": "Data Engineer",
+            "description": "Build systems that collect, manage, and convert raw data.",
+            "total_weeks": 20,
+            "strategies": [
+                "Focus heavily on SQL optimization and query planning.",
+                "Build end-to-end data pipelines using real-world public datasets.",
+                "Learn orchestration tools like Airflow as they are highly demanded."
+            ],
+            "what_to_learn": [
+                "Advanced SQL & Window Functions",
+                "Python Scripting & Pandas",
+                "Apache Spark / Distributed Computing",
+                "Cloud Data Warehouses (Snowflake, BigQuery)",
+                "Workflow Orchestration (Airflow, dbt)"
+            ],
+            "steps": steps
+        }
     else:
         # Default fallback roadmap
         steps = [
@@ -1679,7 +1696,23 @@ def get_career_roadmap(role: str):
             {"step_number": 3, "title": "Advanced Topics", "description": "Dive deep into complex areas", "skills": ["Advanced Concept 1"], "estimated_weeks": 6},
             {"step_number": 4, "title": "Portfolio Project", "description": "Build a real-world project", "skills": ["Project Management", "Execution"], "estimated_weeks": 4}
         ]
-        return {"role": role.title(), "description": f"Roadmap to become a {role.title()}", "total_weeks": 18, "steps": steps}
+        return {
+            "role": role.title(),
+            "description": f"Roadmap to become a {role.title()}",
+            "total_weeks": 18,
+            "strategies": [
+                f"Start by mastering the absolute fundamentals of {role.title()}.",
+                "Build at least 2 complex portfolio projects to showcase your skills.",
+                "Contribute to open-source or collaborate with peers to gain real-world experience."
+            ],
+            "what_to_learn": [
+                f"Core foundations of {role.title()}",
+                "Industry-standard tools and software",
+                "Best practices and design patterns",
+                "Testing, deployment, and maintenance"
+            ],
+            "steps": steps
+        }
 
 @app.get("/api/resources/recommendations", response_model=List[schemas.LearningResource])
 def get_resource_recommendations(missing_skills: str = "", db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):

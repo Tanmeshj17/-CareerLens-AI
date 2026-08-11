@@ -103,7 +103,40 @@ export default function CareerExplorer() {
                 </div>
               ) : roadmap ? (
                 <div className="space-y-md">
-                  <p className="text-sm text-on-surface-variant">{roadmap.description}</p>
+                  <p className="text-sm text-on-surface-variant mb-md">{roadmap.description}</p>
+                  
+                  {(roadmap.strategies || roadmap.what_to_learn) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-md mb-xl">
+                      {roadmap.strategies && (
+                        <div className="glass-effect p-md rounded-xl border border-primary/20 bg-primary/5">
+                          <h4 className="font-bold text-primary flex items-center gap-xs mb-sm">
+                            <span className="material-symbols-outlined text-[20px]">lightbulb</span>
+                            Strategies for Success
+                          </h4>
+                          <ul className="space-y-xs text-sm text-on-surface-variant list-disc pl-md">
+                            {roadmap.strategies.map((strategy, idx) => (
+                              <li key={idx}>{strategy}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {roadmap.what_to_learn && (
+                        <div className="glass-effect p-md rounded-xl border border-secondary/20 bg-secondary/5">
+                          <h4 className="font-bold text-secondary flex items-center gap-xs mb-sm">
+                            <span className="material-symbols-outlined text-[20px]">menu_book</span>
+                            Key Concepts to Learn
+                          </h4>
+                          <ul className="space-y-xs text-sm text-on-surface-variant list-disc pl-md">
+                            {roadmap.what_to_learn.map((concept, idx) => (
+                              <li key={idx}>{concept}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <h3 className="text-lg font-bold mb-md mt-lg">Step-by-Step Execution</h3>
                   <div className="flex flex-col space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:to-transparent">
                     {roadmap.steps.map((step, idx) => (
                       <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
