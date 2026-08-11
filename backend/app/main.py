@@ -229,156 +229,92 @@ def _safe_seed(db):
         db.commit()
         learning_resources_data = [
             models.LearningResource(
-                title="DSA Full Course in Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9ahIappRPN0MCAgtOu3lQjQi",
-                difficulty="Beginner", duration="40 Hours", is_free=True,
-                skills_covered=["Data Structures", "Algorithms", "C++", "Problem Solving"],
+                title="Python for Beginners (Full Course) | #100DaysOfCode", provider="CodeWithHarry",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agwh1XjRt242xIpHhPT2llg",
+                difficulty="Beginner", duration="100 Hours", is_free=True,
+                skills_covered=["Python", "Programming", "OOP"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "SDE-1", "Backend Engineer"], country="India"
+                roles=["Software Engineer", "Data Scientist", "Backend Engineer"], country="India"
             ),
             models.LearningResource(
-                title="Striver's A2Z DSA Course (Take U Forward)", provider="Take U Forward",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz",
-                difficulty="Intermediate", duration="60 Hours", is_free=True,
-                skills_covered=["Data Structures", "Algorithms", "C++", "Java", "Interview Prep"],
+                title="C++ Tutorials in Hindi", provider="CodeWithHarry",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agpFUAlPFe_VNSlXW5uE0YL",
+                difficulty="Intermediate", duration="35 Hours", is_free=True,
+                skills_covered=["C++", "DSA", "OOP"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "SDE-1", "SDE-2"], country="India"
+                roles=["Software Engineer", "Systems Engineer", "Game Developer"], country="India"
             ),
             models.LearningResource(
-                title="DSA with Java Full Course (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3LtFWcvwpqTkUSlB32kJop",
-                difficulty="Beginner", duration="50 Hours", is_free=True,
-                skills_covered=["Java", "Data Structures", "Algorithms", "OOP"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Associate Software Engineer", "Backend Engineer"], country="India"
-            ),
-            models.LearningResource(
-                title="DSA Supreme Course (Love Babbar)", provider="Love Babbar",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA",
-                difficulty="Intermediate", duration="80 Hours", is_free=True,
-                skills_covered=["C++", "Data Structures", "Algorithms", "STL"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Full Stack Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="Python Tutorial in Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agIlnCuB6xLNIeiu7i9HXAP",
-                difficulty="Beginner", duration="15 Hours", is_free=True,
-                skills_covered=["Python", "OOP", "File Handling", "Modules"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Analyst", "Data Engineer"], country="India"
-            ),
-            models.LearningResource(
-                title="Python Full Course (freeCodeCamp)", provider="freeCodeCamp",
-                category="Course", url="https://www.freecodecamp.org/learn/scientific-computing-with-python/",
-                difficulty="Beginner", duration="300 Hours", is_free=True,
-                skills_covered=["Python", "Algorithms", "Data Structures"],
-                source="freeCodeCamp", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Analyst"], country="Global"
-            ),
-            models.LearningResource(
-                title="Web Development Full Course Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agiCUZYRsvtGTXdxkzPyItg",
-                difficulty="Beginner", duration="35 Hours", is_free=True,
-                skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js"],
+                title="Sigma Web Development Course", provider="CodeWithHarry",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agq5TrH9XLIKQvv0iaF2X3w",
+                difficulty="Beginner", duration="80 Hours", is_free=True,
+                skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
                 roles=["Full Stack Developer", "Frontend Developer", "Web Developer"], country="India"
             ),
             models.LearningResource(
-                title="Full Stack Web Development (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3H6c9OGXb5_6wcc1Mca52n",
-                difficulty="Beginner", duration="40 Hours", is_free=True,
-                skills_covered=["HTML", "CSS", "JavaScript", "React", "Express", "MongoDB"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Full Stack Developer", "Frontend Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="freeCodeCamp: Responsive Web Design", provider="freeCodeCamp",
-                category="Course", url="https://www.freecodecamp.org/learn/2022/responsive-web-design/",
-                difficulty="Beginner", duration="300 Hours", is_free=True,
-                skills_covered=["HTML", "CSS", "Responsive Design", "Flexbox", "Grid"],
-                source="freeCodeCamp", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Frontend Developer", "Web Developer"], country="Global"
-            ),
-            models.LearningResource(
-                title="Java Tutorial for Beginners Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6qt",
+                title="Java Tutorials For Beginners In Hindi", provider="CodeWithHarry",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6q",
                 difficulty="Beginner", duration="20 Hours", is_free=True,
                 skills_covered=["Java", "OOP", "Collections", "Multithreading"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
                 roles=["Software Engineer", "Backend Engineer", "Android Developer"], country="India"
             ),
             models.LearningResource(
-                title="SQL Full Course (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe0KR0hPFbJSaAB5FKbxt14j",
-                difficulty="Beginner", duration="10 Hours", is_free=True,
-                skills_covered=["SQL", "MySQL", "Joins", "Subqueries", "Database Design"],
+                title="Data Structures and Algorithms - Full Course", provider="freeCodeCamp",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=8hly31xKli0",
+                difficulty="Advanced", duration="10 Hours", is_free=True,
+                skills_covered=["DSA", "Algorithms", "Problem Solving", "Java", "Python"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Data Analyst", "Backend Engineer", "Data Engineer"], country="India"
+                roles=["Software Engineer", "Backend Engineer", "Full Stack Developer"], country="Global"
             ),
             models.LearningResource(
-                title="DBMS Complete Playlist (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y",
-                difficulty="Beginner", duration="18 Hours", is_free=True,
-                skills_covered=["DBMS", "SQL", "Normalization", "ER Diagrams", "Indexing"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Engineer", "Backend Engineer"], country="India"
-            ),
-            models.LearningResource(
-                title="Operating Systems Complete Playlist (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiGz9donHRrE9I3Mwn6XdP8p",
-                difficulty="Intermediate", duration="20 Hours", is_free=True,
-                skills_covered=["OS", "Process Management", "Memory Management", "File Systems"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "System Engineer", "DevOps Engineer"], country="India"
-            ),
-            models.LearningResource(
-                title="Computer Networks Complete (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiGFBD2-2joCpWOLUrDLvVV_",
+                title="Full Stack Web Development for Beginners", provider="freeCodeCamp",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=nu_pCVPKzTk",
                 difficulty="Intermediate", duration="15 Hours", is_free=True,
-                skills_covered=["Networking", "TCP/IP", "HTTP", "DNS", "Protocols"],
+                skills_covered=["HTML", "CSS", "JavaScript", "Express", "Node.js", "MongoDB"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "DevOps Engineer", "Network Engineer"], country="India"
+                roles=["Full Stack Developer", "Backend Engineer", "Frontend Developer"], country="Global"
             ),
             models.LearningResource(
-                title="Machine Learning Full Course (Krish Naik)", provider="Krish Naik",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe",
-                difficulty="Intermediate", duration="30 Hours", is_free=True,
-                skills_covered=["Python", "Scikit-learn", "Pandas", "Machine Learning", "Statistics"],
+                title="Harvard CS50 - Introduction to Computer Science", provider="Harvard University",
+                category="Course", url="https://www.youtube.com/watch?v=8mAITcNt710",
+                difficulty="Beginner", duration="24 Hours", is_free=True,
+                skills_covered=["C", "Python", "SQL", "Web Dev", "Algorithms"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["ML Engineer", "Data Scientist", "Data Analyst"], country="India"
+                roles=["Software Engineer", "Systems Engineer", "Full Stack Developer"], country="Global"
             ),
             models.LearningResource(
-                title="Deep Learning Full Course (Krish Naik)", provider="Krish Naik",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLZoTAELRMXVPGU70ZGsckrMdr0FteeRUi",
-                difficulty="Advanced", duration="25 Hours", is_free=True,
-                skills_covered=["Deep Learning", "TensorFlow", "Neural Networks", "CNN", "NLP"],
+                title="React JS Course for Beginners - 2023", provider="freeCodeCamp",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=bMknfKXIFA8",
+                difficulty="Intermediate", duration="10 Hours", is_free=True,
+                skills_covered=["React", "JavaScript", "Hooks", "Context API", "Frontend"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["ML Engineer", "AI Engineer", "Data Scientist"], country="India"
+                roles=["Frontend Developer", "Web Developer", "Full Stack Developer"], country="Global"
             ),
             models.LearningResource(
-                title="AWS Cloud Practitioner Essentials (Official Free)", provider="AWS Skill Builder",
-                category="Course", url="https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
-                difficulty="Beginner", duration="6 Hours", is_free=True,
-                skills_covered=["AWS", "Cloud", "EC2", "S3", "IAM"],
-                source="AWS Skill Builder", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["DevOps Engineer", "Cloud Engineer", "Software Engineer"], country="Global"
+                title="SQL Tutorial - Full Database Course for Beginners", provider="freeCodeCamp",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=HXV3zeQKqGY",
+                difficulty="Beginner", duration="4 Hours", is_free=True,
+                skills_covered=["SQL", "MySQL", "Database Design", "Queries"],
+                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
+                roles=["Data Analyst", "Data Engineer", "Backend Engineer", "Software Engineer"], country="Global"
             ),
             models.LearningResource(
-                title="Azure Fundamentals AZ-900 (Microsoft Learn)", provider="Microsoft Learn",
-                category="Course", url="https://learn.microsoft.com/en-us/training/paths/az-900-describe-cloud-concepts/",
-                difficulty="Beginner", duration="10 Hours", is_free=True,
-                skills_covered=["Azure", "Cloud", "Security", "Compliance"],
-                source="Microsoft Learn", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["DevOps Engineer", "Cloud Engineer"], country="Global"
+                title="Machine Learning for Everybody - Full Course", provider="freeCodeCamp",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=i_LwzRmA_08",
+                difficulty="Intermediate", duration="4 Hours", is_free=True,
+                skills_covered=["Machine Learning", "Python", "TensorFlow", "Data Science", "Scikit-Learn"],
+                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
+                roles=["Data Scientist", "ML Engineer", "AI Engineer"], country="Global"
             ),
             models.LearningResource(
-                title="NPTEL All Courses - IIT/IISc (Free Learning)", provider="NPTEL",
-                category="Course", url="https://nptel.ac.in/courses",
-                difficulty="Intermediate", duration="40 Hours", is_free=True,
-                skills_covered=["CS Fundamentals", "DSA", "ML", "DBMS", "Networking"],
-                source="NPTEL", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Engineer", "System Engineer"], country="India"
+                title="Git & GitHub Full Course Hindi", provider="CodeWithHarry",
+                category="YouTube Course", url="https://www.youtube.com/watch?v=gwWKnnCMQ5c",
+                difficulty="Beginner", duration="2 Hours", is_free=True,
+                skills_covered=["Git", "GitHub", "Version Control", "Collaboration"],
+                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
+                roles=["All Engineering Roles"], country="India"
             ),
             models.LearningResource(
                 title="Swayam Online Courses (Government of India)", provider="Swayam",
@@ -389,45 +325,13 @@ def _safe_seed(db):
                 roles=["All Roles"], country="India"
             ),
             models.LearningResource(
-                title="Git & GitHub Full Course Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube", url="https://www.youtube.com/watch?v=gwWKnnCMQ5c",
-                difficulty="Beginner", duration="2 Hours", is_free=True,
-                skills_covered=["Git", "GitHub", "Version Control"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["All Engineering Roles"], country="India"
-            ),
-            models.LearningResource(
-                title="System Design Playlist (Gaurav Sen)", provider="Gaurav Sen",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX",
-                difficulty="Advanced", duration="20 Hours", is_free=True,
-                skills_covered=["System Design", "Distributed Systems", "Scalability", "Load Balancing"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["SDE-2", "Backend Engineer", "Tech Lead"], country="India"
-            ),
-            models.LearningResource(
-                title="HackerRank Skills Certification", provider="HackerRank",
-                category="Course", url="https://www.hackerrank.com/skills-verification",
-                difficulty="Intermediate", duration="5 Hours", is_free=True,
-                skills_covered=["Python", "Java", "SQL", "React", "Problem Solving"],
-                source="HackerRank", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Analyst"], country="Global"
-            ),
-            models.LearningResource(
-                title="React JS Full Course Hindi (Thapa Technical)", provider="Thapa Technical",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLwGdqUZWnOp3aROg4wypcRhZqJG3ajZWJ",
-                difficulty="Intermediate", duration="25 Hours", is_free=True,
-                skills_covered=["React", "JavaScript", "Hooks", "Redux", "REST APIs"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Frontend Developer", "Full Stack Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="Android Development Full Course (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9aiL0kysYlfSOUgY5rNlOhUd",
-                difficulty="Beginner", duration="30 Hours", is_free=True,
-                skills_covered=["Android", "Java", "Kotlin", "XML", "Firebase"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Android Developer", "Mobile Developer"], country="India"
-            ),
+                title="AWS Certified Cloud Practitioner Essentials", provider="AWS Skill Builder",
+                category="Course", url="https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
+                difficulty="Beginner", duration="6 Hours", is_free=True,
+                skills_covered=["AWS", "Cloud", "EC2", "S3", "IAM", "VPC"],
+                source="AWS Skill Builder", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
+                roles=["Cloud Engineer", "DevOps Engineer", "Software Engineer"], country="Global"
+            )
         ]
         db.add_all(learning_resources_data)
         db.commit()
