@@ -230,7 +230,7 @@ def _safe_seed(db):
         learning_resources_data = [
             models.LearningResource(
                 title="DSA Full Course in Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLu0W_9lII9ahIappRPN0MCAgtOu3lQjQi",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9ahIappRPN0MCAgtOu3lQjQi",
                 difficulty="Beginner", duration="40 Hours", is_free=True,
                 skills_covered=["Data Structures", "Algorithms", "C++", "Problem Solving"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -238,7 +238,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Striver's A2Z DSA Course (Take U Forward)", provider="Take U Forward",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz",
                 difficulty="Intermediate", duration="60 Hours", is_free=True,
                 skills_covered=["Data Structures", "Algorithms", "C++", "Java", "Interview Prep"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -246,7 +246,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="DSA with Java Full Course (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLfqMhTWNBTe3LtFWcvwpqTkUSlB32kJop",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3LtFWcvwpqTkUSlB32kJop",
                 difficulty="Beginner", duration="50 Hours", is_free=True,
                 skills_covered=["Java", "Data Structures", "Algorithms", "OOP"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -254,7 +254,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="DSA Supreme Course (Love Babbar)", provider="Love Babbar",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA",
                 difficulty="Intermediate", duration="80 Hours", is_free=True,
                 skills_covered=["C++", "Data Structures", "Algorithms", "STL"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -262,7 +262,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Python Tutorial in Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLu0W_9lII9agIlnCuB6xLNIeiu7i9HXAP",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agIlnCuB6xLNIeiu7i9HXAP",
                 difficulty="Beginner", duration="15 Hours", is_free=True,
                 skills_covered=["Python", "OOP", "File Handling", "Modules"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -278,7 +278,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Web Development Full Course Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLu0W_9lII9agiCUZYRsvtGTXdxkzPyItg",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agiCUZYRsvtGTXdxkzPyItg",
                 difficulty="Beginner", duration="35 Hours", is_free=True,
                 skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -286,7 +286,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Full Stack Web Development (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLfqMhTWNBTe3H6c9OGXb5_6wcc1Mca52n",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3H6c9OGXb5_6wcc1Mca52n",
                 difficulty="Beginner", duration="40 Hours", is_free=True,
                 skills_covered=["HTML", "CSS", "JavaScript", "React", "Express", "MongoDB"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -302,7 +302,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Java Tutorial for Beginners Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6qt",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6qt",
                 difficulty="Beginner", duration="20 Hours", is_free=True,
                 skills_covered=["Java", "OOP", "Collections", "Multithreading"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -310,7 +310,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="SQL Full Course (Apna College)", provider="Apna College",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLfqMhTWNBTe0KR0hPFbJSaAB5FKbxt14j",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe0KR0hPFbJSaAB5FKbxt14j",
                 difficulty="Beginner", duration="10 Hours", is_free=True,
                 skills_covered=["SQL", "MySQL", "Joins", "Subqueries", "Database Design"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -318,7 +318,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="DBMS Complete Playlist (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y",
                 difficulty="Beginner", duration="18 Hours", is_free=True,
                 skills_covered=["DBMS", "SQL", "Normalization", "ER Diagrams", "Indexing"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -326,7 +326,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Operating Systems Complete Playlist (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLxCzCOWd7aiGz9donHRrE9I3Mwn6XdP8p",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiGz9donHRrE9I3Mwn6XdP8p",
                 difficulty="Intermediate", duration="20 Hours", is_free=True,
                 skills_covered=["OS", "Process Management", "Memory Management", "File Systems"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -334,7 +334,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Computer Networks Complete (Gate Smashers)", provider="Gate Smashers",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLxCzCOWd7aiGFBD2-2joCpWOLUrDLvVV_",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLxCzCOWd7aiGFBD2-2joCpWOLUrDLvVV_",
                 difficulty="Intermediate", duration="15 Hours", is_free=True,
                 skills_covered=["Networking", "TCP/IP", "HTTP", "DNS", "Protocols"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -342,7 +342,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Machine Learning Full Course (Krish Naik)", provider="Krish Naik",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe",
                 difficulty="Intermediate", duration="30 Hours", is_free=True,
                 skills_covered=["Python", "Scikit-learn", "Pandas", "Machine Learning", "Statistics"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -350,7 +350,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Deep Learning Full Course (Krish Naik)", provider="Krish Naik",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLZoTAELRMXVPGU70ZGsckrMdr0FteeRUi",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLZoTAELRMXVPGU70ZGsckrMdr0FteeRUi",
                 difficulty="Advanced", duration="25 Hours", is_free=True,
                 skills_covered=["Deep Learning", "TensorFlow", "Neural Networks", "CNN", "NLP"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -390,7 +390,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Git & GitHub Full Course Hindi (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube", url="https://youtu.be/gwWKnnCMQ5c",
+                category="YouTube", url="https://www.youtube.com/watch?v=gwWKnnCMQ5c",
                 difficulty="Beginner", duration="2 Hours", is_free=True,
                 skills_covered=["Git", "GitHub", "Version Control"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -398,7 +398,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="System Design Playlist (Gaurav Sen)", provider="Gaurav Sen",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX",
                 difficulty="Advanced", duration="20 Hours", is_free=True,
                 skills_covered=["System Design", "Distributed Systems", "Scalability", "Load Balancing"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -414,7 +414,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="React JS Full Course Hindi (Thapa Technical)", provider="Thapa Technical",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLwGdqUZWnOp3aROg4wypcRhZqJG3ajZWJ",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLwGdqUZWnOp3aROg4wypcRhZqJG3ajZWJ",
                 difficulty="Intermediate", duration="25 Hours", is_free=True,
                 skills_covered=["React", "JavaScript", "Hooks", "Redux", "REST APIs"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -422,7 +422,7 @@ def _safe_seed(db):
             ),
             models.LearningResource(
                 title="Android Development Full Course (CodeWithHarry)", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://youtube.com/playlist?list=PLu0W_9lII9aiL0kysYlfSOUgY5rNlOhUd",
+                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9aiL0kysYlfSOUgY5rNlOhUd",
                 difficulty="Beginner", duration="30 Hours", is_free=True,
                 skills_covered=["Android", "Java", "Kotlin", "XML", "Firebase"],
                 source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
@@ -543,11 +543,9 @@ def startup_event():
 
         # 2b. Purge ALL legacy/synthetic/fake/generic records from the database using raw SQL
         try:
-            valid_sources_str = "('Lever/Paytm', 'Lever/Meesho', 'Lever/CRED', 'Greenhouse/PhonePe', 'Unstop', 'Remotive', 'Arbeitnow')"
-            purge_stmt = text(f"""
+            purge_stmt = text("""
                 DELETE FROM opportunities 
-                WHERE primary_source NOT IN {valid_sources_str}
-                   OR apply_url LIKE '%linkedin.com%'
+                WHERE apply_url LIKE '%linkedin.com%'
                    OR apply_url LIKE '%?req_id=%'
                    OR apply_url LIKE '%?q=%'
                    OR apply_url LIKE '%?keyword=%'
@@ -887,6 +885,7 @@ def read_opportunities(
     location: Optional[str] = None,
     experience: Optional[str] = None,
     type: Optional[str] = None,
+    sort: Optional[str] = "newest", # newest | relevance | quality
     page: int = 1,
     limit: int = 30,
     db: Session = Depends(database.get_db),
@@ -914,9 +913,8 @@ def read_opportunities(
         filters.append(models.Opportunity.job_type.ilike(type))
 
     # Phase 8.55: Enforce 100% Direct-Apply Verified Sources ONLY
-    valid_sources = ["Lever/Paytm", "Lever/Meesho", "Lever/CRED", "Greenhouse/PhonePe", "Unstop", "Remotive", "Arbeitnow"]
-    filters.append(models.Opportunity.primary_source.in_(valid_sources))
     filters.append(models.Opportunity.data_origin == "LIVE_API")
+    filters.append(models.Opportunity.primary_source.notlike("%Careers%"))
     filters.append(models.Opportunity.apply_url.notlike("%linkedin.com%"))
     filters.append(models.Opportunity.apply_url.notlike("%?req_id=%"))
     filters.append(models.Opportunity.apply_url.notlike("%?q=%"))
@@ -953,13 +951,26 @@ def read_opportunities(
     )
     if filters:
         results_q = results_q.filter(*filters)
-    results = results_q.order_by(
-        models.Opportunity.computed_rank_score.desc(),
-        # Use last_seen as secondary sort: last_seen is updated on every pipeline
-        # re-confirmation, so it reflects real data freshness. posted_date is
-        # a corrupted bulk-migration artifact (same value on all existing records).
-        models.Opportunity.last_seen.desc().nulls_last()
-    ).offset(skip).limit(limit).all()
+
+    # Dynamic sort handling
+    if sort == "newest":
+        results_q = results_q.order_by(
+            models.Opportunity.last_seen.desc().nulls_last(),
+            models.Opportunity.posted_date.desc().nulls_last(),
+            models.Opportunity.id.desc()
+        )
+    elif sort == "quality":
+        results_q = results_q.order_by(
+            models.Opportunity.link_quality_score.desc().nulls_last(),
+            models.Opportunity.trust_score.desc().nulls_last()
+        )
+    else:  # relevance
+        results_q = results_q.order_by(
+            models.Opportunity.computed_rank_score.desc().nulls_last(),
+            models.Opportunity.last_seen.desc().nulls_last()
+        )
+
+    results = results_q.offset(skip).limit(limit).all()
     
     # Async search logging (non-blocking)
     if search:

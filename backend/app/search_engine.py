@@ -16,10 +16,9 @@ def detect_search_intent(query: str) -> dict:
     return {"type": "role", "roles": [q], "original": q}
 
 def get_base_active_query(db: Session):
-    valid_sources = ["Lever/Paytm", "Lever/Meesho", "Lever/CRED", "Greenhouse/PhonePe", "Unstop", "Remotive", "Arbeitnow"]
     return db.query(models.Opportunity).filter(
-        models.Opportunity.primary_source.in_(valid_sources),
         models.Opportunity.data_origin == "LIVE_API",
+        models.Opportunity.primary_source.notlike("%Careers%"),
         models.Opportunity.apply_url.notlike("%linkedin.com%"),
         models.Opportunity.apply_url.notlike("%?req_id=%"),
         models.Opportunity.apply_url.notlike("%?q=%"),

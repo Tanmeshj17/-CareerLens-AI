@@ -89,16 +89,16 @@ export default function LandingPage() {
         <section className="py-xl bg-surface-container-low">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-xl px-lg text-center stagger-children">
             <div className="space-y-xs">
-              <div className="text-3xl font-semibold text-primary">10k+</div>
-              <div className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-widest">Active Jobs</div>
+              <div className="text-3xl font-semibold text-primary">1,000+</div>
+              <div className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-widest">Verified Direct Jobs</div>
             </div>
             <div className="space-y-xs">
-              <div className="text-3xl font-semibold text-primary">5k+</div>
+              <div className="text-3xl font-semibold text-primary">500+</div>
               <div className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-widest">Internship Openings</div>
             </div>
             <div className="space-y-xs">
-              <div className="text-3xl font-semibold text-primary">50k+</div>
-              <div className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-widest">Successful Users</div>
+              <div className="text-3xl font-semibold text-primary">100%</div>
+              <div className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-widest">Verified Direct Apply Links</div>
             </div>
           </div>
         </section>

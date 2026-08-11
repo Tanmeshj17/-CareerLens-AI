@@ -260,12 +260,13 @@ export default function OpportunitiesHub() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locationFilter, setLocationFilter] = useState('')
   const [jobType, setJobType] = useState('All')
+  const [sortBy, setSortBy] = useState('newest') // newest | relevance | quality
 
   // Saved jobs tracker
   const [savedIds, setSavedIds] = useState(new Set())
   const [savingId, setSavingId] = useState(null)
 
-  const fetchJobs = async (append = false, page = 1) => {
+  const fetchJobs = async (append = false, page = 1, currentSort = sortBy) => {
     try {
       if (append) setLoadingMore(true)
       else setLoading(true)
@@ -275,6 +276,7 @@ export default function OpportunitiesHub() {
         search: searchQuery || undefined,
         type: jobType !== 'All' ? jobType : undefined,
         location: locationFilter || undefined,
+        sort: currentSort,
         limit: 20,
         skip: (page - 1) * 20,
         page: page, // legacy compatibility
@@ -500,13 +502,6 @@ export default function OpportunitiesHub() {
               <option value="Contract">Contract</option>
             </select>
           </div>
-          <div className="space-y-xs">
-            <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase">Sorted By</label>
-            <div className="w-full px-sm py-md bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface-variant flex items-center gap-xs">
-              <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
-              India Relevance
-            </div>
-          </div>
         </div>
         <div className="flex flex-col-reverse md:flex-row justify-between items-stretch md:items-center pt-md border-t border-outline-variant/30 gap-sm">
           <Button variant="ghost" className="w-full md:w-auto text-on-surface-variant hover:text-primary" onClick={resetFilters}>Clear All</Button>
@@ -520,6 +515,31 @@ export default function OpportunitiesHub() {
           </Button>
         </div>
       </section>
+
+      {/* Quick Sorting Filters */}
+      <div className="flex gap-sm overflow-x-auto pb-1 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+        <button 
+          onClick={() => { setSortBy('newest'); setCurrentPage(1); fetchJobs(false, 1, 'newest'); }}
+          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'newest' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+        >
+          <span className="material-symbols-outlined text-[16px]">bolt</span>
+          Latest Jobs
+        </button>
+        <button 
+          onClick={() => { setSortBy('relevance'); setCurrentPage(1); fetchJobs(false, 1, 'relevance'); }}
+          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'relevance' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+        >
+          <span className="material-symbols-outlined text-[16px]">target</span>
+          Recommended
+        </button>
+        <button 
+          onClick={() => { setSortBy('quality'); setCurrentPage(1); fetchJobs(false, 1, 'quality'); }}
+          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'quality' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+        >
+          <span className="material-symbols-outlined text-[16px]">verified</span>
+          Verified Links
+        </button>
+      </div>
 
       {/* Phase 8.65: Search Confidence Banner */}
       {!loading && searchMeta && searchQuery && (
