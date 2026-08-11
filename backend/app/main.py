@@ -224,115 +224,56 @@ def _safe_seed(db):
         db.commit()
 
     # 3. Learning Resources (Expanded Catalog with Verified India Priority URLs)
-    if db.query(models.LearningResource).count() < 25:
+    if db.query(models.LearningResource).count() < 50:
         db.query(models.LearningResource).delete()
         db.commit()
+        
         learning_resources_data = [
-            models.LearningResource(
-                title="Python for Beginners (Full Course) | #100DaysOfCode", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agwh1XjRt242xIpHhPT2llg",
-                difficulty="Beginner", duration="100 Hours", is_free=True,
-                skills_covered=["Python", "Programming", "OOP"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Data Scientist", "Backend Engineer"], country="India"
-            ),
-            models.LearningResource(
-                title="C++ Tutorials in Hindi", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agpFUAlPFe_VNSlXW5uE0YL",
-                difficulty="Intermediate", duration="35 Hours", is_free=True,
-                skills_covered=["C++", "DSA", "OOP"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Systems Engineer", "Game Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="Sigma Web Development Course", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agq5TrH9XLIKQvv0iaF2X3w",
-                difficulty="Beginner", duration="80 Hours", is_free=True,
-                skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Full Stack Developer", "Frontend Developer", "Web Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="Java Tutorials For Beginners In Hindi", provider="CodeWithHarry",
-                category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6q",
-                difficulty="Beginner", duration="20 Hours", is_free=True,
-                skills_covered=["Java", "OOP", "Collections", "Multithreading"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Backend Engineer", "Android Developer"], country="India"
-            ),
-            models.LearningResource(
-                title="Data Structures and Algorithms - Full Course", provider="freeCodeCamp",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=8hly31xKli0",
-                difficulty="Advanced", duration="10 Hours", is_free=True,
-                skills_covered=["DSA", "Algorithms", "Problem Solving", "Java", "Python"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Backend Engineer", "Full Stack Developer"], country="Global"
-            ),
-            models.LearningResource(
-                title="Full Stack Web Development for Beginners", provider="freeCodeCamp",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=nu_pCVPKzTk",
-                difficulty="Intermediate", duration="15 Hours", is_free=True,
-                skills_covered=["HTML", "CSS", "JavaScript", "Express", "Node.js", "MongoDB"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Full Stack Developer", "Backend Engineer", "Frontend Developer"], country="Global"
-            ),
-            models.LearningResource(
-                title="Harvard CS50 - Introduction to Computer Science", provider="Harvard University",
-                category="Course", url="https://www.youtube.com/watch?v=8mAITcNt710",
-                difficulty="Beginner", duration="24 Hours", is_free=True,
-                skills_covered=["C", "Python", "SQL", "Web Dev", "Algorithms"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Software Engineer", "Systems Engineer", "Full Stack Developer"], country="Global"
-            ),
-            models.LearningResource(
-                title="React JS Course for Beginners - 2023", provider="freeCodeCamp",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=bMknfKXIFA8",
-                difficulty="Intermediate", duration="10 Hours", is_free=True,
-                skills_covered=["React", "JavaScript", "Hooks", "Context API", "Frontend"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Frontend Developer", "Web Developer", "Full Stack Developer"], country="Global"
-            ),
-            models.LearningResource(
-                title="SQL Tutorial - Full Database Course for Beginners", provider="freeCodeCamp",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=HXV3zeQKqGY",
-                difficulty="Beginner", duration="4 Hours", is_free=True,
-                skills_covered=["SQL", "MySQL", "Database Design", "Queries"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Data Analyst", "Data Engineer", "Backend Engineer", "Software Engineer"], country="Global"
-            ),
-            models.LearningResource(
-                title="Machine Learning for Everybody - Full Course", provider="freeCodeCamp",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=i_LwzRmA_08",
-                difficulty="Intermediate", duration="4 Hours", is_free=True,
-                skills_covered=["Machine Learning", "Python", "TensorFlow", "Data Science", "Scikit-Learn"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Data Scientist", "ML Engineer", "AI Engineer"], country="Global"
-            ),
-            models.LearningResource(
-                title="Git & GitHub Full Course Hindi", provider="CodeWithHarry",
-                category="YouTube Course", url="https://www.youtube.com/watch?v=gwWKnnCMQ5c",
-                difficulty="Beginner", duration="2 Hours", is_free=True,
-                skills_covered=["Git", "GitHub", "Version Control", "Collaboration"],
-                source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["All Engineering Roles"], country="India"
-            ),
-            models.LearningResource(
-                title="Swayam Online Courses (Government of India)", provider="Swayam",
-                category="Course", url="https://swayam.gov.in/",
-                difficulty="Beginner", duration="Variable", is_free=True,
-                skills_covered=["CS", "Engineering", "Management", "Science"],
-                source="Swayam", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["All Roles"], country="India"
-            ),
-            models.LearningResource(
-                title="AWS Certified Cloud Practitioner Essentials", provider="AWS Skill Builder",
-                category="Course", url="https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
-                difficulty="Beginner", duration="6 Hours", is_free=True,
-                skills_covered=["AWS", "Cloud", "EC2", "S3", "IAM", "VPC"],
-                source="AWS Skill Builder", availability_status="VERIFIED", status="VERIFIED", affordability="FREE",
-                roles=["Cloud Engineer", "DevOps Engineer", "Software Engineer"], country="Global"
-            )
+            # --- FULL STACK & WEB DEV (CodeWithHarry, Harkirat, Apna College, freeCodeCamp) ---
+            models.LearningResource(title="Sigma Web Development Course", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agq5TrH9XLIKQvv0iaF2X3w", difficulty="Beginner", duration="80 Hours", is_free=True, skills_covered=["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB", "Web Development", "Full Stack"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Full Stack Developer", "Frontend Developer", "Web Developer"], country="India"),
+            models.LearningResource(title="Full Stack Web Development for Beginners", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=nu_pCVPKzTk", difficulty="Intermediate", duration="15 Hours", is_free=True, skills_covered=["HTML", "CSS", "JavaScript", "Express", "Node.js", "MongoDB", "Full Stack"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Full Stack Developer", "Backend Developer", "Frontend Developer"], country="Global"),
+            models.LearningResource(title="Web Development Course - Apna College", provider="Apna College", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3H6c9OGXb5_yew8Qmu41a3", difficulty="Beginner", duration="50 Hours", is_free=True, skills_covered=["HTML", "CSS", "JavaScript", "React", "Frontend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Full Stack Developer"], country="India"),
+            models.LearningResource(title="Namaste JavaScript", provider="Akshay Saini", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLlasXeu85E9cQ32gLCvAvr9vNaUccPVNP", difficulty="Intermediate", duration="15 Hours", is_free=True, skills_covered=["JavaScript", "Closures", "Hoisting", "Promises", "Frontend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Full Stack Developer"], country="India"),
+            models.LearningResource(title="React JS Course for Beginners - 2023", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=bMknfKXIFA8", difficulty="Intermediate", duration="10 Hours", is_free=True, skills_covered=["React", "JavaScript", "Hooks", "Context API", "Frontend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Web Developer", "Full Stack Developer"], country="Global"),
+            models.LearningResource(title="React.js Tutorials in Hindi", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agx66oZnT6IyhcMIbUMNMdt", difficulty="Beginner", duration="15 Hours", is_free=True, skills_covered=["React.js", "Frontend", "JavaScript", "Hooks"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Web Developer"], country="India"),
+            models.LearningResource(title="Node.js and Express.js - Full Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=Oe421EPjeBE", difficulty="Intermediate", duration="8 Hours", is_free=True, skills_covered=["Node.js", "Express.js", "Backend", "API", "JavaScript"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Backend Developer", "Full Stack Developer"], country="Global"),
+            models.LearningResource(title="Next.js 14 Full Course 2024", provider="JavaScript Mastery", category="YouTube Course", url="https://www.youtube.com/watch?v=wm5gMKuwSYk", difficulty="Intermediate", duration="5 Hours", is_free=True, skills_covered=["Next.js", "React", "Full Stack", "Tailwind CSS"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Full Stack Developer"], country="Global"),
+            models.LearningResource(title="Tailwind CSS Full Course", provider="CodeWithHarry", category="YouTube Course", url="https://www.youtube.com/watch?v=tZOXcKAKjEE", difficulty="Beginner", duration="3 Hours", is_free=True, skills_covered=["Tailwind", "CSS", "Frontend", "Design"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Frontend Developer", "Web Designer"], country="India"),
+            models.LearningResource(title="Learn Web3 and Blockchain", provider="Harkirat Singh", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agq5TrH9XLIKQvv0iaF2X3w", difficulty="Advanced", duration="20 Hours", is_free=True, skills_covered=["Web3", "Blockchain", "Solidity", "Smart Contracts"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Web3 Developer", "Full Stack Developer"], country="India"),
+
+            # --- PYTHON, C++, JAVA, & DSA ---
+            models.LearningResource(title="Python for Beginners | #100DaysOfCode", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agwh1XjRt242xIpHhPT2llg", difficulty="Beginner", duration="100 Hours", is_free=True, skills_covered=["Python", "Programming", "OOP", "Backend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Data Scientist", "Backend Developer"], country="India"),
+            models.LearningResource(title="C++ Tutorials in Hindi", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agpFUAlPFe_VNSlXW5uE0YL", difficulty="Intermediate", duration="35 Hours", is_free=True, skills_covered=["C++", "DSA", "OOP"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Systems Engineer", "Backend Developer"], country="India"),
+            models.LearningResource(title="Java Tutorials For Beginners In Hindi", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9agS67Uits0UnJyrYiXhDS6q", difficulty="Beginner", duration="20 Hours", is_free=True, skills_covered=["Java", "OOP", "Collections", "Backend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Backend Developer", "Java Developer"], country="India"),
+            models.LearningResource(title="Java & DSA in 30 days - Course for Placement", provider="Apna College", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe3LtFWcvwpqTkUSlB32kJop", difficulty="Intermediate", duration="40 Hours", is_free=True, skills_covered=["Java", "DSA", "Algorithms", "Interview Prep"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Backend Developer", "Java Developer"], country="India"),
+            models.LearningResource(title="Data Structures and Algorithms - Full Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=8hly31xKli0", difficulty="Advanced", duration="10 Hours", is_free=True, skills_covered=["DSA", "Algorithms", "Problem Solving", "Java", "Python"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Backend Developer", "Full Stack Developer"], country="Global"),
+            models.LearningResource(title="Striver's A2Z DSA Course/Sheet", provider="Take U Forward (Striver)", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz", difficulty="Advanced", duration="80 Hours", is_free=True, skills_covered=["DSA", "Competitive Programming", "C++", "Java", "Interview Prep"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Backend Developer"], country="India"),
+            models.LearningResource(title="Python Django Tutorial in Hindi", provider="CodeWithHarry", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLu0W_9lII9ah7DDtYtflgwMwpT3xmjXY9", difficulty="Intermediate", duration="15 Hours", is_free=True, skills_covered=["Python", "Django", "Backend", "Web Development"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Backend Developer", "Python Developer", "Full Stack Developer"], country="India"),
+            models.LearningResource(title="FastAPI - The Complete Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=0sOvCWFmrtA", difficulty="Intermediate", duration="12 Hours", is_free=True, skills_covered=["Python", "FastAPI", "APIs", "Backend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Backend Developer", "Python Developer"], country="Global"),
+            models.LearningResource(title="Complete C++ Placement Course", provider="Apna College", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLfqMhTWNBTe0b2nM6JHVCnAkhQRGiZMSJ", difficulty="Beginner", duration="45 Hours", is_free=True, skills_covered=["C++", "Programming", "DSA"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Backend Developer"], country="India"),
+            
+            # --- DATA SCIENCE, ML & DATABASE ---
+            models.LearningResource(title="SQL Tutorial - Full Database Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=HXV3zeQKqGY", difficulty="Beginner", duration="4 Hours", is_free=True, skills_covered=["SQL", "MySQL", "Database", "Backend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Analyst", "Data Engineer", "Backend Developer", "Data Scientist", "Software Engineer"], country="Global"),
+            models.LearningResource(title="Machine Learning for Everybody - Full Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=i_LwzRmA_08", difficulty="Intermediate", duration="4 Hours", is_free=True, skills_covered=["Machine Learning", "Python", "Data Science", "Scikit-Learn"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Scientist", "Machine Learning Engineer", "Data Analyst"], country="Global"),
+            models.LearningResource(title="Data Science Course in Hindi", provider="Code Basics", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLPbgcxheSpE1DptOXONKVZFoE_qgq_Kz_", difficulty="Intermediate", duration="30 Hours", is_free=True, skills_covered=["Data Science", "Python", "Machine Learning", "Math"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Scientist", "Machine Learning Engineer", "Data Analyst"], country="India"),
+            models.LearningResource(title="Power BI Full Course", provider="Edureka", category="YouTube Course", url="https://www.youtube.com/watch?v=AGrl-H87pRU", difficulty="Beginner", duration="10 Hours", is_free=True, skills_covered=["Power BI", "Data Visualization", "Data Analyst"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Analyst", "Data Engineer", "Data Scientist"], country="India"),
+            models.LearningResource(title="Pandas Data Analytics Tutorial", provider="Code Basics", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PLPbgcxheSpE1PW09g5Rk9R-E3KkY_z3mZ", difficulty="Beginner", duration="8 Hours", is_free=True, skills_covered=["Python", "Pandas", "Data Analyst", "Data Science"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Analyst", "Data Scientist", "Data Engineer"], country="India"),
+            models.LearningResource(title="Deep Learning Course - Neural Networks", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=VyWAvY2CF9c", difficulty="Advanced", duration="10 Hours", is_free=True, skills_covered=["Deep Learning", "Neural Networks", "PyTorch", "Machine Learning Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Machine Learning Engineer", "Data Scientist"], country="Global"),
+            models.LearningResource(title="Data Engineering Full Course", provider="Edureka", category="YouTube Course", url="https://www.youtube.com/watch?v=qWW_w_H7yEU", difficulty="Intermediate", duration="8 Hours", is_free=True, skills_covered=["Data Engineering", "Big Data", "Hadoop", "Spark", "Data Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Engineer", "Data Analyst", "Software Engineer"], country="India"),
+            models.LearningResource(title="Data Analysis with Python Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=r-uOLxNrNk8", difficulty="Beginner", duration="10 Hours", is_free=True, skills_covered=["Python", "Data Analysis", "Numpy", "Pandas", "Data Analyst"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Data Analyst", "Data Scientist"], country="Global"),
+            models.LearningResource(title="MongoDB Tutorial for Beginners", provider="CodeWithHarry", category="YouTube Course", url="https://www.youtube.com/watch?v=J6mDclq_4bQ", difficulty="Beginner", duration="2 Hours", is_free=True, skills_covered=["MongoDB", "NoSQL", "Database", "Backend Developer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Backend Developer", "Data Engineer", "Full Stack Developer"], country="India"),
+
+            # --- DEVOPS, CLOUD & FUNDAMENTALS ---
+            models.LearningResource(title="Git & GitHub Full Course Hindi", provider="CodeWithHarry", category="YouTube Course", url="https://www.youtube.com/watch?v=gwWKnnCMQ5c", difficulty="Beginner", duration="2 Hours", is_free=True, skills_covered=["Git", "GitHub", "Version Control", "DevOps"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Frontend Developer", "Backend Developer", "DevOps Engineer", "Full Stack Developer", "Data Scientist", "Data Analyst", "Machine Learning Engineer"], country="India"),
+            models.LearningResource(title="DevOps Tutorial for Beginners", provider="Edureka", category="YouTube Course", url="https://www.youtube.com/watch?v=hQcFE0RD0cQ", difficulty="Beginner", duration="12 Hours", is_free=True, skills_covered=["DevOps", "CI/CD", "Jenkins", "Docker", "Kubernetes", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Software Engineer"], country="India"),
+            models.LearningResource(title="AWS Certified Cloud Practitioner Essentials", provider="AWS Skill Builder", category="Course", url="https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials", difficulty="Beginner", duration="6 Hours", is_free=True, skills_covered=["AWS", "Cloud", "EC2", "S3", "DevOps"], source="AWS Skill Builder", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Software Engineer", "Cloud Engineer"], country="Global"),
+            models.LearningResource(title="Docker Tutorial for Beginners", provider="CodeStepByStep", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PL8p2I9GklV44w-rQyG0HkU2pCgUaU9h_T", difficulty="Beginner", duration="4 Hours", is_free=True, skills_covered=["Docker", "Containers", "DevOps Engineer", "Backend Developer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Full Stack Developer"], country="India"),
+            models.LearningResource(title="Linux Operating System - Crash Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=sWbUDq4S6Y8", difficulty="Beginner", duration="2 Hours", is_free=True, skills_covered=["Linux", "Bash", "Terminal", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Software Engineer"], country="Global"),
+            models.LearningResource(title="Harvard CS50 - Introduction to Computer Science", provider="Harvard University", category="Course", url="https://www.youtube.com/watch?v=8mAITcNt710", difficulty="Beginner", duration="24 Hours", is_free=True, skills_covered=["CS Fundamentals", "C", "Python", "Algorithms", "Software Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Frontend Developer", "Backend Developer", "Full Stack Developer", "Data Scientist", "Data Analyst", "Machine Learning Engineer", "DevOps Engineer"], country="Global"),
+            models.LearningResource(title="Swayam Online Courses (Government of India)", provider="Swayam", category="Course", url="https://swayam.gov.in/", difficulty="Beginner", duration="Variable", is_free=True, skills_covered=["CS Fundamentals", "Engineering", "Algorithms", "Software Engineer"], source="Swayam", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Frontend Developer", "Backend Developer", "Full Stack Developer", "Data Scientist", "Data Analyst", "Machine Learning Engineer", "DevOps Engineer"], country="India"),
+            models.LearningResource(title="Kubernetes Course - Full Tutorial", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=X48VuDVv0do", difficulty="Intermediate", duration="4 Hours", is_free=True, skills_covered=["Kubernetes", "Containers", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer"], country="Global")
         ]
+
         db.add_all(learning_resources_data)
         db.commit()
 
@@ -1659,9 +1600,12 @@ def root():
 
 # --- Phase 4: Career Intelligence & Roadmaps ---
 
+
 @app.get("/api/roadmaps/{role}", response_model=schemas.CareerRoadmap)
 def get_career_roadmap(role: str):
     role_lower = role.lower()
+    
+    # 1. Data Engineer
     if "data" in role_lower and "engineer" in role_lower:
         steps = [
             {"step_number": 1, "title": "SQL & Relational Databases", "description": "Master advanced SQL and database internals", "skills": ["PostgreSQL", "MySQL", "Advanced SQL"], "estimated_weeks": 4},
@@ -1688,28 +1632,137 @@ def get_career_roadmap(role: str):
             ],
             "steps": steps
         }
-    else:
-        # Default fallback roadmap
+        
+    # 2. Frontend Developer / Engineer
+    elif "front" in role_lower or "ui" in role_lower:
         steps = [
-            {"step_number": 1, "title": "Fundamentals", "description": f"Learn the basics of {role}", "skills": ["Basics", "Fundamentals"], "estimated_weeks": 4},
-            {"step_number": 2, "title": "Core Tools", "description": "Master the primary tools", "skills": ["Tool A", "Tool B"], "estimated_weeks": 4},
-            {"step_number": 3, "title": "Advanced Topics", "description": "Dive deep into complex areas", "skills": ["Advanced Concept 1"], "estimated_weeks": 6},
-            {"step_number": 4, "title": "Portfolio Project", "description": "Build a real-world project", "skills": ["Project Management", "Execution"], "estimated_weeks": 4}
+            {"step_number": 1, "title": "Internet Fundamentals & HTML/CSS", "description": "Understand how the web works and build responsive layouts", "skills": ["HTML5", "CSS3", "Flexbox", "Grid"], "estimated_weeks": 3},
+            {"step_number": 2, "title": "Deep Dive into JavaScript", "description": "Master core JS, DOM manipulation, and ES6+ features", "skills": ["JavaScript", "DOM", "ES6+", "Async/Await"], "estimated_weeks": 5},
+            {"step_number": 3, "title": "Frontend Frameworks (React/Vue)", "description": "Learn a modern component-based UI framework", "skills": ["React.js", "State Management", "Hooks"], "estimated_weeks": 6},
+            {"step_number": 4, "title": "CSS Frameworks & Tooling", "description": "Speed up styling and manage assets", "skills": ["TailwindCSS", "Webpack", "Vite"], "estimated_weeks": 3},
+            {"step_number": 5, "title": "API Integration & Deployment", "description": "Connect to backends and deploy to the world", "skills": ["REST APIs", "Vercel", "Netlify", "Git"], "estimated_weeks": 3}
+        ]
+        return {
+            "role": "Frontend Developer",
+            "description": "Create the user interfaces and experiences of web applications.",
+            "total_weeks": 20,
+            "strategies": [
+                "Clone popular websites (Netflix, Twitter, Spotify) to practice UI development.",
+                "Build projects that consume real public APIs (weather, movies, news).",
+                "Don't rush to React; make sure your Vanilla JS fundamentals are very strong."
+            ],
+            "what_to_learn": [
+                "Semantic HTML and Modern CSS Layouts (Flexbox/Grid)",
+                "Advanced JavaScript (Closures, Promises, Event Loop)",
+                "React, React Router, and Redux/Zustand",
+                "Version Control (Git/GitHub) and Hosting (Vercel)"
+            ],
+            "steps": steps
+        }
+        
+    # 3. Backend Developer / Engineer
+    elif "back" in role_lower:
+        steps = [
+            {"step_number": 1, "title": "Language Mastery (Node.js/Python/Java)", "description": "Master a backend programming language deeply", "skills": ["Node.js", "Python", "Java", "Go"], "estimated_weeks": 4},
+            {"step_number": 2, "title": "Databases & ORMs", "description": "Learn to store and query data efficiently", "skills": ["SQL", "PostgreSQL", "MongoDB", "Mongoose/Prisma"], "estimated_weeks": 5},
+            {"step_number": 3, "title": "Building APIs", "description": "Create RESTful and GraphQL APIs", "skills": ["Express.js", "FastAPI", "REST", "GraphQL"], "estimated_weeks": 4},
+            {"step_number": 4, "title": "Authentication & Security", "description": "Secure your applications and manage users", "skills": ["JWT", "OAuth2", "Bcrypt", "CORS"], "estimated_weeks": 3},
+            {"step_number": 5, "title": "Deployment & Containerization", "description": "Package and ship your backend to servers", "skills": ["Docker", "Linux", "AWS/Render"], "estimated_weeks": 4}
+        ]
+        return {
+            "role": "Backend Developer",
+            "description": "Build the core logic, databases, and APIs that power applications.",
+            "total_weeks": 20,
+            "strategies": [
+                "Focus heavily on database design and understanding relationships.",
+                "Build a complete REST API from scratch and document it using Postman or Swagger.",
+                "Learn about common security flaws like SQL Injection and XSS."
+            ],
+            "what_to_learn": [
+                "Backend Languages (Node.js/Express, Python/FastAPI, or Java/Spring)",
+                "Relational Databases (SQL) and NoSQL (MongoDB)",
+                "API Design (REST, JSON, GraphQL)",
+                "Authentication strategies (Sessions, JWT)"
+            ],
+            "steps": steps
+        }
+        
+    # 4. Full Stack Developer
+    elif "full" in role_lower:
+        steps = [
+            {"step_number": 1, "title": "Frontend Fundamentals", "description": "Master HTML, CSS, JavaScript, and React", "skills": ["HTML/CSS", "JavaScript", "React"], "estimated_weeks": 6},
+            {"step_number": 2, "title": "Backend Fundamentals", "description": "Learn Node.js, Express, and API design", "skills": ["Node.js", "Express", "REST"], "estimated_weeks": 5},
+            {"step_number": 3, "title": "Database Management", "description": "Design schemas and integrate databases", "skills": ["MongoDB", "PostgreSQL", "Mongoose"], "estimated_weeks": 4},
+            {"step_number": 4, "title": "Authentication & State", "description": "Connect frontend and backend securely", "skills": ["JWT", "Redux", "Context API"], "estimated_weeks": 3},
+            {"step_number": 5, "title": "Full Stack Deployment", "description": "Deploy front and back ends and configure CI/CD", "skills": ["Docker", "Vercel", "Render", "CI/CD"], "estimated_weeks": 4}
+        ]
+        return {
+            "role": "Full Stack Developer",
+            "description": "Handle both the frontend UI and the backend logic of web applications.",
+            "total_weeks": 22,
+            "strategies": [
+                "Build full end-to-end CRUD applications like an E-commerce store or Social Media app.",
+                "Learn the MERN stack (MongoDB, Express, React, Node) as it is highly popular for beginners.",
+                "Master Git and version control early, it will save you headaches when connecting front and back ends."
+            ],
+            "what_to_learn": [
+                "Frontend (React/Vue, CSS Frameworks)",
+                "Backend (Node.js, Express)",
+                "Databases (MongoDB, PostgreSQL)",
+                "DevOps Basics (Git, Deployment, Docker)"
+            ],
+            "steps": steps
+        }
+        
+    # 5. Data Scientist / Analyst
+    elif "data" in role_lower:
+        steps = [
+            {"step_number": 1, "title": "Math & Statistics", "description": "Master probability, statistics, and linear algebra fundamentals", "skills": ["Statistics", "Probability", "Linear Algebra"], "estimated_weeks": 4},
+            {"step_number": 2, "title": "Python & Data Analysis", "description": "Learn Python libraries for data manipulation", "skills": ["Python", "Pandas", "NumPy"], "estimated_weeks": 4},
+            {"step_number": 3, "title": "Data Visualization", "description": "Communicate findings effectively through charts", "skills": ["Matplotlib", "Seaborn", "Tableau/PowerBI"], "estimated_weeks": 3},
+            {"step_number": 4, "title": "Machine Learning Fundamentals", "description": "Learn core ML algorithms and model evaluation", "skills": ["Scikit-Learn", "Regression", "Classification"], "estimated_weeks": 6},
+            {"step_number": 5, "title": "Advanced ML & Deployment", "description": "Dive into deep learning or deploy models to production", "skills": ["TensorFlow/PyTorch", "Flask", "Streamlit"], "estimated_weeks": 4}
         ]
         return {
             "role": role.title(),
-            "description": f"Roadmap to become a {role.title()}",
-            "total_weeks": 18,
+            "description": "Analyze data, build models, and extract actionable insights for business.",
+            "total_weeks": 21,
             "strategies": [
-                f"Start by mastering the absolute fundamentals of {role.title()}.",
-                "Build at least 2 complex portfolio projects to showcase your skills.",
-                "Contribute to open-source or collaborate with peers to gain real-world experience."
+                "Kaggle is your best friend. Participate in competitions and read public notebooks.",
+                "Don't just run ML models—learn to explain the 'why' behind the data and algorithms.",
+                "Build a portfolio that tells a story with data, not just raw code."
             ],
             "what_to_learn": [
-                f"Core foundations of {role.title()}",
-                "Industry-standard tools and software",
-                "Best practices and design patterns",
-                "Testing, deployment, and maintenance"
+                "Statistics & Probability",
+                "Python (Pandas, NumPy, Scikit-Learn)",
+                "SQL for Data Extraction",
+                "Data Visualization (Tableau, PowerBI, Matplotlib)"
+            ],
+            "steps": steps
+        }
+
+    # Default Dynamic Fallback
+    else:
+        steps = [
+            {"step_number": 1, "title": f"{role.title()} Fundamentals", "description": f"Master the core principles and basics required for {role.title()}", "skills": ["Core Concepts", "Industry Basics", "Terminology"], "estimated_weeks": 4},
+            {"step_number": 2, "title": "Primary Tools & Software", "description": "Gain proficiency in the industry-standard software and tools", "skills": ["Primary Software", "Workflows", "Automation"], "estimated_weeks": 5},
+            {"step_number": 3, "title": "Advanced Techniques", "description": "Dive deeper into specialized topics and edge cases", "skills": ["Advanced Strategies", "Optimization", "Troubleshooting"], "estimated_weeks": 5},
+            {"step_number": 4, "title": "Portfolio & Real-world Projects", "description": "Apply your knowledge to build a strong professional portfolio", "skills": ["Project Execution", "Documentation", "Presentation"], "estimated_weeks": 4}
+        ]
+        return {
+            "role": role.title(),
+            "description": f"A comprehensive learning path to become a successful {role.title()}.",
+            "total_weeks": 18,
+            "strategies": [
+                f"Start by understanding the day-to-day responsibilities of a {role.title()}.",
+                "Find a mentor or join a community dedicated to this field.",
+                "Build 2-3 high-quality projects that demonstrate your practical skills."
+            ],
+            "what_to_learn": [
+                "Fundamental theoretical concepts",
+                "Industry-standard tools and frameworks",
+                "Soft skills like communication and problem-solving",
+                "Best practices and standard operating procedures"
             ],
             "steps": steps
         }
