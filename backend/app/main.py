@@ -1247,27 +1247,28 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
         raise HTTPException(status_code=404, detail="Resume profile details not found")
 
     # Phase 10.2.4: Resume-to-Role Gap Analysis
-    career_profile = db.query(models.UserCareerProfile).filter(models.UserCareerProfile.user_id == current_user.id).first()
-    target_role = None
-    if career_profile and career_profile.target_role:
-        target_role = career_profile.target_role
+    # Always infer the target role directly from the resume for accurate gap analysis
+    user_skills_lower = [s.lower() for s in (profile.extracted_skills or [])]
+    all_role_skills = db.query(models.RoleSkillMap).all()
+    
+    role_reqs = {}
+    for rs in all_role_skills:
+        if rs.role not in role_reqs:
+            role_reqs[rs.role] = []
+        role_reqs[rs.role].append(rs.skill.lower())
         
-    if not target_role:
-        # Dynamically infer the best matching role based on extracted skills
-        user_skills_lower = [s.lower() for s in (profile.extracted_skills or [])]
-        all_role_skills = db.query(models.RoleSkillMap).all()
-        
-        role_counts = {}
-        for rs in all_role_skills:
-            if rs.role not in role_counts:
-                role_counts[rs.role] = 0
-            if rs.skill.lower() in user_skills_lower:
-                role_counts[rs.role] += 1
-                
-        if role_counts and any(count > 0 for count in role_counts.values()):
-            target_role = max(role_counts, key=role_counts.get)
-        else:
-            target_role = "Software Engineer"
+    target_role = "Software Engineer"
+    best_score = -1
+    
+    for role, skills in role_reqs.items():
+        if not skills:
+            continue
+        overlap = len(set(user_skills_lower).intersection(set(skills)))
+        # Score is based on percentage of required skills covered
+        score = (overlap / len(skills)) * 100
+        if score > best_score:
+            best_score = score
+            target_role = role
 
     role_skills = db.query(models.RoleSkillMap).filter(models.RoleSkillMap.role.ilike(target_role)).all()
     
