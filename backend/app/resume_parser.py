@@ -159,19 +159,38 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
             seen.add(d)
             dedup_edu.append(e)
 
-    # Scoring Logic
-    achievement_matches = re.findall(r'(\d+%|\$\d+|\d+x|increased by|decreased by|reduced by|improved by)', text_lower)
-    achievement_score = min(len(achievement_matches) * 5, 30)
+    # Improved Scoring Logic
+    # 1. Base Score for readable structure & contact info (30 points)
+    email_match = re.search(r'[\w\.-]+@[\w\.-]+', text)
+    phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
+    base_score = 25
+    if email_match: base_score += 5
+    if phone_match: base_score += 5
     
-    skill_score = min(len(extracted_skills) * 4, 40)
-    cert_score = min(len(extracted_certs) * 10, 20)
-    edu_score = 10 if dedup_edu else 0
-    
-    # Base ATS Score calculation out of 100
-    ats_score = min(100, skill_score + achievement_score + cert_score + edu_score)
-    # Ensure minimum reasonable score if skills are found
-    if len(extracted_skills) > 5 and ats_score < 40:
-        ats_score = 40 + len(extracted_skills)
+    # 2. Skill Density Score (Up to 40 points)
+    # 15+ skills = 40 pts, 10 skills = 30 pts, 5 skills = 20 pts
+    num_skills = len(extracted_skills)
+    if num_skills >= 15:
+        skill_score = 40
+    elif num_skills >= 10:
+        skill_score = 32 + (num_skills - 10) * 1.5
+    elif num_skills >= 5:
+        skill_score = 20 + (num_skills - 5) * 2.4
+    else:
+        skill_score = num_skills * 4
+
+    # 3. Impact Metrics & Action Keywords (Up to 20 points)
+    # Broader pattern matching numbers, scale, percentages, and strong action verbs
+    impact_matches = re.findall(r'(\d+%\b|\$\d+|\d+x\b|\b\d+\s*(?:tb|gb|mb|m|k|rows|users|pipelines|services|models|projects)\b|increased|decreased|reduced|improved|built|engineered|architected|optimized|scaled)', text_lower)
+    impact_score = min(20, len(impact_matches) * 2)
+
+    # 4. Certifications & Education Bonus (Up to 10 points)
+    cert_score = 5 if extracted_certs else 0
+    edu_score = 5 if dedup_edu else 0
+
+    # Total ATS Score (Bounded 0 to 100)
+    raw_ats_score = int(base_score + skill_score + impact_score + cert_score + edu_score)
+    ats_score = max(35, min(98, raw_ats_score))
 
     # Dynamic Feedback Generation
     strengths = []
