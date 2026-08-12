@@ -1046,7 +1046,7 @@ def update_application(app_id: int, application_update: schemas.ApplicationUpdat
 
 
 # --- Resumes Routes ---
-@app.post("/api/resumes/analyze", response_model=schemas.Resume)
+@app.post("/api/resumes/analyze", response_model=schemas.AnalyzeResumeResponse)
 @limiter.limit("10/minute")
 async def analyze_resume(request: Request, file: UploadFile = File(...), db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
     # --- Upload Validation ---
@@ -1120,6 +1120,16 @@ async def analyze_resume(request: Request, file: UploadFile = File(...), db: Ses
     )
     db.add(db_profile)
     db.commit()
+    
+    # Attach profile data to the return object so it matches AnalyzeResumeResponse schema
+    db_resume.extracted_skills = parsed["extracted_skills"]
+    db_resume.extracted_projects = parsed["extracted_projects"]
+    db_resume.extracted_education = parsed["extracted_education"]
+    db_resume.extracted_certifications = parsed["extracted_certifications"]
+    db_resume.extracted_experience = parsed["extracted_experience"]
+    db_resume.strengths = parsed["strengths"]
+    db_resume.weaknesses = parsed["weaknesses"]
+    db_resume.suggestions = parsed["suggestions"]
     
     return db_resume
 

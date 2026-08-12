@@ -142,6 +142,25 @@ class ResumeBase(BaseModel):
 class ResumeCreate(ResumeBase):
     pass
 
+
+class AnalyzeResumeResponse(BaseModel):
+    id: int
+    user_id: int
+    filename: str
+    ats_score: int
+    skills_score: int
+    extracted_skills: Optional[List[str]] = []
+    extracted_projects: Optional[List[Dict[str, Any]]] = []
+    extracted_education: Optional[List[Dict[str, Any]]] = []
+    extracted_certifications: Optional[List[str]] = []
+    extracted_experience: Optional[List[Dict[str, Any]]] = []
+    strengths: Optional[List[str]] = []
+    weaknesses: Optional[List[str]] = []
+    suggestions: Optional[List[str]] = []
+    
+    class Config:
+        from_attributes = True
+
 class Resume(ResumeBase):
     id: int
     user_id: int
