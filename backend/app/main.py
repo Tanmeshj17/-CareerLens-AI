@@ -278,7 +278,7 @@ def _safe_seed(db):
         db.commit()
 
     # 4. Certifications (Expanded Catalog with Verified URLs)
-    if db.query(models.Certification).count() < 30:
+    if db.query(models.Certification).count() < 35:
         db.query(models.Certification).delete()
         db.commit()
         certifications_data = [
@@ -410,6 +410,47 @@ def _safe_seed(db):
                 skills_covered=["Scrum Framework", "Agile Methodologies", "Sprint Planning", "Facilitation"],
                 roles=["Scrum Master", "Project Manager", "Agile Coach"],
                 availability_status="VERIFIED", price_inr=83000, affordability="PAID", free_learning_available=False
+            ),
+            # Indian Government Certifications
+            models.Certification(
+                name="Swayam Online Certification", provider="Government of India (Swayam)",
+                url="https://swayam.gov.in/", is_free=False, cost="INR 1,000 (Exam)",
+                difficulty="Intermediate", estimated_hours=40,
+                skills_covered=["Varies", "Engineering", "Sciences", "Humanities", "Management"],
+                roles=["Student", "Professional", "Researcher"],
+                availability_status="VERIFIED", price_inr=1000, affordability="AFFORDABLE", free_learning_available=True
+            ),
+            models.Certification(
+                name="NPTEL Online Certification (IIT/IISc)", provider="NPTEL",
+                url="https://nptel.ac.in/courses", is_free=False, cost="INR 1,000 (Exam)",
+                difficulty="Advanced", estimated_hours=40,
+                skills_covered=["CS Fundamentals", "Algorithms", "Machine Learning", "Data Science"],
+                roles=["Software Engineer", "Data Scientist", "Research Analyst"],
+                availability_status="VERIFIED", price_inr=1000, affordability="AFFORDABLE", free_learning_available=True
+            ),
+            models.Certification(
+                name="CDAC Certified Software Professional", provider="C-DAC",
+                url="https://www.cdac.in/", is_free=False, cost="Varies",
+                difficulty="Intermediate", estimated_hours=120,
+                skills_covered=["Software Development", "C++", "Java", "Web Technologies"],
+                roles=["Software Engineer", "Backend Developer", "Full Stack Developer"],
+                availability_status="VERIFIED", price_inr=5000, affordability="AFFORDABLE", free_learning_available=False
+            ),
+            models.Certification(
+                name="NIELIT 'O' / 'A' / 'B' / 'C' Level Certification", provider="NIELIT",
+                url="https://www.nielit.gov.in/", is_free=False, cost="Varies by Level",
+                difficulty="Beginner", estimated_hours=100,
+                skills_covered=["IT Tools", "Programming", "Databases", "Networking"],
+                roles=["IT Assistant", "Programmer", "Systems Administrator"],
+                availability_status="VERIFIED", price_inr=3000, affordability="AFFORDABLE", free_learning_available=False
+            ),
+            models.Certification(
+                name="Skill India Certification", provider="NSDC / Skill India",
+                url="https://www.skillindia.gov.in/", is_free=True, cost="Free",
+                difficulty="Beginner", estimated_hours=30,
+                skills_covered=["Vocational Skills", "Digital Literacy", "Soft Skills", "Industry Specific"],
+                roles=["Entry Level", "Apprentice", "Technician"],
+                availability_status="VERIFIED", price_inr=0, affordability="FREE", free_learning_available=True
             )
         ]
         db.add_all(certifications_data)

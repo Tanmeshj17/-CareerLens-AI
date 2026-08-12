@@ -2,10 +2,12 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../App';
 import { getCertifications } from '../api';
 
-const categories = ['All', 'Cloud', 'Data', 'Security', 'DevOps', 'AI/ML', 'Project Management'];
+const categories = ['All', 'Free', 'Paid', 'Cloud', 'Data', 'Security', 'DevOps', 'AI/ML', 'Project Management'];
 
 const categoryIcons = {
   All: 'apps',
+  Free: 'volunteer_activism',
+  Paid: 'payments',
   Cloud: 'cloud',
   Data: 'database',
   Security: 'shield',
@@ -139,7 +141,13 @@ export default function Certifications() {
       cert.title.toLowerCase().includes(search.toLowerCase()) ||
       cert.provider.toLowerCase().includes(search.toLowerCase()) ||
       cert.skills.some((s) => s.toLowerCase().includes(search.toLowerCase()));
-    const matchesCategory = activeCategory === 'All' || cert.category === activeCategory;
+      
+    let matchesCategory = false;
+    if (activeCategory === 'All') matchesCategory = true;
+    else if (activeCategory === 'Free') matchesCategory = cert.is_free;
+    else if (activeCategory === 'Paid') matchesCategory = !cert.is_free;
+    else matchesCategory = cert.category === activeCategory;
+    
     return matchesSearch && matchesCategory;
   });
 
