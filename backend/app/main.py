@@ -200,24 +200,103 @@ def _safe_seed(db):
     """Safely seed initial data (skills, certs, learning resources) without synthetic jobs."""
     # 1. Role Skill Maps
 
-    if db.query(models.RoleSkillMap).count() == 0:
+    if db.query(models.RoleSkillMap).count() < 100:
+        db.query(models.RoleSkillMap).delete()
+        db.commit()
         role_skills_data = [
+            # Software Engineer
+            ("Software Engineer", "Python", "Required", "Programming"),
+            ("Software Engineer", "Java", "Required", "Programming"),
+            ("Software Engineer", "C++", "Preferred", "Programming"),
+            ("Software Engineer", "JavaScript", "Required", "Programming"),
+            ("Software Engineer", "Data Structures", "Required", "Core CS"),
+            ("Software Engineer", "Algorithms", "Required", "Core CS"),
+            ("Software Engineer", "SQL", "Required", "Database"),
+            ("Software Engineer", "PostgreSQL", "Preferred", "Database"),
+            ("Software Engineer", "Git", "Required", "Tools"),
+            ("Software Engineer", "GitHub", "Required", "Tools"),
+            ("Software Engineer", "Docker", "Preferred", "DevOps"),
+            ("Software Engineer", "AWS", "Preferred", "Cloud"),
+            ("Software Engineer", "REST", "Required", "Architecture"),
+            ("Software Engineer", "Microservices", "Preferred", "Architecture"),
+            ("Software Engineer", "Agile", "Required", "Methodology"),
+            ("Software Engineer", "Problem Solving", "Required", "Soft Skills"),
+            ("Software Engineer", "System Design", "Required", "Core CS"),
+            
+            # Data Engineer
             ("Data Engineer", "Python", "Required", "Programming"),
             ("Data Engineer", "SQL", "Required", "Database"),
+            ("Data Engineer", "Scala", "Preferred", "Programming"),
             ("Data Engineer", "Apache Spark", "Required", "Big Data"),
-            ("Data Engineer", "Airflow", "Preferred", "Orchestration"),
-            ("Software Engineer", "Java", "Required", "Programming"),
-            ("Software Engineer", "Python", "Required", "Programming"),
-            ("Software Engineer", "Data Structures", "Required", "Core CS"),
-            ("Frontend Engineer", "React", "Required", "Frontend"),
+            ("Data Engineer", "Hadoop", "Preferred", "Big Data"),
+            ("Data Engineer", "Airflow", "Required", "Orchestration"),
+            ("Data Engineer", "Kafka", "Required", "Streaming"),
+            ("Data Engineer", "dbt", "Preferred", "Transformation"),
+            ("Data Engineer", "AWS", "Required", "Cloud"),
+            ("Data Engineer", "Snowflake", "Preferred", "Data Warehouse"),
+            ("Data Engineer", "Redshift", "Preferred", "Data Warehouse"),
+            ("Data Engineer", "Docker", "Required", "DevOps"),
+            ("Data Engineer", "Data Modeling", "Required", "Core"),
+            
+            # Frontend Engineer
+            ("Frontend Engineer", "JavaScript", "Required", "Programming"),
             ("Frontend Engineer", "TypeScript", "Required", "Programming"),
-            ("Frontend Engineer", "CSS", "Required", "Frontend"),
+            ("Frontend Engineer", "React", "Required", "Framework"),
+            ("Frontend Engineer", "Next.js", "Preferred", "Framework"),
+            ("Frontend Engineer", "Vue", "Preferred", "Framework"),
+            ("Frontend Engineer", "HTML", "Required", "Core Web"),
+            ("Frontend Engineer", "CSS", "Required", "Core Web"),
+            ("Frontend Engineer", "Tailwind", "Preferred", "Styling"),
+            ("Frontend Engineer", "Redux", "Preferred", "State Management"),
+            ("Frontend Engineer", "Git", "Required", "Tools"),
+            ("Frontend Engineer", "Jest", "Preferred", "Testing"),
+            ("Frontend Engineer", "Webpack", "Preferred", "Bundling"),
+            ("Frontend Engineer", "UX", "Preferred", "Design"),
+            ("Frontend Engineer", "Responsive Design", "Required", "Core Web"),
+            
+            # Backend Engineer
+            ("Backend Engineer", "Python", "Required", "Programming"),
+            ("Backend Engineer", "Node.js", "Required", "Programming"),
+            ("Backend Engineer", "Java", "Preferred", "Programming"),
+            ("Backend Engineer", "Go", "Preferred", "Programming"),
+            ("Backend Engineer", "SQL", "Required", "Database"),
+            ("Backend Engineer", "PostgreSQL", "Required", "Database"),
+            ("Backend Engineer", "MongoDB", "Preferred", "Database"),
+            ("Backend Engineer", "Redis", "Required", "Caching"),
+            ("Backend Engineer", "Docker", "Required", "DevOps"),
+            ("Backend Engineer", "Kubernetes", "Preferred", "DevOps"),
+            ("Backend Engineer", "AWS", "Required", "Cloud"),
+            ("Backend Engineer", "REST", "Required", "Architecture"),
+            ("Backend Engineer", "GraphQL", "Preferred", "Architecture"),
+            ("Backend Engineer", "Microservices", "Required", "Architecture"),
+            
+            # DevOps Engineer
+            ("DevOps Engineer", "Linux", "Required", "OS"),
+            ("DevOps Engineer", "Bash", "Required", "Scripting"),
+            ("DevOps Engineer", "Python", "Required", "Scripting"),
             ("DevOps Engineer", "Docker", "Required", "Containerization"),
             ("DevOps Engineer", "Kubernetes", "Required", "Orchestration"),
+            ("DevOps Engineer", "Terraform", "Required", "IaC"),
+            ("DevOps Engineer", "Ansible", "Preferred", "Configuration"),
             ("DevOps Engineer", "AWS", "Required", "Cloud"),
+            ("DevOps Engineer", "CI/CD", "Required", "Pipelines"),
+            ("DevOps Engineer", "Jenkins", "Preferred", "Pipelines"),
+            ("DevOps Engineer", "GitLab", "Preferred", "Pipelines"),
+            ("DevOps Engineer", "Prometheus", "Required", "Monitoring"),
+            ("DevOps Engineer", "Grafana", "Required", "Monitoring"),
+            ("DevOps Engineer", "Git", "Required", "Tools"),
+            
+            # Data Analyst
             ("Data Analyst", "SQL", "Required", "Database"),
             ("Data Analyst", "Python", "Required", "Programming"),
+            ("Data Analyst", "R", "Preferred", "Programming"),
+            ("Data Analyst", "Excel", "Required", "Tools"),
+            ("Data Analyst", "Tableau", "Required", "BI Tools"),
             ("Data Analyst", "Power BI", "Required", "BI Tools"),
+            ("Data Analyst", "Pandas", "Required", "Data Science"),
+            ("Data Analyst", "Statistics", "Required", "Core"),
+            ("Data Analyst", "Data Visualization", "Required", "Core"),
+            ("Data Analyst", "A/B Testing", "Preferred", "Core")
         ]
         for r, s, imp, cat in role_skills_data:
             db.add(models.RoleSkillMap(role=r, skill=s, importance=imp, category=cat))
