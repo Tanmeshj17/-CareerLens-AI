@@ -1248,7 +1248,26 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
 
     # Phase 10.2.4: Resume-to-Role Gap Analysis
     career_profile = db.query(models.UserCareerProfile).filter(models.UserCareerProfile.user_id == current_user.id).first()
-    target_role = career_profile.target_role if career_profile and career_profile.target_role else "Software Engineer"
+    target_role = None
+    if career_profile and career_profile.target_role:
+        target_role = career_profile.target_role
+        
+    if not target_role:
+        # Dynamically infer the best matching role based on extracted skills
+        user_skills_lower = [s.lower() for s in (profile.extracted_skills or [])]
+        all_role_skills = db.query(models.RoleSkillMap).all()
+        
+        role_counts = {}
+        for rs in all_role_skills:
+            if rs.role not in role_counts:
+                role_counts[rs.role] = 0
+            if rs.skill.lower() in user_skills_lower:
+                role_counts[rs.role] += 1
+                
+        if role_counts and any(count > 0 for count in role_counts.values()):
+            target_role = max(role_counts, key=role_counts.get)
+        else:
+            target_role = "Software Engineer"
 
     role_skills = db.query(models.RoleSkillMap).filter(models.RoleSkillMap.role.ilike(target_role)).all()
     
