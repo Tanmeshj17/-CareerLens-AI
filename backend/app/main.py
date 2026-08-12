@@ -200,7 +200,7 @@ def _safe_seed(db):
     """Safely seed initial data (skills, certs, learning resources) without synthetic jobs."""
     # 1. Role Skill Maps
 
-    if db.query(models.RoleSkillMap).count() < 100:
+    if db.query(models.RoleSkillMap).count() < 120:
         db.query(models.RoleSkillMap).delete()
         db.commit()
         role_skills_data = [
@@ -226,16 +226,26 @@ def _safe_seed(db):
             # Data Engineer
             ("Data Engineer", "Python", "Required", "Programming"),
             ("Data Engineer", "SQL", "Required", "Database"),
-            ("Data Engineer", "Scala", "Preferred", "Programming"),
+            ("Data Engineer", "PostgreSQL", "Required", "Database"),
+            ("Data Engineer", "Databricks", "Required", "Big Data"),
             ("Data Engineer", "Apache Spark", "Required", "Big Data"),
-            ("Data Engineer", "Hadoop", "Preferred", "Big Data"),
             ("Data Engineer", "Airflow", "Required", "Orchestration"),
             ("Data Engineer", "Kafka", "Required", "Streaming"),
             ("Data Engineer", "dbt", "Preferred", "Transformation"),
-            ("Data Engineer", "AWS", "Required", "Cloud"),
+            ("Data Engineer", "AWS", "Preferred", "Cloud"),
+            ("Data Engineer", "Azure", "Preferred", "Cloud"),
+            ("Data Engineer", "GCP", "Preferred", "Cloud"),
             ("Data Engineer", "Snowflake", "Preferred", "Data Warehouse"),
             ("Data Engineer", "Redshift", "Preferred", "Data Warehouse"),
-            ("Data Engineer", "Docker", "Required", "DevOps"),
+            ("Data Engineer", "BigQuery", "Preferred", "Data Warehouse"),
+            ("Data Engineer", "Docker", "Preferred", "DevOps"),
+            ("Data Engineer", "Git", "Required", "Tools"),
+            ("Data Engineer", "GitHub", "Required", "Tools"),
+            ("Data Engineer", "REST", "Preferred", "Architecture"),
+            ("Data Engineer", "FastAPI", "Preferred", "Framework"),
+            ("Data Engineer", "Pandas", "Required", "Data Science"),
+            ("Data Engineer", "NumPy", "Required", "Data Science"),
+            ("Data Engineer", "Problem Solving", "Required", "Soft Skills"),
             ("Data Engineer", "Data Modeling", "Required", "Core"),
             
             # Frontend Engineer
@@ -1246,29 +1256,62 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
     if not profile:
         raise HTTPException(status_code=404, detail="Resume profile details not found")
 
-    # Phase 10.2.4: Resume-to-Role Gap Analysis
-    # Always infer the target role directly from the resume for accurate gap analysis
+    # Phase 10.2.4: Smart Role Detection for Gap Analysis
+    filename_lower = (resume.filename or "").lower()
     user_skills_lower = [s.lower() for s in (profile.extracted_skills or [])]
-    all_role_skills = db.query(models.RoleSkillMap).all()
-    
-    role_reqs = {}
-    for rs in all_role_skills:
-        if rs.role not in role_reqs:
-            role_reqs[rs.role] = []
-        role_reqs[rs.role].append(rs.skill.lower())
-        
-    target_role = "Software Engineer"
-    best_score = -1
-    
-    for role, skills in role_reqs.items():
-        if not skills:
-            continue
-        overlap = len(set(user_skills_lower).intersection(set(skills)))
-        # Score is based on percentage of required skills covered
-        score = (overlap / len(skills)) * 100
-        if score > best_score:
-            best_score = score
-            target_role = role
+    user_skills_set = set(user_skills_lower)
+
+    # 1. Filename explicit overrides
+    target_role = None
+    if "data" in filename_lower and ("engineer" in filename_lower or "engineering" in filename_lower or "de" in filename_lower):
+        target_role = "Data Engineer"
+    elif "devops" in filename_lower or "sre" in filename_lower:
+        target_role = "DevOps Engineer"
+    elif "frontend" in filename_lower or "react" in filename_lower:
+        target_role = "Frontend Engineer"
+    elif "backend" in filename_lower or "node" in filename_lower:
+        target_role = "Backend Engineer"
+    elif "analyst" in filename_lower or "analytics" in filename_lower:
+        target_role = "Data Analyst"
+
+    if not target_role:
+        # 2. Weighted Domain Skill Matching
+        de_skills = {"apache spark", "spark", "airflow", "kafka", "dbt", "snowflake", "redshift", "bigquery", "databricks", "hadoop", "etl", "data modeling", "data pipeline", "pyspark", "azure", "gcp"}
+        fe_skills = {"react", "next.js", "vue", "angular", "html", "css", "tailwind", "redux", "zustand", "frontend", "webpack", "vite"}
+        devops_skills = {"docker", "kubernetes", "k8s", "terraform", "ansible", "jenkins", "prometheus", "grafana", "bash", "ci/cd"}
+        da_skills = {"tableau", "power bi", "excel", "statistics", "seaborn", "matplotlib", "a/b testing"}
+        be_skills = {"fastapi", "django", "flask", "express.js", "node.js", "nest.js", "spring boot", "microservices", "redis", "mongodb"}
+
+        scores = {
+            "Data Engineer": len(user_skills_set.intersection(de_skills)) * 3.0,
+            "Frontend Engineer": len(user_skills_set.intersection(fe_skills)) * 2.0,
+            "DevOps Engineer": len(user_skills_set.intersection(devops_skills)) * 2.0,
+            "Data Analyst": len(user_skills_set.intersection(da_skills)) * 2.0,
+            "Backend Engineer": len(user_skills_set.intersection(be_skills)) * 1.5,
+        }
+
+        best_role = max(scores, key=scores.get)
+        if scores[best_role] > 0:
+            target_role = best_role
+        else:
+            # 3. Fallback to percentage overlap across all db roles
+            all_role_skills = db.query(models.RoleSkillMap).all()
+            role_reqs = {}
+            for rs in all_role_skills:
+                if rs.role not in role_reqs:
+                    role_reqs[rs.role] = []
+                role_reqs[rs.role].append(rs.skill.lower())
+                
+            best_overlap_role = "Software Engineer"
+            best_score = -1
+            for role, skills in role_reqs.items():
+                if not skills: continue
+                overlap = len(user_skills_set.intersection(set(skills)))
+                score = (overlap / len(skills)) * 100
+                if score > best_score:
+                    best_score = score
+                    best_overlap_role = role
+            target_role = best_overlap_role
 
     role_skills = db.query(models.RoleSkillMap).filter(models.RoleSkillMap.role.ilike(target_role)).all()
     
