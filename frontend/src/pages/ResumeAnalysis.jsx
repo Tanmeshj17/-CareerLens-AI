@@ -1,72 +1,50 @@
 import { useState } from 'react';
 import { analyzeResume, getResumeGapAnalysis, getResumeReadiness } from '../api';
 
-// ─── Score Color Logic ───────────────────────────────────────────────────────
 function getScoreColor(score) {
-  if (score >= 80) return { color: 'text-emerald-400', bg: 'bg-emerald-500', ring: 'stroke-emerald-400', label: 'Excellent' };
-  if (score >= 60) return { color: 'text-sky-400', bg: 'bg-sky-500', ring: 'stroke-sky-400', label: 'Good' };
-  if (score >= 40) return { color: 'text-amber-400', bg: 'bg-amber-500', ring: 'stroke-amber-400', label: 'Average' };
-  return { color: 'text-rose-400', bg: 'bg-rose-500', ring: 'stroke-rose-400', label: 'Needs Work' };
+  if (score >= 80) return 'text-emerald-400';
+  if (score >= 60) return 'text-sky-400';
+  if (score >= 40) return 'text-amber-400';
+  return 'text-rose-400';
 }
 
-// ─── ATS Score Ring Component ────────────────────────────────────────────────
+function getScoreStroke(score) {
+  if (score >= 80) return '#34d399';
+  if (score >= 60) return '#38bdf8';
+  if (score >= 40) return '#fbbf24';
+  return '#fb7185';
+}
+
 function ScoreRing({ score }) {
-  const { color, ring, label } = getScoreColor(score);
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
-
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-36 h-36">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke="currentColor" strokeWidth="10" className="text-white/8" />
-          <circle
-            cx="60" cy="60" r={radius} fill="none" strokeWidth="10"
-            strokeDasharray={circumference} strokeDashoffset={offset}
-            strokeLinecap="round" className={ring}
-            style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-4xl font-black font-[Geist] ${color}`}>{score}</span>
-          <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest font-[Geist]">/ 100</span>
-        </div>
-      </div>
-      <span className={`text-xs font-bold px-3 py-1 rounded-full ${color} bg-white/5 border border-current/20 font-[Geist]`}>{label}</span>
+    <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="currentColor" strokeWidth="10" className="text-white/8" />
+        <circle
+          cx="60" cy="60" r={radius} fill="none" strokeWidth="10"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ stroke: getScoreStroke(score), transition: 'stroke-dashoffset 1s ease-in-out' }}
+        />
+      </svg>
+      <span className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</span>
     </div>
   );
 }
 
-// ─── Skill Tag ───────────────────────────────────────────────────────────────
-function SkillTag({ skill, variant = 'default' }) {
-  const variants = {
-    default: 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] border-[var(--md-sys-color-outline-variant)]/30',
-    match: 'bg-emerald-500/12 text-emerald-400 border-emerald-500/25',
-    missing: 'bg-rose-500/12 text-rose-400 border-rose-500/25',
-    recommend: 'bg-[var(--md-sys-color-primary)]/12 text-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)]/25',
-  };
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium font-[Geist] border ${variants[variant]}`}>
-      {skill}
-    </span>
-  );
-}
-
 export default function ResumeAnalysis() {
-  const [file, setFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [gapData, setGapData] = useState(null);
   const [readinessData, setReadinessData] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
 
   const handleUpload = async (e) => {
-    e.preventDefault();
     const selectedFile = e.target.files && e.target.files[0];
     if (!selectedFile) return;
 
-    setFile(selectedFile);
     setAnalyzing(true);
     setResult(null);
     setGapData(null);
@@ -87,6 +65,7 @@ export default function ResumeAnalysis() {
         strengths: analyzeRes.strengths || [],
         weaknesses: analyzeRes.weaknesses || [],
         suggestions: analyzeRes.suggestions || [],
+        targetRole: analyzeRes.target_role || (gapRes?.target_role) || 'Software Engineer',
         certs: analyzeRes.extracted_certifications || [],
         experience: analyzeRes.extracted_experience || [],
         education: analyzeRes.extracted_education || [],
@@ -101,347 +80,210 @@ export default function ResumeAnalysis() {
     }
   };
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: 'dashboard' },
-    { id: 'gap', label: 'Skill Gap', icon: 'compare_arrows' },
-    { id: 'feedback', label: 'AI Feedback', icon: 'lightbulb' },
-  ];
-
   return (
     <div className="space-y-lg animate-fade-in-up">
 
-      {/* ─── Header ─── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--md-sys-color-primary-container)]/20 via-[var(--md-sys-color-primary)]/8 to-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/30 p-xl">
-        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[var(--md-sys-color-primary)]/6 blur-3xl pointer-events-none" />
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[var(--md-sys-color-primary)]/15 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 28 }}>insert_chart</span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">
-              Resume ATS Analysis
-            </h1>
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)]">
-              AI-powered scoring, skill gap detection, and professional feedback
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Header */}
+      <header>
+        <h1 className="text-3xl font-bold text-on-surface">Resume ATS Analysis</h1>
+        <p className="text-on-surface-variant">Upload your resume to get instant ATS score, skill gap, and AI feedback.</p>
+      </header>
 
-      {/* ─── Upload Zone ─── */}
+      {/* Upload Zone */}
       {!result && !analyzing && (
-        <label className="group block cursor-pointer">
-          <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.doc,.docx" />
-          <div className="border-2 border-dashed border-[var(--md-sys-color-outline-variant)]/50 rounded-2xl p-16 flex flex-col items-center justify-center bg-[var(--md-sys-color-surface-container)]/50 hover:bg-[var(--md-sys-color-surface-container)] hover:border-[var(--md-sys-color-primary)]/50 transition-all duration-300 group-hover:shadow-lg">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--md-sys-color-primary)]/12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 34 }}>upload_file</span>
-            </div>
-            <p className="text-lg font-bold text-[var(--md-sys-color-on-surface)] font-[Geist] mb-1">
-              Drop your resume here or click to browse
-            </p>
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">
-              Supports PDF and DOCX · Max 5 MB
-            </p>
-            <div className="mt-6 flex items-center gap-3">
-              {['ATS Score', 'Skill Gap Analysis', 'AI Feedback', '300+ Skills Detected'].map(tag => (
-                <span key={tag} className="text-xs px-3 py-1.5 rounded-full bg-[var(--md-sys-color-primary)]/10 text-[var(--md-sys-color-primary)] font-[Geist] font-medium border border-[var(--md-sys-color-primary)]/20">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        </label>
-      )}
-
-      {/* ─── Loading State ─── */}
-      {analyzing && (
-        <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/30 p-16 flex flex-col items-center gap-6">
-          <div className="relative w-20 h-20">
-            <div className="w-full h-full rounded-full border-4 border-[var(--md-sys-color-primary)]/20 border-t-[var(--md-sys-color-primary)] animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 28 }}>description</span>
-            </div>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-[var(--md-sys-color-on-surface)] font-[Geist] animate-pulse">
-              Analyzing your resume...
-            </p>
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] mt-1 font-[Geist]">
-              Detecting skills, evaluating ATS score, and checking skill gaps
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {['Extracting Skills', 'Scoring ATS', 'Gap Analysis'].map((step, i) => (
-              <div key={step} className="flex items-center gap-1.5 text-xs text-[var(--md-sys-color-on-surface-variant)] px-3 py-1.5 rounded-full bg-white/5 border border-[var(--md-sys-color-outline-variant)]/20 font-[Geist]">
-                <div className="w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-primary)] animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
-                {step}
-              </div>
-            ))}
-          </div>
+        <div className="border-2 border-dashed border-outline-variant rounded-xl p-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer relative">
+          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleUpload} accept=".pdf,.doc,.docx" />
+          <span className="material-symbols-outlined text-4xl text-primary mb-sm">upload_file</span>
+          <p className="text-lg font-bold text-on-surface">Drop your resume here or click to browse</p>
+          <p className="text-sm text-on-surface-variant mt-1">Accepted formats: PDF, DOCX</p>
         </div>
       )}
 
-      {/* ─── Results ─── */}
-      {result && (
-        <div className="space-y-lg">
+      {/* Analyzing spinner */}
+      {analyzing && (
+        <div className="p-xl text-center space-y-md">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-lg font-bold animate-pulse">Analyzing your resume with AI...</p>
+          <p className="text-sm text-on-surface-variant">Detecting 300+ skills, scoring ATS fit, checking skill gaps…</p>
+        </div>
+      )}
 
-          {/* ─── Score Overview Cards ─── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+      {/* Results */}
+      {result && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+
+          {/* ─── Left Column ─── */}
+          <div className="md:col-span-1 space-y-md">
+
             {/* ATS Score */}
-            <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg flex flex-col items-center gap-md">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">ATS Score</p>
+            <div className="glass-effect p-lg rounded-xl text-center space-y-sm">
+              <h3 className="font-bold text-on-surface-variant uppercase tracking-wider text-sm">ATS Score</h3>
               <ScoreRing score={result.score} />
+              <p className={`text-xs font-bold uppercase tracking-wider ${getScoreColor(result.score)}`}>
+                {result.score >= 80 ? 'Excellent' : result.score >= 60 ? 'Good' : result.score >= 40 ? 'Average' : 'Needs Work'}
+              </p>
             </div>
 
-            {/* Skills Breakdown */}
-            <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg space-y-md">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">Detection Summary</p>
-              {[
-                { label: 'Skills Detected', value: result.skills.length, icon: 'code', color: 'text-[var(--md-sys-color-primary)]' },
-                { label: 'Certifications', value: result.certs.length, icon: 'workspace_premium', color: 'text-amber-400' },
-                { label: 'Education', value: result.education.length, icon: 'school', color: 'text-sky-400' },
-              ].map(item => (
-                <div key={item.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className={`material-symbols-outlined ${item.color}`} style={{ fontSize: 18 }}>{item.icon}</span>
-                    <span className="text-sm text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">{item.label}</span>
-                  </div>
-                  <span className={`text-xl font-black font-[Geist] ${item.color}`}>{item.value}</span>
-                </div>
-              ))}
+            {/* Target Role */}
+            <div className="glass-effect p-md rounded-xl text-center border border-outline-variant">
+              <h3 className="font-bold text-on-surface-variant uppercase tracking-wider text-xs mb-1">Target Role Match</h3>
+              <div className="text-lg font-bold text-primary">{result.targetRole}</div>
             </div>
 
             {/* Market Readiness */}
-            <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg flex flex-col items-center justify-center gap-md">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">Market Readiness</p>
-              {readinessData ? (
-                <>
-                  <div className={`text-5xl font-black font-[Geist] ${getScoreColor(readinessData.readiness_score).color}`}>
-                    {readinessData.readiness_score}
-                    <span className="text-xl text-[var(--md-sys-color-on-surface-variant)]">/100</span>
-                  </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${getScoreColor(readinessData.readiness_score).color} bg-white/5 border-current/20 font-[Geist]`}>
-                    {readinessData.level || 'Intermediate'}
-                  </span>
-                  {gapData?.target_role && (
-                    <div className="text-center">
-                      <p className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">Best Role Match</p>
-                      <p className="text-sm font-bold text-[var(--md-sys-color-primary)] font-[Geist]">{gapData.target_role}</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center">
-                  <p className="text-4xl font-black font-[Geist] text-[var(--md-sys-color-primary)]">{result.score}%</p>
-                  <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-1 font-[Geist]">Based on ATS Score</p>
+            {readinessData && (
+              <div className="glass-effect p-lg rounded-xl text-center bg-surface-container-low border border-outline-variant">
+                <h3 className="font-bold text-on-surface-variant uppercase tracking-wider text-sm mb-2">Market Readiness</h3>
+                <div className={`text-3xl font-black mb-1 ${getScoreColor(readinessData.readiness_score)}`}>
+                  {readinessData.readiness_score}/100
                 </div>
+                <div className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-success/10 text-success border border-success/20">
+                  {readinessData.level}
+                </div>
+              </div>
+            )}
+
+            {/* Extracted Skills */}
+            <div className="glass-effect p-md rounded-xl">
+              <h3 className="font-bold text-on-surface-variant mb-sm flex items-center gap-2">
+                Extracted Skills
+                <span className="px-2 py-0.5 rounded-full text-xs bg-primary/12 text-primary font-medium">{result.skills.length}</span>
+              </h3>
+              {result.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {result.skills.map(s => (
+                    <span key={s} className="px-3 py-1 bg-surface-container-high text-on-surface rounded-full text-xs font-medium border border-outline-variant">{s}</span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-on-surface-variant">No skills detected. Try a text-based PDF resume.</p>
               )}
             </div>
-          </div>
 
-          {/* ─── Tabs ─── */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--md-sys-color-surface-container)]/50 border border-[var(--md-sys-color-outline-variant)]/20 w-fit">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium font-[Geist] transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                    : 'text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)]'
-                }`}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* ─── Tab: Overview ─── */}
-          {activeTab === 'overview' && (
-            <div className="space-y-md">
-              <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg">
-                <div className="flex items-center gap-2 mb-md">
-                  <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 20 }}>code</span>
-                  <h3 className="text-base font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">
-                    Extracted Skills
-                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)]/12 text-[var(--md-sys-color-primary)] font-medium">{result.skills.length}</span>
-                  </h3>
+            {/* Certs */}
+            {result.certs.length > 0 && (
+              <div className="glass-effect p-md rounded-xl">
+                <h3 className="font-bold text-on-surface-variant mb-sm">Certifications Detected</h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.certs.map(c => (
+                    <span key={c} className="px-2 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-xs font-bold">{c}</span>
+                  ))}
                 </div>
-                {result.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {result.skills.map(skill => <SkillTag key={skill} skill={skill} />)}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)]/30 block mb-2" style={{ fontSize: 36 }}>search_off</span>
-                    <p className="text-sm text-[var(--md-sys-color-on-surface-variant)]">No skills detected. Try uploading a text-based PDF or DOCX resume.</p>
+              </div>
+            )}
+
+            <label className="block cursor-pointer">
+              <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.doc,.docx" />
+              <div className="w-full py-2 bg-outline/10 hover:bg-outline/20 rounded-lg font-bold transition-colors text-center text-sm text-on-surface-variant">
+                Analyze Another Resume
+              </div>
+            </label>
+          </div>
+
+          {/* ─── Right Column ─── */}
+          <div className="md:col-span-2 space-y-md">
+
+            {/* Skill Gap */}
+            {gapData && (
+              <div className="bg-surface border border-outline-variant rounded-xl p-lg space-y-md">
+                <div className="flex items-center justify-between border-b border-outline-variant/50 pb-2">
+                  <h3 className="text-xl font-bold">Skill Gap Analysis</h3>
+                  {gapData.coverage_percentage !== undefined && (
+                    <span className={`text-sm font-bold ${getScoreColor(gapData.coverage_percentage)}`}>
+                      {Math.round(gapData.coverage_percentage)}% covered
+                    </span>
+                  )}
+                </div>
+
+                {/* Coverage bar */}
+                {gapData.coverage_percentage !== undefined && (
+                  <div className="h-2 rounded-full bg-white/8 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${gapData.coverage_percentage}%`, background: getScoreStroke(gapData.coverage_percentage) }}
+                    />
                   </div>
                 )}
-              </div>
 
-              {result.certs.length > 0 && (
-                <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg">
-                  <div className="flex items-center gap-2 mb-md">
-                    <span className="material-symbols-outlined text-amber-400" style={{ fontSize: 20 }}>workspace_premium</span>
-                    <h3 className="text-base font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">Detected Certifications</h3>
-                  </div>
+                <div>
+                  <h4 className="text-sm font-bold text-on-surface-variant mb-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
+                    Matching Market Skills
+                    <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-emerald-500/12 text-emerald-400">{gapData.matching_skills?.length || 0}</span>
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    {result.certs.map(cert => (
-                      <span key={cert} className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/12 text-amber-400 border border-amber-500/25 font-medium font-[Geist]">{cert}</span>
+                    {gapData.matching_skills?.map(s => (
+                      <span key={s} className="px-2 py-1 bg-success/10 text-success border border-success/20 rounded text-xs font-bold">{s}</span>
+                    ))}
+                    {!gapData.matching_skills?.length && <span className="text-sm text-on-surface-variant">No top market skills matched yet.</span>}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-on-surface-variant mb-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-error text-sm">cancel</span>
+                    Missing Market Skills
+                    <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-error/12 text-error">{gapData.missing_skills?.length || 0}</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {gapData.missing_skills?.slice(0, 15).map(s => (
+                      <span key={s} className="px-2 py-1 bg-error/10 text-error border border-error/20 rounded text-xs font-bold">{s}</span>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* ─── Tab: Skill Gap ─── */}
-          {activeTab === 'gap' && (
-            <div className="space-y-md">
-              {gapData ? (
-                <>
-                  {gapData.coverage_percentage !== undefined && (
-                    <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 20 }}>compare_arrows</span>
-                          <h3 className="text-base font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">
-                            Coverage: {gapData.target_role}
-                          </h3>
-                        </div>
-                        <span className={`text-2xl font-black font-[Geist] ${getScoreColor(gapData.coverage_percentage).color}`}>
-                          {Math.round(gapData.coverage_percentage)}%
-                        </span>
-                      </div>
-                      <div className="h-3 rounded-full bg-white/8 overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-[var(--md-sys-color-primary)] to-emerald-400"
-                          style={{ width: `${gapData.coverage_percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                    <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg">
-                      <div className="flex items-center gap-2 mb-md">
-                        <span className="material-symbols-outlined text-emerald-400" style={{ fontSize: 20 }}>check_circle</span>
-                        <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">
-                          Matching Skills
-                          <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/12 text-emerald-400 font-medium">{gapData.matching_skills?.length || 0}</span>
-                        </h4>
-                      </div>
-                      {gapData.matching_skills?.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {gapData.matching_skills.map(s => <SkillTag key={s} skill={s} variant="match" />)}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-[var(--md-sys-color-on-surface-variant)]">No matching skills detected against the target role.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-lg">
-                      <div className="flex items-center gap-2 mb-md">
-                        <span className="material-symbols-outlined text-rose-400" style={{ fontSize: 20 }}>cancel</span>
-                        <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)] font-[Geist]">
-                          Missing Skills
-                          <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-rose-500/12 text-rose-400 font-medium">{gapData.missing_skills?.length || 0}</span>
-                        </h4>
-                      </div>
-                      {gapData.missing_skills?.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {gapData.missing_skills.slice(0, 20).map(s => <SkillTag key={s} skill={s} variant="missing" />)}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-emerald-400 font-medium font-[Geist]">🎉 You match all required skills!</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {gapData.recommended_skills?.length > 0 && (
-                    <div className="rounded-xl bg-gradient-to-br from-[var(--md-sys-color-primary)]/8 to-violet-500/8 border border-[var(--md-sys-color-primary)]/20 p-lg">
-                      <div className="flex items-center gap-2 mb-md">
-                        <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]" style={{ fontSize: 20 }}>bolt</span>
-                        <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] font-[Geist]">Priority Skills to Learn</h4>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {gapData.recommended_skills.map(s => <SkillTag key={s} skill={s} variant="recommend" />)}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/25 p-12 text-center">
-                  <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)]/30 block mb-3" style={{ fontSize: 48 }}>compare_arrows</span>
-                  <p className="text-sm text-[var(--md-sys-color-on-surface-variant)]">Skill gap analysis data unavailable. Ensure you have a career profile set up.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ─── Tab: AI Feedback ─── */}
-          {activeTab === 'feedback' && (
-            <div className="space-y-md">
-              {[
-                {
-                  title: 'Strengths',
-                  icon: 'check_circle',
-                  color: 'text-emerald-400',
-                  border: 'border-emerald-500/40',
-                  bg: 'from-emerald-500/8',
-                  items: result.strengths,
-                  empty: 'No specific strengths detected.',
-                },
-                {
-                  title: 'Areas to Improve',
-                  icon: 'warning',
-                  color: 'text-rose-400',
-                  border: 'border-rose-500/40',
-                  bg: 'from-rose-500/8',
-                  items: result.weaknesses,
-                  empty: 'No major weaknesses detected.',
-                },
-                {
-                  title: 'AI Suggestions',
-                  icon: 'lightbulb',
-                  color: 'text-amber-400',
-                  border: 'border-amber-500/40',
-                  bg: 'from-amber-500/8',
-                  items: result.suggestions,
-                  empty: 'No additional suggestions.',
-                },
-              ].map(section => (
-                <div key={section.title} className={`rounded-xl bg-gradient-to-r ${section.bg} to-transparent border-l-4 ${section.border} bg-[var(--md-sys-color-surface-container)] p-lg`}>
-                  <div className="flex items-center gap-2 mb-md">
-                    <span className={`material-symbols-outlined ${section.color}`} style={{ fontSize: 22 }}>{section.icon}</span>
-                    <h3 className={`text-base font-bold ${section.color} font-[Geist]`}>{section.title}</h3>
-                  </div>
-                  {section.items.length > 0 ? (
-                    <ul className="space-y-2">
-                      {section.items.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3 text-sm text-[var(--md-sys-color-on-surface)] font-[Geist]">
-                          <span className={`mt-0.5 w-5 h-5 rounded-full ${section.color} bg-current/10 flex items-center justify-center shrink-0 text-[10px] font-bold`}>{i + 1}</span>
-                          {item}
-                        </li>
+                {gapData.recommended_skills?.length > 0 && (
+                  <div className="bg-primary/5 p-md rounded-lg border border-primary/20">
+                    <h4 className="text-sm font-bold text-primary mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">bolt</span>
+                      Recommended to Learn
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {gapData.recommended_skills.map(s => (
+                        <span key={s} className="px-2 py-1 bg-primary text-on-primary rounded text-xs font-bold shadow-sm">{s}</span>
                       ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] font-[Geist]">{section.empty}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* ─── Analyze Another ─── */}
-          <label className="group block cursor-pointer">
-            <input type="file" className="hidden" onChange={handleUpload} accept=".pdf,.doc,.docx" />
-            <div className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[var(--md-sys-color-outline-variant)]/40 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-primary)] hover:border-[var(--md-sys-color-primary)]/40 transition-all duration-200 text-sm font-medium font-[Geist]">
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>upload_file</span>
-              Analyze Another Resume
-            </div>
-          </label>
+            {/* Strengths */}
+            {result.strengths.length > 0 && (
+              <div className="bg-surface-container-low border-l-4 border-success p-md rounded-r-xl shadow-sm">
+                <h3 className="font-bold text-success flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined">check_circle</span> Strengths
+                </h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {result.strengths.map((s, i) => <li key={i} className="text-sm">{s}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {/* Weaknesses */}
+            {result.weaknesses.length > 0 && (
+              <div className="bg-surface-container-low border-l-4 border-error p-md rounded-r-xl shadow-sm">
+                <h3 className="font-bold text-error flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined">warning</span> Areas to Improve
+                </h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {result.weaknesses.map((s, i) => <li key={i} className="text-sm">{s}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {/* Suggestions */}
+            {result.suggestions.length > 0 && (
+              <div className="bg-surface-container-low border-l-4 border-warning p-md rounded-r-xl shadow-sm">
+                <h3 className="font-bold text-warning flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined">lightbulb</span> AI Suggestions
+                </h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {result.suggestions.map((s, i) => <li key={i} className="text-sm">{s}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
