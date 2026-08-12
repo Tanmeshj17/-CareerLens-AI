@@ -196,6 +196,11 @@ async def global_exception_handler(request, exc):
         content={"detail": "Internal Server Error. Please try again later."},
     )
 
+# ── Health check endpoint (keeps Render backend warm) ──────────
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 def _safe_seed(db):
     """Safely seed initial data (skills, certs, learning resources) without synthetic jobs."""
     # 1. Role Skill Maps

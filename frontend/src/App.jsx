@@ -64,6 +64,12 @@ export default function App() {
     }
     initAuth()
 
+    // ── Backend keep-alive: prevents Render cold-start (biggest speed win) ──
+    const API_BASE = (import.meta.env.VITE_API_URL || 'https://careerlens-api-f74a.onrender.com').replace(/\/$/, '')
+    const pingBackend = () => fetch(`${API_BASE}/health`, { method: 'GET' }).catch(() => {})
+    pingBackend() // immediate ping on page load
+    const pingInterval = setInterval(pingBackend, 10 * 60 * 1000) // every 10 min
+
     const handleUnauthorized = () => {
       if (isMounted) {
         setIsAuthenticated(false)
@@ -75,6 +81,7 @@ export default function App() {
     window.addEventListener('auth:unauthorized', handleUnauthorized)
     return () => {
       isMounted = false
+      clearInterval(pingInterval)
       window.removeEventListener('auth:unauthorized', handleUnauthorized)
     }
   }, [navigate])

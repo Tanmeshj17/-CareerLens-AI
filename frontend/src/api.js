@@ -20,40 +20,77 @@ function clearToken() {
   localStorage.removeItem('careerlens_token');
 }
 
+// ── In-Memory Cache (5 min TTL for GET requests) ──────────────
+const _cache = new Map()
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+function getCached(key) {
+  const entry = _cache.get(key)
+  if (!entry) return null
+  if (Date.now() - entry.ts > CACHE_TTL_MS) {
+    _cache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCached(key, data) {
+  _cache.set(key, { data, ts: Date.now() })
+}
+
+export function invalidateCache(prefix) {
+  for (const key of _cache.keys()) {
+    if (!prefix || key.startsWith(prefix)) _cache.delete(key)
+  }
+}
+
 // ── Request Helper ────────────────────────────────────────────
 async function request(path, options = {}) {
-  const token = getToken();
-  const headers = { ...(options.headers || {}) };
+  const token = getToken()
+  const headers = { ...(options.headers || {}) }
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`
   }
 
   // Don't set Content-Type for FormData (browser sets boundary automatically)
   if (!(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json';
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const isGet = !options.method || options.method === 'GET'
+
+  // Return cached response for GET requests
+  if (isGet) {
+    const cached = getCached(path)
+    if (cached) return cached
   }
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
-  });
+  })
 
   if (res.status === 401) {
-    const hadToken = !!getToken();
-    clearToken();
+    const hadToken = !!getToken()
+    clearToken()
     if (hadToken) {
-      window.dispatchEvent(new Event('auth:unauthorized'));
+      window.dispatchEvent(new Event('auth:unauthorized'))
     }
-    throw new Error('Session expired. Please log in again.');
+    throw new Error('Session expired. Please log in again.')
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(err.detail || `HTTP ${res.status}`);
+    const err = await res.json().catch(() => ({ detail: 'Request failed' }))
+    throw new Error(err.detail || `HTTP ${res.status}`)
   }
 
-  return res.json();
+  const data = await res.json()
+
+  // Cache successful GET responses
+  if (isGet) setCached(path, data)
+
+  return data
 }
 
 // ── Auth ──────────────────────────────────────────────────────
