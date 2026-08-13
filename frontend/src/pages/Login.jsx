@@ -155,13 +155,12 @@ export default function Login() {
             <div className="space-y-xs relative">
               <div className="flex justify-between items-center mb-1">
                 <label className="text-sm font-medium font-[Geist] text-on-surface" htmlFor="password">Password</label>
-                <button 
-                  type="button" 
-                  onClick={() => { setShowForgotModal(true); setForgotEmail(email); }} 
+                <Link 
+                  to="/forgot-password" 
                   className="text-xs font-medium font-[Geist] text-primary hover:underline cursor-pointer focus:outline-none"
                 >
                   Forgot Password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <Input 
