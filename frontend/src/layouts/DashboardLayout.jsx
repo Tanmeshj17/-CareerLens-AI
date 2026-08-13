@@ -162,7 +162,7 @@ export default function DashboardLayout() {
 
         {/* Page Content */}
         <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-[1440px] mx-auto w-full flex flex-col min-w-0 overflow-x-hidden">
-          <div className="flex-1 mb-lg sm:mb-xl min-w-0">
+          <div className="flex-1 mb-lg sm:mb-xl min-w-0 min-h-[80vh]">
             <Outlet />
           </div>
           <Footer />
