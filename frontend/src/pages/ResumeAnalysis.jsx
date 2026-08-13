@@ -8,6 +8,13 @@ function getScoreColor(score) {
   return 'text-rose-400';
 }
 
+function getBarColor(pct) {
+  if (pct >= 75) return '#34d399';
+  if (pct >= 50) return '#38bdf8';
+  if (pct >= 30) return '#fbbf24';
+  return '#fb7185';
+}
+
 function getScoreStroke(score) {
   if (score >= 80) return '#34d399';
   if (score >= 60) return '#38bdf8';
@@ -31,6 +38,38 @@ function ScoreRing({ score }) {
         />
       </svg>
       <span className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</span>
+    </div>
+  );
+}
+
+function ScoreBreakdown({ breakdown }) {
+  if (!breakdown) return null;
+  const categories = Object.values(breakdown);
+  return (
+    <div className="glass-effect p-md rounded-xl space-y-3">
+      <h3 className="font-bold text-on-surface-variant text-sm uppercase tracking-wider flex items-center gap-2">
+        <span className="material-symbols-outlined text-base text-primary">analytics</span>
+        Score Breakdown
+      </h3>
+      {categories.map((cat) => {
+        const pct = Math.round((cat.score / cat.max) * 100);
+        return (
+          <div key={cat.label}>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs text-on-surface-variant font-medium">{cat.label}</span>
+              <span className="text-xs font-bold" style={{ color: getBarColor(pct) }}>
+                {cat.score}/{cat.max}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${pct}%`, background: getBarColor(pct) }}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -69,6 +108,8 @@ export default function ResumeAnalysis() {
         certs: analyzeRes.extracted_certifications || [],
         experience: analyzeRes.extracted_experience || [],
         education: analyzeRes.extracted_education || [],
+        scoreBreakdown: analyzeRes.score_breakdown || null,
+        metricsFound: analyzeRes.metrics_found || null,
       });
       setGapData(gapRes);
       setReadinessData(readinessRes);
@@ -122,7 +163,23 @@ export default function ResumeAnalysis() {
               <p className={`text-xs font-bold uppercase tracking-wider ${getScoreColor(result.score)}`}>
                 {result.score >= 80 ? 'Excellent' : result.score >= 60 ? 'Good' : result.score >= 40 ? 'Average' : 'Needs Work'}
               </p>
+              {result.metricsFound && (
+                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 pt-1 border-t border-white/[0.06]">
+                  <span className="text-[10px] text-on-surface-variant">
+                    <span className="font-bold text-on-surface">{result.metricsFound.word_count}</span> words
+                  </span>
+                  <span className="text-[10px] text-on-surface-variant">
+                    <span className="font-bold text-on-surface">{result.metricsFound.total_skills}</span> skills
+                  </span>
+                  <span className="text-[10px] text-on-surface-variant">
+                    <span className="font-bold text-on-surface">{result.metricsFound.impact_items}</span> impact items
+                  </span>
+                </div>
+              )}
             </div>
+
+            {/* Score Breakdown */}
+            <ScoreBreakdown breakdown={result.scoreBreakdown} />
 
             {/* Target Role */}
             <div className="glass-effect p-md rounded-xl text-center border border-outline-variant">

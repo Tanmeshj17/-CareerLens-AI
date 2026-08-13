@@ -162,11 +162,10 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
             seen.add(d)
             dedup_edu.append(e)
 
-    # Industry Standard Multi-Dimensional ATS Scoring Logic (100 Point Scale)
+    # Industry-Standard 5-Category ATS Scoring Algorithm (100 Point Scale)
     
-    # 1. Contact Information & Online Presence (Max 15 Pts)
+    # 1. Contact Information & Online Footprint (Max 15 Pts)
     email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
-    # Robust Phone regex supporting Indian (+91, 10-digit), US, and international formats
     phone_match = re.search(r'(?:\+?\d{1,4}[-.\s]?)?\(?\d{2,5}\)?[-.\s]?\d{3,5}[-.\s]?\d{3,5}', text)
     has_linkedin = "linkedin.com" in text_lower
     has_github = "github.com" in text_lower or "portfolio" in text_lower
@@ -174,7 +173,8 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     contact_score = 0
     if email_match: contact_score += 5
     if phone_match: contact_score += 5
-    if has_linkedin or has_github: contact_score += 5
+    if has_linkedin: contact_score += 3
+    if has_github: contact_score += 2
     contact_score = min(15, contact_score)
 
     # 2. Section Structure Coverage (Max 15 Pts)
@@ -182,45 +182,61 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     for key, headers in SECTION_HEADERS.items():
         if any(h in text_lower for h in headers):
             found_sections += 1
-    section_score = min(15, found_sections * 3.75)
+    section_score = min(15, int(found_sections * 3.75))
 
-    # 3. Skill Match & Keyword Density (Max 35 Pts)
+    # 3. Skill Keyword Density (Max 35 Pts)
     num_skills = len(extracted_skills)
-    if num_skills >= 12:
+    if num_skills >= 15:
         skill_score = 35
-    elif num_skills >= 8:
-        skill_score = 28 + (num_skills - 8) * 1.75
-    elif num_skills >= 4:
-        skill_score = 20 + (num_skills - 4) * 2.0
+    elif num_skills >= 10:
+        skill_score = int(28 + (num_skills - 10) * 1.4)
+    elif num_skills >= 5:
+        skill_score = int(18 + (num_skills - 5) * 2.0)
     elif num_skills >= 1:
-        skill_score = 12 + num_skills * 2.0
+        skill_score = int(8 + num_skills * 2.5)
     else:
-        skill_score = 5
+        skill_score = 4
 
-    # 4. Action Verbs & Quantifiable Impact (Max 20 Pts)
+    # 4. Action Verbs & Quantifiable Impact Metrics (Max 20 Pts)
     impact_matches = re.findall(
         r'(\d+%\b|\$\d+|\d+x\b|\b\d+\s*(?:tb|gb|mb|m|k|rows|users|pipelines|services|models|projects|clients|apps|users|downloads|teams|members|percent|hrs|hours|days|months|years)\b|increased|decreased|reduced|improved|built|engineered|architected|optimized|scaled|managed|spearheaded|developed|implemented|launched|created|designed|automated|integrated|led|mentored)',
         text_lower
     )
-    impact_score = min(20, len(impact_matches) * 2.5)
+    impact_score = min(20, int(len(impact_matches) * 2.5))
 
-    # 5. Education & Certifications (Max 15 Pts)
-    edu_score = 8 if dedup_edu else 4
-    cert_score = 7 if extracted_certs else 3
-    credentials_score = min(15, edu_score + cert_score)
-
-    # Total Raw ATS Score
-    raw_ats_score = int(contact_score + section_score + skill_score + impact_score + credentials_score)
-    
-    # Fair & Trusted calibration for real ATS tools (min 50 for readable resume, up to 98)
-    if raw_ats_score >= 85:
-        ats_score = min(98, raw_ats_score)
-    elif raw_ats_score >= 65:
-        ats_score = min(92, raw_ats_score + 5)
-    elif raw_ats_score >= 45:
-        ats_score = min(82, raw_ats_score + 10)
+    # 5. Brevity & Word Count Readability (Max 15 Pts)
+    word_count = len(text.split())
+    if 350 <= word_count <= 850:
+        brevity_score = 15
+    elif 200 <= word_count < 350:
+        brevity_score = 10
+    elif 850 < word_count <= 1100:
+        brevity_score = 10
     else:
-        ats_score = max(45, raw_ats_score + 12)
+        brevity_score = 5
+
+    # Total Authentic ATS Score
+    ats_score = int(contact_score + section_score + skill_score + impact_score + brevity_score)
+    ats_score = max(35, min(98, ats_score))
+
+    score_breakdown = {
+        "contact_formatting": {"score": contact_score, "max": 15, "label": "Contact & Profile Links"},
+        "section_structure": {"score": section_score, "max": 15, "label": "Section Completeness"},
+        "skill_density": {"score": skill_score, "max": 35, "label": "Skills & Keywords"},
+        "action_impact": {"score": impact_score, "max": 20, "label": "Impact & Action Verbs"},
+        "brevity_readability": {"score": brevity_score, "max": 15, "label": "Word Count & Readability"}
+    }
+
+    metrics_found = {
+        "total_skills": num_skills,
+        "impact_items": len(impact_matches),
+        "word_count": word_count,
+        "sections_found": found_sections,
+        "has_email": bool(email_match),
+        "has_phone": bool(phone_match),
+        "has_linkedin": has_linkedin,
+        "has_github": has_github
+    }
 
     # Dynamic Feedback Generation
     strengths = []
@@ -266,7 +282,6 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     else:
         suggestions.append("Add your LinkedIn profile and GitHub/portfolio link at the top of your resume.")
 
-    word_count = len(text.split())
     if word_count > 900:
         weaknesses.append(f"Resume length is high ({word_count} words), which can dilute ATS keyword density.")
         suggestions.append("Keep resume concise (1-2 pages) focusing on recent relevant experience.")
@@ -319,6 +334,8 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
         "extracted_certifications": extracted_certs,
         "extracted_experience": extracted_experience,
         "ats_score": ats_score,
+        "score_breakdown": score_breakdown,
+        "metrics_found": metrics_found,
         "strengths": strengths,
         "weaknesses": weaknesses,
         "suggestions": suggestions

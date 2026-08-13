@@ -1221,6 +1221,8 @@ async def analyze_resume(request: Request, file: UploadFile = File(...), db: Ses
     db_resume.strengths = parsed["strengths"]
     db_resume.weaknesses = parsed["weaknesses"]
     db_resume.suggestions = parsed["suggestions"]
+    db_resume.score_breakdown = parsed.get("score_breakdown")
+    db_resume.metrics_found = parsed.get("metrics_found")
     
     return db_resume
 

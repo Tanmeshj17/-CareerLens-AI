@@ -157,6 +157,8 @@ class AnalyzeResumeResponse(BaseModel):
     strengths: Optional[List[str]] = []
     weaknesses: Optional[List[str]] = []
     suggestions: Optional[List[str]] = []
+    score_breakdown: Optional[Dict[str, Any]] = None
+    metrics_found: Optional[Dict[str, Any]] = None
     
     class Config:
         from_attributes = True
