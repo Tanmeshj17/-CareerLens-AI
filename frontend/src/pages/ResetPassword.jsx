@@ -7,8 +7,9 @@ import { Alert } from '../components/ui/Alert'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
-  const token = searchParams.get('token') || ''
+  const urlToken = searchParams.get('token') || ''
 
+  const [manualToken, setManualToken] = useState(urlToken)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -17,8 +18,14 @@ export default function ResetPassword() {
   const [errorMsg, setErrorMsg] = useState('')
   const navigate = useNavigate()
 
+  const activeToken = urlToken || manualToken
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!activeToken) {
+      setErrorMsg('Please enter your reset token.')
+      return
+    }
     if (newPassword !== confirmPassword) {
       setErrorMsg('Passwords do not match.')
       return
@@ -33,29 +40,16 @@ export default function ResetPassword() {
     setSuccessMsg('')
 
     try {
-      const res = await resetPassword(token, newPassword)
+      const res = await resetPassword(activeToken, newPassword)
       setSuccessMsg(res.message || 'Password successfully reset!')
       setTimeout(() => {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      setErrorMsg(err.message || 'Failed to reset password. Link may be invalid or expired.')
+      setErrorMsg(err.message || 'Failed to reset password. Link or token may be invalid or expired.')
     } finally {
       setLoading(false)
     }
-  }
-
-  if (!token) {
-    return (
-      <div className="bg-surface-bright text-on-surface min-h-screen flex items-center justify-center p-md">
-        <div className="w-full max-w-md bg-white rounded-2xl p-xl shadow-lg border border-outline-variant text-center">
-          <Alert type="error" message="Invalid request. Missing password reset token." />
-          <Link to="/login" className="mt-md text-sm font-medium text-primary hover:underline inline-block">
-            Back to Login
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (

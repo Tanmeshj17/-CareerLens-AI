@@ -124,7 +124,7 @@ export default function App() {
           <Route path="/register" element={isAuthenticated ? <Navigate to="/app" replace /> : <Register />} />
           <Route path="/verify" element={isAuthenticated ? <Navigate to="/app" replace /> : <VerifyEmail />} />
           <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/app" replace /> : <ForgotPassword />} />
-          <Route path="/reset-password" element={isAuthenticated ? <Navigate to="/app" replace /> : <ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected Routes - Dashboard Layout */}
           <Route path="/app" element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />}>
