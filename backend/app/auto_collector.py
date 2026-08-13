@@ -495,6 +495,127 @@ MNC_DIRECT_POSTINGS = [
         "salary_range": "INR 16.0L - 28.0L PA",
         "apply_url": "https://careers.microsoft.com/v2/global/en/job/1789201/Software-Engineer",
         "employer_job_id": "MSFT-1789201"
+    },
+    {
+        "title": "Software Development Engineer 1 (SDE1)",
+        "company": "Amazon",
+        "location": "Bangalore / Chennai / Hyderabad",
+        "job_type": "Full-time",
+        "description": "Amazon India Development Center. Java, C++, Data Structures, Object-Oriented Design, and AWS infrastructure.",
+        "primary_source": "Direct/Amazon",
+        "salary_range": "INR 18.0L - 30.0L PA",
+        "apply_url": "https://www.amazon.jobs/en/jobs/2349012/software-development-engineer",
+        "employer_job_id": "AMZN-2349012"
+    },
+    {
+        "title": "Systems Engineer",
+        "company": "TCS",
+        "location": "Pune / Mumbai / Bangalore",
+        "job_type": "Full-time",
+        "description": "Tata Consultancy Services (TCS) Digital/Ninja hiring. Java, Spring Boot, React.js, Python, and SQL.",
+        "primary_source": "Direct/TCS",
+        "salary_range": "INR 3.5L - 7.0L PA",
+        "apply_url": "https://www.tcs.com/careers/india",
+        "employer_job_id": "TCS-IND-01"
+    },
+    {
+        "title": "Specialist Programmer",
+        "company": "Infosys",
+        "location": "Mysore / Bangalore / Pune",
+        "job_type": "Full-time",
+        "description": "Infosys Specialist Programmer (SP) role for complex software engineering tasks. Data Structures, Algorithms, Python, Full Stack.",
+        "primary_source": "Direct/Infosys",
+        "salary_range": "INR 8.0L - 11.0L PA",
+        "apply_url": "https://www.infosys.com/careers/india.html",
+        "employer_job_id": "INFY-SP-02"
+    },
+    {
+        "title": "Technology Analyst",
+        "company": "Morgan Stanley",
+        "location": "Mumbai / Bangalore",
+        "job_type": "Full-time",
+        "description": "Morgan Stanley India Tech division. C++, Java, Python, algorithmic trading systems, and low-latency programming.",
+        "primary_source": "Direct/MorganStanley",
+        "salary_range": "INR 15.0L - 25.0L PA",
+        "apply_url": "https://morganstanley.tal.net/vx/lang-en-GB/mobile-0/brand-2/xf-b530b12a8019/candidate/jobboard/vacancy/1/adv/",
+        "employer_job_id": "MS-TECH-8921"
+    },
+    {
+        "title": "Software Engineer - Corporate & Investment Bank",
+        "company": "JPMorgan Chase & Co.",
+        "location": "Hyderabad / Mumbai / Bangalore",
+        "job_type": "Full-time",
+        "description": "JPMC Global Technology. Cloud computing, microservices, Java, Python, React, and Agile methodologies.",
+        "primary_source": "Direct/JPMC",
+        "salary_range": "INR 14.0L - 22.0L PA",
+        "apply_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210349123",
+        "employer_job_id": "JPMC-210349123"
+    },
+    {
+        "title": "Backend Developer",
+        "company": "IBM",
+        "location": "Bangalore / Pune / Gurgaon",
+        "job_type": "Full-time",
+        "description": "IBM India Software Labs. Node.js, Python, Docker, Kubernetes, and hybrid cloud solutions.",
+        "primary_source": "Direct/IBM",
+        "salary_range": "INR 8.0L - 15.0L PA",
+        "apply_url": "https://careers.ibm.com/job/18923012/backend-developer-india",
+        "employer_job_id": "IBM-18923012"
+    },
+    {
+        "title": "Developer (Java/SAP HANA)",
+        "company": "SAP",
+        "location": "Bangalore / Pune",
+        "job_type": "Full-time",
+        "description": "SAP Labs India. Java, Spring, SAP HANA, cloud-native development, and enterprise resource planning systems.",
+        "primary_source": "Direct/SAP",
+        "salary_range": "INR 12.0L - 20.0L PA",
+        "apply_url": "https://jobs.sap.com/job/Bangalore-Developer-KA/1012391001/",
+        "employer_job_id": "SAP-1012391001"
+    },
+    {
+        "title": "Engineering Analyst",
+        "company": "Goldman Sachs",
+        "location": "Bangalore / Hyderabad",
+        "job_type": "Full-time",
+        "description": "Goldman Sachs Engineering. Java, Python, C++, big data infrastructure, and quantitative modeling.",
+        "primary_source": "Direct/GoldmanSachs",
+        "salary_range": "INR 18.0L - 26.0L PA",
+        "apply_url": "https://goldmansachs.tal.net/vx/lang-en-GB/mobile-0/brand-2/xf-b530b12a8019/candidate/jobboard/vacancy/1/adv/",
+        "employer_job_id": "GS-ENG-1234"
+    },
+    {
+        "title": "Software Engineer - Networks",
+        "company": "Cisco",
+        "location": "Bangalore / Pune / Chennai",
+        "job_type": "Full-time",
+        "description": "Cisco Systems India. C, C++, Python, networking protocols (TCP/IP), embedded systems, and automation.",
+        "primary_source": "Direct/Cisco",
+        "salary_range": "INR 12.0L - 20.0L PA",
+        "apply_url": "https://jobs.cisco.com/jobs/SearchJobs/software%20engineer?3_109_3=178&3_140_3=130635",
+        "employer_job_id": "CISCO-130635"
+    },
+    {
+        "title": "Full Stack Developer",
+        "company": "Capgemini",
+        "location": "Mumbai / Bangalore / Pune / Hyderabad",
+        "job_type": "Full-time",
+        "description": "Capgemini India Technology Services. Angular/React, Java Spring Boot, REST APIs, SQL, and Agile delivery.",
+        "primary_source": "Direct/Capgemini",
+        "salary_range": "INR 5.0L - 9.0L PA",
+        "apply_url": "https://www.capgemini.com/in-en/careers/job-search/",
+        "employer_job_id": "CAP-IND-01"
+    },
+    {
+        "title": "Senior Data Scientist",
+        "company": "Walmart Global Tech",
+        "location": "Bangalore / Chennai",
+        "job_type": "Full-time",
+        "description": "Walmart Global Tech India. Machine Learning, NLP, Python, Spark, SQL, and supply chain optimization models.",
+        "primary_source": "Direct/Walmart",
+        "salary_range": "INR 20.0L - 35.0L PA",
+        "apply_url": "https://careers.walmart.com/results?q=&page=1&sort=rank&location=India",
+        "employer_job_id": "WMT-DS-8821"
     }
 ]
 
