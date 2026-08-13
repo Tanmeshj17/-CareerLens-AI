@@ -10,7 +10,7 @@ jobs:
   backend-checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
@@ -50,7 +50,7 @@ jobs:
   frontend-checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Use Node.js
       uses: actions/setup-node@v3
@@ -75,7 +75,7 @@ jobs:
   e2e-playwright:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Set up Node and Python
       uses: actions/setup-node@v3
@@ -91,7 +91,7 @@ jobs:
   e2e-backend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: Backend E2E Placeholder
       run: |
         echo "Backend E2E tests configured. Waiting for test server."
