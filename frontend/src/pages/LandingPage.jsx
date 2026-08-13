@@ -66,93 +66,103 @@ export default function LandingPage() {
 
       <main className="max-w-[1440px] mx-auto">
 
-        {/* ── Hero Section ── */}
-        <section id="home" className="relative pt-2xl pb-3xl px-lg overflow-hidden">
+        {/* ── Hero Section with Background Image ── */}
+        <section id="home" className="relative pt-12 sm:pt-16 pb-20 px-lg overflow-hidden rounded-3xl mx-4 sm:mx-6 my-4 border border-outline-variant/60 shadow-xl bg-surface-container-lowest">
 
-          {/* Subtle background glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+          {/* Photographic background with soft glass overlay */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/images/hero_bg.jpg" 
+              alt="Career Opportunities Office" 
+              className="w-full h-full object-cover object-center opacity-25 scale-105 filter blur-[1px]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-surface-bright via-surface/95 to-surface-bright/80 backdrop-blur-[2px]" />
+          </div>
 
-          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-2xl max-w-7xl mx-auto">
+          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto">
 
             {/* Left: Text Content */}
-            <div className="flex-1 space-y-lg text-center lg:text-left animate-fade-in-up">
+            <div className="flex-1 space-y-6 text-center lg:text-left animate-fade-in-up">
 
-              {/* Pill badge */}
-              <div className="inline-flex items-center gap-sm px-md py-xs rounded-full bg-primary-container/30 border border-primary/20 text-xs font-bold text-primary uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                Real-Time Job Intelligence Engine (2026 Edition)
+              {/* Styled Pill badge */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-primary/20 text-xs font-bold text-primary shadow-sm backdrop-blur-md">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Real-Time Job Intelligence Engine (2026 Edition)</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-on-background leading-[1.1]">
-                Search Once. Learn <span className="text-primary">Smart.</span> Get Hired in India.
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-on-background leading-[1.12]">
+                Search Once. Learn <span className="text-primary underline decoration-primary/30 decoration-wavy decoration-2 underline-offset-8">Smart.</span> Get Hired in India.
               </h1>
 
-              <p className="text-lg text-on-surface-variant leading-relaxed max-w-xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg text-on-surface-variant leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
                 Skip dead job portals and recruiter spam. CareerLens AI aggregates real, verified employer requisitions across India with authentic 5-category ATS resume scoring.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-md pt-sm justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center lg:justify-start">
                 <Link
                   to="/app/opportunities"
-                  className="bg-primary text-on-primary px-xl py-md rounded-xl text-sm font-bold hover:bg-primary-container hover:text-on-primary-container transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-sm"
+                  className="bg-primary text-on-primary px-8 py-3.5 rounded-xl text-sm font-bold hover:bg-primary-container hover:text-on-primary-container transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center justify-center gap-2 active:scale-95"
                 >
-                  Explore Verified Jobs
-                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                  <span>Explore Verified Jobs</span>
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 </Link>
                 <Link
                   to="/app/resume"
-                  className="bg-white border border-outline-variant text-on-surface px-xl py-md rounded-xl text-sm font-bold hover:bg-surface-container-low transition-all flex items-center justify-center gap-sm"
+                  className="bg-white/90 backdrop-blur-md border border-outline-variant hover:border-primary/40 text-on-surface px-8 py-3.5 rounded-xl text-sm font-bold hover:bg-surface-container-low transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-primary text-xl">description</span>
-                  Test ATS Score
+                  <span className="material-symbols-outlined text-primary text-lg">description</span>
+                  <span>Test ATS Score</span>
                 </Link>
               </div>
 
-              {/* Trust row */}
-              <div className="flex flex-wrap items-center gap-md pt-sm justify-center lg:justify-start text-xs text-on-surface-variant">
-                <span className="flex items-center gap-xs font-medium">
+              {/* Trust badges */}
+              <div className="flex flex-wrap items-center gap-4 pt-2 justify-center lg:justify-start text-xs text-on-surface-variant">
+                <span className="flex items-center gap-1.5 font-semibold bg-white/70 px-2.5 py-1 rounded-md border border-outline-variant/50">
                   <span className="material-symbols-outlined text-success text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                  100% Verified Direct Apply Links
+                  100% Direct Links
                 </span>
-                <span className="flex items-center gap-xs font-medium">
+                <span className="flex items-center gap-1.5 font-semibold bg-white/70 px-2.5 py-1 rounded-md border border-outline-variant/50">
                   <span className="material-symbols-outlined text-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-                  95%+ India-Specific Jobs
+                  95%+ India Specific
                 </span>
-                <span className="flex items-center gap-xs font-medium">
+                <span className="flex items-center gap-1.5 font-semibold bg-white/70 px-2.5 py-1 rounded-md border border-outline-variant/50">
                   <span className="material-symbols-outlined text-warning text-base" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                  Free Forever
+                  Free Access
                 </span>
               </div>
             </div>
 
             {/* Right: 3D Dashboard Image */}
-            <div className="flex-1 relative w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-              <div className="relative rounded-2xl overflow-hidden border border-outline-variant shadow-2xl shadow-primary/10 bg-surface-container-lowest p-1">
+            <div className="flex-1 relative w-full max-w-xl animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+              <div className="relative rounded-2xl overflow-hidden border border-outline-variant shadow-2xl bg-white/80 backdrop-blur-md p-1.5 group hover:shadow-primary/15 transition-all duration-300">
                 <img
                   src="/images/hero_3d.jpg"
                   alt="CareerLens AI Dashboard - 3D Interface Preview"
-                  className="w-full h-auto object-cover rounded-xl"
+                  className="w-full h-auto object-cover rounded-xl transition-transform duration-300 group-hover:scale-[1.01]"
                 />
 
                 {/* Floating Badge: Match Score */}
-                <div className="absolute top-4 left-4 flex items-center gap-sm px-md py-sm rounded-xl bg-white/95 backdrop-blur-sm border border-outline-variant shadow-lg text-left">
-                  <div className="w-9 h-9 rounded-lg bg-success/15 text-success flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant shadow-lg text-left">
+                  <div className="w-8 h-8 rounded-lg bg-success/15 text-success flex items-center justify-center font-bold text-xs shrink-0">
                     96%
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-on-surface">AI Match Score</div>
-                    <div className="text-[10px] text-on-surface-variant">Skill & Experience Aligned</div>
+                    <div className="text-[11px] font-bold text-on-surface leading-none">AI Match Score</div>
+                    <div className="text-[9px] text-on-surface-variant mt-0.5">Skill Aligned</div>
                   </div>
                 </div>
 
                 {/* Floating Badge: Verified Link */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-sm px-md py-sm rounded-xl bg-white/95 backdrop-blur-sm border border-outline-variant shadow-lg text-left">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant shadow-lg text-left">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-on-surface">Direct Employer Link</div>
-                    <div className="text-[10px] text-on-surface-variant">Official ATS • No Middleman</div>
+                    <div className="text-[11px] font-bold text-on-surface leading-none">Direct Link</div>
+                    <div className="text-[9px] text-on-surface-variant mt-0.5">Official ATS URL</div>
                   </div>
                 </div>
               </div>
