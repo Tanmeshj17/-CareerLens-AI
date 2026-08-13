@@ -8,6 +8,8 @@ const LandingPage = React.lazy(() => import('./pages/LandingPage'))
 const Login = React.lazy(() => import('./pages/Login'))
 const Register = React.lazy(() => import('./pages/Register'))
 const VerifyEmail = React.lazy(() => import('./pages/VerifyEmail'))
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'))
 const Dashboard = React.lazy(() => import('./pages/Dashboard'))
 const OpportunitiesHub = React.lazy(() => import('./pages/OpportunitiesHub'))
 const ResumeAnalysis = React.lazy(() => import('./pages/ResumeAnalysis'))
@@ -121,6 +123,8 @@ export default function App() {
           <Route path="/login" element={isAuthenticated ? <Navigate to="/app" replace /> : <Login />} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/app" replace /> : <Register />} />
           <Route path="/verify" element={isAuthenticated ? <Navigate to="/app" replace /> : <VerifyEmail />} />
+          <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/app" replace /> : <ForgotPassword />} />
+          <Route path="/reset-password" element={isAuthenticated ? <Navigate to="/app" replace /> : <ResetPassword />} />
 
           {/* Protected Routes - Dashboard Layout */}
           <Route path="/app" element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />}>

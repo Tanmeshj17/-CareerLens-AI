@@ -115,6 +115,20 @@ export async function resendVerificationEmail(email) {
   });
 }
 
+export async function forgotPassword(email) {
+  return request('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(token, new_password) {
+  return request('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, new_password }),
+  });
+}
+
 export async function loginUser(email, password) {
   const formData = new URLSearchParams();
   formData.append('username', email);

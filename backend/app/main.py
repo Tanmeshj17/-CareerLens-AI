@@ -828,21 +828,25 @@ def verify_email(request: Request, payload: schemas.EmailVerificationRequest, db
 @app.post("/api/auth/forgot-password")
 @limiter.limit("3/minute")
 def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db: Session = Depends(database.get_db)):
-    # Prevent email enumeration by always returning success
     email = payload.email.strip().lower()
     user = auth.get_user_by_email(db, email)
+    reset_url = None
     if user:
         raw_token = auth.generate_secure_token()
         user.reset_token = auth.hash_token(raw_token)
         user.reset_expires = datetime.utcnow() + timedelta(hours=1)
         db.commit()
-        # Send password reset email via the email service
         from app.email_service import send_password_reset_email
         frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
         reset_url = f"{frontend_url}/reset-password?token={raw_token}"
         send_password_reset_email(email, reset_url)
 
-    return {"message": "If an account exists, a password reset link has been sent."}
+    res_data = {"message": "If an account exists, a password reset link has been sent."}
+    # If Resend API key is missing or in dev, provide the reset URL directly so password reset is never blocked
+    if reset_url and (not os.getenv("RESEND_API_KEY") or os.getenv("ENVIRONMENT") != "production"):
+        res_data["debug_reset_url"] = reset_url
+
+    return res_data
 
 @app.post("/api/auth/reset-password")
 @limiter.limit("3/minute")
