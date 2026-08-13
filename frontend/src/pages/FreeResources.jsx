@@ -501,28 +501,34 @@ export default function FreeResources() {
 
                 <div
                   ref={(el) => (scrollRefs.current[col.title] = el)}
-                  className="flex gap-md overflow-x-auto custom-scrollbar pb-sm scroll-smooth"
+                  className="flex gap-md overflow-x-auto custom-scrollbar pb-sm scroll-smooth min-h-[90px]"
                 >
-                  {items.map((r) => (
-                    <a
-                      key={r.id}
-                      href={r.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group shrink-0 w-72 glass-effect rounded-xl border border-white/[0.06] hover:border-white/[0.12] p-md flex items-start gap-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
-                    >
-                      <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${r.gradient} flex items-center justify-center shrink-0`}>
-                        <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>{r.icon}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition">{r.title}</h4>
-                        <p className="text-[11px] text-on-surface-variant mt-0.5 truncate">{r.provider}</p>
-                        <div className="mt-1.5">
-                          <Stars rating={r.rating} />
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="shrink-0 w-72 h-20 rounded-xl bg-white/[0.02] animate-pulse border border-white/[0.05]" />
+                    ))
+                  ) : (
+                    items.map((r) => (
+                      <a
+                        key={r.id}
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group shrink-0 w-72 glass-effect rounded-xl border border-white/[0.06] hover:border-white/[0.12] p-md flex items-start gap-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
+                      >
+                        <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${r.gradient} flex items-center justify-center shrink-0`}>
+                          <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>{r.icon}</span>
                         </div>
-                      </div>
-                    </a>
-                  ))}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition">{r.title}</h4>
+                          <p className="text-[11px] text-on-surface-variant mt-0.5 truncate">{r.provider}</p>
+                          <div className="mt-1.5">
+                            <Stars rating={r.rating} />
+                          </div>
+                        </div>
+                      </a>
+                    ))
+                  )}
                 </div>
               </div>
             )
