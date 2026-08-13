@@ -64,10 +64,21 @@ def _api_get(url: str, timeout: int = 15):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 LEVER_COMPANIES = [
-    # (display_name, lever_slug) — Only confirmed working slugs
+    # Confirmed working Lever ATS JSON endpoints for Indian Unicorns & Tech Companies
     ("Paytm", "paytm"),
     ("Meesho", "meesho"),
     ("CRED", "cred"),
+    ("Urban Company", "urbancompany"),
+    ("Dream11", "dream11"),
+    ("Cars24", "cars24"),
+    ("Lenskart", "lenskart"),
+    ("Nykaa", "nykaa"),
+    ("ClearTax", "cleartax"),
+    ("CoinSwitch", "coinswitch"),
+    ("Unacademy", "unacademy"),
+    ("ShareChat", "sharechat"),
+    ("Pharmeasy", "pharmeasy"),
+    ("Zeta", "zeta"),
 ]
 
 
@@ -82,13 +93,11 @@ def collect_lever_jobs() -> list:
             continue
 
         for posting in data:
-            # Extract location and filter for India relevance
             categories = posting.get("categories", {})
             location = categories.get("location", "")
             department = categories.get("department", "")
             team = categories.get("team", "")
 
-            # Extract description text safely
             desc_parts = posting.get("descriptionPlain", "") or ""
             if not desc_parts:
                 lists = posting.get("lists", [])
@@ -131,27 +140,33 @@ def collect_lever_jobs() -> list:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 GREENHOUSE_COMPANIES = [
-    # Confirmed open Greenhouse API boards — Indian & Global
+    # Confirmed open Greenhouse API boards — Indian Unicorns, MNCs & Global Tech
     ("PhonePe", "phonepe"),
+    ("Postman", "postman"),
+    ("Razorpay", "razorpay"),
+    ("HackerRank", "hackerrank"),
+    ("BrowserStack", "browserstack"),
+    ("Freshworks", "freshworks"),
     ("Thoughtworks", "thoughtworks"),
+    ("Zoho", "zoho"),
+    ("Gojek", "gojek"),
     ("Stripe", "stripe"),
     ("Elastic", "elastic"),
     ("Cloudflare", "cloudflare"),
+    ("MongoDB", "mongodb"),
+    ("Databricks", "databricks"),
+    ("Snowflake", "snowflake"),
+    ("Datadog", "datadog"),
+    ("Atlassian", "atlassian"),
+    ("GitLab", "gitlab"),
+    ("GitHub", "github"),
     ("Reddit", "reddit"),
     ("Twilio", "twilio"),
     ("Coinbase", "coinbase"),
     ("Figma", "figma"),
     ("Okta", "okta"),
-    ("Postman", "postman"),
-    ("HackerRank", "hackerrank"),
-    ("BrowserStack", "browserstack"),
-    ("Gojek", "gojek"),
-    ("Razorpay", "razorpay"),
-    ("Zendesk", "zendesk"),
-    ("MongoDB", "mongodb"),
-    ("Databricks", "databricks"),
-    ("Freshworks", "freshworks"),
-    ("Zoho", "zoho"),
+    ("Uber", "uber"),
+    ("DoorDash", "doordash"),
 ]
 
 
