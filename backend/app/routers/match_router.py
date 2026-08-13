@@ -86,11 +86,11 @@ def get_recommended_opportunities(
             })
             
         if sort == "newest":
-            scored.sort(key=lambda x: (x["opportunity"]["last_seen"], x["opportunity"]["posted_date"], x["opportunity"]["id"]), reverse=True)
+            scored.sort(key=lambda x: (x["opportunity"]["posted_date"] or "1970-01-01", x["opportunity"]["id"]), reverse=True)
         elif sort == "quality":
             scored.sort(key=lambda x: (x["opportunity"]["link_quality_score"], x["opportunity"]["trust_score"]), reverse=True)
         else: # relevance
-            scored.sort(key=lambda x: (x["final_score"], x["opportunity"]["last_seen"]), reverse=True)
+            scored.sort(key=lambda x: (x["final_score"], x["opportunity"]["posted_date"] or "1970-01-01"), reverse=True)
             
         return scored, search_metadata
 
@@ -150,7 +150,7 @@ def get_recommended_opportunities(
     db.commit()
     
     return {
-        "total": len(scored_opportunities),
+        "total": search_metadata.get("total_db_active", len(scored_opportunities)) if search_metadata else len(scored_opportunities),
         "items": paginated,
         "search_metadata": search_metadata
     }
