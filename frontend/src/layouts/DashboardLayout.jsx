@@ -126,42 +126,43 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-[260px] flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-[260px] flex flex-col min-h-screen min-w-0">
         {/* Top Nav */}
-        <header className="flex justify-between items-center h-16 px-lg sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant">
-          <div className="flex items-center gap-md flex-1">
+        <header className="flex justify-between items-center h-16 px-sm sm:px-md md:px-lg sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant">
+          <div className="flex items-center gap-xs sm:gap-md flex-1 min-w-0">
             <button
-              className="lg:hidden material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container rounded-lg"
+              className="lg:hidden material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container rounded-lg shrink-0"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
             >
               menu
             </button>
-            <div className="relative w-full max-w-md">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+            <div className="relative w-full max-w-[200px] sm:max-w-xs md:max-w-md">
+              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
               <input
                 type="text"
-                placeholder="Search for jobs, skills, or mentors..."
-                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Search..."
+                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 sm:py-2 pl-8 sm:pl-10 pr-3 sm:pr-4 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary truncate"
               />
             </div>
           </div>
-          <div className="flex items-center gap-lg">
-            <button className="relative text-on-surface-variant hover:text-primary transition-colors" onClick={() => navigate('/app/notifications')}>
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+          <div className="flex items-center gap-xs sm:gap-md md:gap-lg shrink-0 ml-2">
+            <button className="relative p-1 text-on-surface-variant hover:text-primary transition-colors" onClick={() => navigate('/app/notifications')} title="Notifications">
+              <span className="material-symbols-outlined text-xl sm:text-2xl">notifications</span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
             </button>
-            <button className="text-on-surface-variant hover:text-primary transition-colors" onClick={() => navigate('/app/profile')}>
-              <span className="material-symbols-outlined">settings</span>
+            <button className="p-1 text-on-surface-variant hover:text-primary transition-colors hidden sm:block" onClick={() => navigate('/app/profile')} title="Settings">
+              <span className="material-symbols-outlined text-xl sm:text-2xl">settings</span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-xs cursor-pointer" onClick={() => navigate('/app/profile')}>
-              {user?.full_name?.split(' ').map(n => n[0]).join('')}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-xs cursor-pointer shrink-0" onClick={() => navigate('/app/profile')}>
+              {user?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-lg max-w-[1440px] mx-auto w-full flex flex-col">
-          <div className="flex-1 mb-xl">
+        <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-[1440px] mx-auto w-full flex flex-col min-w-0 overflow-x-hidden">
+          <div className="flex-1 mb-lg sm:mb-xl min-w-0">
             <Outlet />
           </div>
           <Footer />

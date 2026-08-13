@@ -182,7 +182,7 @@ export default function Dashboard() {
                       </div>
                       
                       {/* Component Scores */}
-                      <div className="grid grid-cols-3 gap-xs mb-md border-t border-outline-variant/50 pt-sm mt-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-xs mb-md border-t border-outline-variant/50 pt-sm mt-sm">
                         <div className="text-center">
                           <div className="text-[10px] uppercase text-on-surface-variant mb-0.5">Skills</div>
                           <div className="text-sm font-bold text-primary">{item.components?.skill_coverage || 0}%</div>

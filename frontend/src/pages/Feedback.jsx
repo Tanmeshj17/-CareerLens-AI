@@ -386,7 +386,7 @@ export default function Feedback() {
         {/* ── Sidebar (2 cols) ── */}
         <div className="xl:col-span-2 space-y-lg">
           {/* Community Stats */}
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             {COMMUNITY_STATS.map((s, i) => (
               <div key={i} className="bg-surface border border-outline-variant rounded-xl p-md hover:shadow-lg transition-shadow duration-300">
                 <div className={`${s.bg} w-10 h-10 rounded-lg flex items-center justify-center mb-sm`}>

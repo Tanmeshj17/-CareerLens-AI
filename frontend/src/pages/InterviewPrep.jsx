@@ -416,7 +416,7 @@ export default function InterviewPrep() {
               <span className="material-symbols-outlined text-[18px]">donut_large</span>
               Category Progress
             </h3>
-            <div className="grid grid-cols-2 gap-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-lg">
               {categories.map((cat) => {
                 const meta = categoryMeta[cat];
                 const pct = Math.round((meta.completed / meta.total) * 100);

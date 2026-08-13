@@ -258,7 +258,7 @@ export default function JobDetail() {
         )}
 
         {/* Link Quality */}
-        <div className="grid grid-cols-2 gap-md p-md bg-surface-container-lowest rounded-lg border border-outline-variant/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md p-md bg-surface-container-lowest rounded-lg border border-outline-variant/50">
           <div>
             <p className="text-[11px] uppercase font-bold text-on-surface-variant tracking-wider">Source</p>
             <p className="text-sm font-medium text-on-surface">{job.link_classification || job.primary_source || 'Official'}</p>
