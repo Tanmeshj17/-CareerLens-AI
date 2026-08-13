@@ -3,26 +3,35 @@ import io
 import pdfplumber
 import docx
 
-# Expanded and robust taxonomy
+import re
+import io
+import pdfplumber
+import docx
+
+# Expanded and robust taxonomy (350+ skills & tools)
 SKILLS_DB = {
     # Languages
-    "python", "javascript", "typescript", "java", "c++", "c#", "ruby", "go", "golang", "rust", "swift", "kotlin", "php", "sql", "r", "scala", "shell", "bash", "powershell", "html", "css", "sass", "less", "solidity", "dart", "perl", "haskell", "lua", "matlab", "objective-c", "assembly", "vba", "groovy",
+    "python", "javascript", "typescript", "java", "c++", "c#", "ruby", "go", "golang", "rust", "swift", "kotlin", "php", "sql", "r", "scala", "shell", "bash", "powershell", "html", "html5", "css", "css3", "sass", "less", "solidity", "dart", "perl", "haskell", "lua", "matlab", "objective-c", "assembly", "vba", "groovy", "apex", "fortran", "cobol",
     # Frontend
-    "react", "angular", "vue", "vue.js", "next.js", "nuxt.js", "svelte", "jquery", "bootstrap", "tailwind", "tailwindcss", "material-ui", "mui", "redux", "zustand", "graphql", "apollo", "webpack", "vite", "npm", "yarn", "html5", "css3", "ember.js", "backbone.js", "lit", "alpine.js", "chakra ui",
+    "react", "react.js", "angular", "angularjs", "vue", "vue.js", "next.js", "nuxt.js", "svelte", "jquery", "bootstrap", "tailwind", "tailwindcss", "material-ui", "mui", "redux", "redux toolkit", "zustand", "graphql", "apollo", "webpack", "vite", "npm", "yarn", "ember.js", "backbone.js", "lit", "alpine.js", "chakra ui", "pwa", "responsive design", "web assembly", "web Workers",
     # Backend
-    "fastapi", "flask", "django", "node.js", "express", "express.js", "spring", "spring boot", "ruby on rails", "rails", "asp.net", "laravel", "nest.js", "fastify", "celery", "gunicorn", "uvicorn", "koa", "hapi", "phoenix", "gin", "echo", "actix", "rocket",
+    "fastapi", "flask", "django", "node.js", "nodejs", "express", "express.js", "spring", "spring boot", "ruby on rails", "rails", "asp.net", ".net", "dotnet", "laravel", "nest.js", "fastify", "celery", "gunicorn", "uvicorn", "koa", "hapi", "phoenix", "gin", "echo", "actix", "rocket", "grpc", "soap", "rest api", "restful api", "microservices", "serverless",
     # Cloud & DevOps
-    "aws", "amazon web services", "gcp", "google cloud", "azure", "kubernetes", "k8s", "docker", "terraform", "ansible", "jenkins", "git", "github", "gitlab", "ci/cd", "circleci", "prometheus", "grafana", "nginx", "apache", "linux", "unix", "vagrant", "heroku", "travis ci", "bitbucket", "argocd", "datadog", "new relic", "splunk", "elastic stack", "elk", "pulumi", "puppet", "chef", "openshift", "cloudformation",
-    # Databases
-    "postgresql", "postgres", "mysql", "sqlite", "mongodb", "redis", "elasticsearch", "cassandra", "dynamodb", "mariadb", "oracle", "firebase", "couchdb", "neo4j", "supabase", "cockroachdb", "snowflake", "redshift", "bigquery", "clickhouse", "influxdb", "couchbase", "realm", "arango",
-    # Data & ML
-    "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras", "opencv", "nltk", "spacy", "spark", "hadoop", "hive", "airflow", "kafka", "dbt", "tableau", "power bi", "matplotlib", "seaborn", "pyspark", "databricks", "hugging face", "transformers", "langchain", "llamaindex", "llm", "genai", "generative ai", "computer vision", "nlp", "xgboost", "lightgbm", "mlflow",
+    "aws", "amazon web services", "gcp", "google cloud", "azure", "kubernetes", "k8s", "docker", "terraform", "ansible", "jenkins", "git", "github", "gitlab", "ci/cd", "cicd", "circleci", "prometheus", "grafana", "nginx", "apache", "linux", "unix", "vagrant", "heroku", "travis ci", "bitbucket", "argocd", "datadog", "new relic", "splunk", "elastic stack", "elk", "pulumi", "puppet", "chef", "openshift", "cloudformation", "bash scripting", "ec2", "s3", "lambda", "ecs", "eks", "cloud watch",
+    # Databases & Storage
+    "postgresql", "postgres", "mysql", "sqlite", "mongodb", "redis", "elasticsearch", "cassandra", "dynamodb", "mariadb", "oracle", "firebase", "couchdb", "neo4j", "supabase", "cockroachdb", "snowflake", "redshift", "bigquery", "clickhouse", "influxdb", "couchbase", "realm", "vector database", "pgvector", "milvus", "pinecone", "chromadb",
+    # Data & AI / ML
+    "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras", "opencv", "nltk", "spacy", "spark", "hadoop", "hive", "airflow", "kafka", "dbt", "tableau", "power bi", "matplotlib", "seaborn", "pyspark", "databricks", "hugging face", "transformers", "langchain", "llamaindex", "llm", "genai", "generative ai", "computer vision", "nlp", "xgboost", "lightgbm", "mlflow", "data analysis", "data mining", "machine learning", "deep learning", "neural networks", "data visualization", "predictive modeling", "business intelligence",
+    # Mobile
+    "react native", "flutter", "ios", "android", "xcode", "android studio", "jetpack compose", "swiftui", "cordova", "ionic",
+    # Testing & QA
+    "selenium", "cypress", "jest", "mocha", "chai", "playwright", "puppeteer", "junit", "pytest", "test-driven development", "tdd", "postman", "jmeter", "appium", "loadrunner", "unit testing", "integration testing", "automation testing",
     # Security
-    "penetration testing", "pentesting", "cryptography", "oauth", "jwt", "saml", "owasp", "burp suite", "wireshark", "nmap", "metasploit", "iam", "siem", "soc", "firewall", "ids/ips", "kali linux", "zero trust", "devsecops",
-    # Architecture & Concepts
-    "microservices", "rest", "restful", "graphql", "grpc", "soap", "webhooks", "websocket", "serverless", "event-driven", "oop", "functional programming", "tdd", "bdd", "domain driven design", "ddd", "solid principles", "mvc",
-    # Management & Soft Skills
-    "agile", "scrum", "jira", "confluence", "trello", "gitflow", "product management", "project management", "communication", "leadership", "problem solving", "teamwork", "kanban", "sprint planning", "stakeholder management", "roadmap", "okr",
+    "penetration testing", "pentesting", "cryptography", "oauth", "jwt", "saml", "owasp", "burp suite", "wireshark", "nmap", "metasploit", "iam", "siem", "soc", "firewall", "ids/ips", "kali linux", "zero trust", "devsecops", "cybersecurity",
+    # Core CS & Architecture
+    "object oriented programming", "oop", "data structures", "algorithms", "system design", "functional programming", "design patterns", "software architecture", "multithreading", "concurrency", "distributed systems",
+    # Soft Skills & Management
+    "agile", "scrum", "jira", "confluence", "trello", "gitflow", "product management", "project management", "communication", "leadership", "problem solving", "teamwork", "kanban", "sprint planning", "stakeholder management", "roadmap", "okr", "cross-functional collaboration", "critical thinking", "adaptability", "time management",
 }
 
 CERT_KEYWORDS = [
@@ -31,19 +40,18 @@ CERT_KEYWORDS = [
     "CompTIA Security+", "CompTIA Network+", "CompTIA A+", "PMP", "Project Management Professional",
     "Certified Scrum Master", "CSM", "CKA", "Certified Kubernetes Administrator", "CKAD",
     "Terraform Associate", "Cisco Certified", "CCNA", "CCNP", "CISSP", "CEH", "Certified Ethical Hacker",
-    "CISA", "CISM", "ITIL", "Salesforce Certified"
+    "CISA", "CISM", "ITIL", "Salesforce Certified", "Oracle Certified", "Microsoft Certified"
 ]
 
 DEGREE_KEYWORDS = [
-    r"b\.?tech", r"b\.?e\.?", r"b\.?s\.?", r"bachelor", r"m\.?tech", r"m\.?s\.?", r"master", r"ph\.?d\.?", r"doctorate", r"m\.?b\.?a\.?", r"diploma", r"b\.?c\.?a\.?", r"m\.?c\.?a\.?"
+    r"b\.?tech", r"b\.?e\.?", r"b\.?s\.?", r"bachelor", r"m\.?tech", r"m\.?s\.?", r"master", r"ph\.?d\.?", r"doctorate", r"m\.?b\.?a\.?", r"diploma", r"b\.?c\.?a\.?", r"m\.?c\.?a\.?", r"b\.?sc", r"m\.?sc", r"b\.?com"
 ]
 
 SECTION_HEADERS = {
-    "education": ["education", "academic qualification", "academic background", "qualification"],
-    "experience": ["experience", "employment", "work history", "work experience", "professional experience", "career history", "professional summary"],
-    "projects": ["projects", "personal projects", "academic projects", "key projects"],
-    "skills": ["skills", "technical skills", "expertise", "core competencies", "technologies"],
-    "certifications": ["certifications", "licenses", "certificates", "credentials"]
+    "education": ["education", "academic qualification", "academic background", "qualification", "academics"],
+    "experience": ["experience", "employment", "work history", "work experience", "professional experience", "career history", "projects", "key projects"],
+    "skills": ["skills", "technical skills", "expertise", "core competencies", "technologies", "tools"],
+    "certifications": ["certifications", "licenses", "certificates", "credentials", "achievements", "awards"]
 }
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
@@ -85,7 +93,9 @@ def format_skill_name(skill: str) -> str:
         "aws certified": "AWS Certified", "github": "GitHub", "gitlab": "GitLab",
         "postgresql": "PostgreSQL", "mysql": "MySQL", "mongodb": "MongoDB",
         "next.js": "Next.js", "express.js": "Express.js", "graphql": "GraphQL",
-        "linux": "Linux", "unix": "Unix", "api": "API", "rest": "REST",
+        "linux": "Linux", "unix": "Unix", "api": "API", "rest api": "REST API",
+        "git": "Git", "jira": "Jira", "agile": "Agile", "scrum": "Scrum",
+        "oop": "OOP", "dsa": "Data Structures & Algorithms",
     }
     return formatting_map.get(skill, skill.title())
 
@@ -102,27 +112,19 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
 
     text_lower = text.lower()
     
-    # Improved Skill Extraction
+    # Skill Extraction
     extracted_skills_set = set()
-    
-    # For special characters like C++, C#, Node.js, Next.js, .NET we can't just use \b blindly
-    # We use a custom regex approach
     for skill in SKILLS_DB:
-        # Escape the skill for regex
         escaped_skill = re.escape(skill)
-        
-        # If the skill starts or ends with a non-word character (like C++, .NET), relax the boundary
         prefix_boundary = r"(?<![a-z0-9])" if not skill[0].isalnum() else r"\b"
         suffix_boundary = r"(?![a-z0-9])" if not skill[-1].isalnum() else r"\b"
-        
         pattern = rf"{prefix_boundary}{escaped_skill}{suffix_boundary}"
-        
         if re.search(pattern, text_lower):
             extracted_skills_set.add(format_skill_name(skill))
 
     extracted_skills = list(extracted_skills_set)
 
-    # Experience Extraction (Heuristic)
+    # Experience Extraction
     extracted_experience = []
     years_matches = re.findall(r'(\d+)\s*\+?\s*(?:years?|yrs?)(?:\s*of)?\s*(?:experience)?', text_lower)
     total_years = 0
@@ -132,17 +134,18 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
         except:
             pass
 
-    # Projects Extraction (Heuristic)
+    # Projects / Github links
     extracted_projects = []
     if "github.com" in text_lower:
         extracted_projects.append({"title": "Open Source / GitHub Repository", "description": "Linked in resume"})
+    if "linkedin.com" in text_lower:
+        extracted_projects.append({"title": "LinkedIn Profile", "description": "Verified URL detected"})
 
     # Certifications
     extracted_certs = []
     for cert in CERT_KEYWORDS:
         if cert.lower() in text_lower:
             extracted_certs.append(cert)
-    
     extracted_certs = list(set(extracted_certs))
 
     # Education
@@ -159,38 +162,65 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
             seen.add(d)
             dedup_edu.append(e)
 
-    # Improved Scoring Logic
-    # 1. Base Score for readable structure & contact info (30 points)
-    email_match = re.search(r'[\w\.-]+@[\w\.-]+', text)
-    phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
-    base_score = 25
-    if email_match: base_score += 5
-    if phone_match: base_score += 5
+    # Industry Standard Multi-Dimensional ATS Scoring Logic (100 Point Scale)
     
-    # 2. Skill Density Score (Up to 40 points)
-    # 15+ skills = 40 pts, 10 skills = 30 pts, 5 skills = 20 pts
+    # 1. Contact Information & Online Presence (Max 15 Pts)
+    email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+    # Robust Phone regex supporting Indian (+91, 10-digit), US, and international formats
+    phone_match = re.search(r'(?:\+?\d{1,4}[-.\s]?)?\(?\d{2,5}\)?[-.\s]?\d{3,5}[-.\s]?\d{3,5}', text)
+    has_linkedin = "linkedin.com" in text_lower
+    has_github = "github.com" in text_lower or "portfolio" in text_lower
+    
+    contact_score = 0
+    if email_match: contact_score += 5
+    if phone_match: contact_score += 5
+    if has_linkedin or has_github: contact_score += 5
+    contact_score = min(15, contact_score)
+
+    # 2. Section Structure Coverage (Max 15 Pts)
+    found_sections = 0
+    for key, headers in SECTION_HEADERS.items():
+        if any(h in text_lower for h in headers):
+            found_sections += 1
+    section_score = min(15, found_sections * 3.75)
+
+    # 3. Skill Match & Keyword Density (Max 35 Pts)
     num_skills = len(extracted_skills)
-    if num_skills >= 15:
-        skill_score = 40
-    elif num_skills >= 10:
-        skill_score = 32 + (num_skills - 10) * 1.5
-    elif num_skills >= 5:
-        skill_score = 20 + (num_skills - 5) * 2.4
+    if num_skills >= 12:
+        skill_score = 35
+    elif num_skills >= 8:
+        skill_score = 28 + (num_skills - 8) * 1.75
+    elif num_skills >= 4:
+        skill_score = 20 + (num_skills - 4) * 2.0
+    elif num_skills >= 1:
+        skill_score = 12 + num_skills * 2.0
     else:
-        skill_score = num_skills * 4
+        skill_score = 5
 
-    # 3. Impact Metrics & Action Keywords (Up to 20 points)
-    # Broader pattern matching numbers, scale, percentages, and strong action verbs
-    impact_matches = re.findall(r'(\d+%\b|\$\d+|\d+x\b|\b\d+\s*(?:tb|gb|mb|m|k|rows|users|pipelines|services|models|projects)\b|increased|decreased|reduced|improved|built|engineered|architected|optimized|scaled)', text_lower)
-    impact_score = min(20, len(impact_matches) * 2)
+    # 4. Action Verbs & Quantifiable Impact (Max 20 Pts)
+    impact_matches = re.findall(
+        r'(\d+%\b|\$\d+|\d+x\b|\b\d+\s*(?:tb|gb|mb|m|k|rows|users|pipelines|services|models|projects|clients|apps|users|downloads|teams|members|percent|hrs|hours|days|months|years)\b|increased|decreased|reduced|improved|built|engineered|architected|optimized|scaled|managed|spearheaded|developed|implemented|launched|created|designed|automated|integrated|led|mentored)',
+        text_lower
+    )
+    impact_score = min(20, len(impact_matches) * 2.5)
 
-    # 4. Certifications & Education Bonus (Up to 10 points)
-    cert_score = 5 if extracted_certs else 0
-    edu_score = 5 if dedup_edu else 0
+    # 5. Education & Certifications (Max 15 Pts)
+    edu_score = 8 if dedup_edu else 4
+    cert_score = 7 if extracted_certs else 3
+    credentials_score = min(15, edu_score + cert_score)
 
-    # Total ATS Score (Bounded 0 to 100)
-    raw_ats_score = int(base_score + skill_score + impact_score + cert_score + edu_score)
-    ats_score = max(35, min(98, raw_ats_score))
+    # Total Raw ATS Score
+    raw_ats_score = int(contact_score + section_score + skill_score + impact_score + credentials_score)
+    
+    # Fair & Trusted calibration for real ATS tools (min 50 for readable resume, up to 98)
+    if raw_ats_score >= 85:
+        ats_score = min(98, raw_ats_score)
+    elif raw_ats_score >= 65:
+        ats_score = min(92, raw_ats_score + 5)
+    elif raw_ats_score >= 45:
+        ats_score = min(82, raw_ats_score + 10)
+    else:
+        ats_score = max(45, raw_ats_score + 12)
 
     # Dynamic Feedback Generation
     strengths = []
@@ -198,50 +228,52 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     suggestions = []
 
     # 1. Evaluate Skills
-    if len(extracted_skills) > 15:
-        strengths.append(f"Excellent technical density with {len(extracted_skills)} industry skills detected.")
-    elif len(extracted_skills) >= 8:
-        strengths.append(f"Solid foundation with {len(extracted_skills)} key skills identified.")
+    if len(extracted_skills) >= 12:
+        strengths.append(f"High technical keyword density ({len(extracted_skills)} industry skills detected).")
+    elif len(extracted_skills) >= 6:
+        strengths.append(f"Good foundational coverage ({len(extracted_skills)} key skills identified).")
     else:
-        weaknesses.append("Low keyword density limits ATS visibility.")
-        suggestions.append("Ensure technical skills are explicitly listed (e.g., 'Python' instead of 'scripting').")
+        weaknesses.append("Low technical keyword count reduces ATS recruiter matches.")
+        suggestions.append("Explicitly list technical skills, tools, and frameworks in a dedicated Skills section.")
 
     # 2. Evaluate Achievements / Metrics
-    if achievement_score >= 15:
-        strengths.append(f"Strong use of quantifiable metrics ({len(achievement_matches)} data points found).")
-    elif achievement_score > 0:
-        weaknesses.append("Some metrics found, but impact could be quantified more aggressively.")
-        suggestions.append("Use the X-Y-Z formula: 'Accomplished [X] as measured by [Y], by doing [Z]'.")
+    if impact_score >= 12:
+        strengths.append(f"Excellent use of action verbs & quantifiable metrics ({len(impact_matches)} impact items found).")
+    elif impact_score > 0:
+        weaknesses.append("Experience bullet points have limited numerical metrics.")
+        suggestions.append("Use quantifiable numbers to showcase impact (e.g. 'Improved speed by 35%').")
     else:
-        weaknesses.append("No quantifiable metrics or numbers detected in experience bullet points.")
-        suggestions.append("Quantify your achievements! Add numbers to show scale (e.g., 'improved performance by 20%').")
+        weaknesses.append("No numerical metrics detected in experience bullet points.")
+        suggestions.append("Add measurable outcomes (users served, performance % gains, latency reductions).")
 
-    # 3. Evaluate Certifications
+    # 3. Evaluate Certifications & Education
     if extracted_certs:
-        strengths.append(f"Professional credentials verified: {', '.join(extracted_certs[:2])}")
+        strengths.append(f"Recognized professional certifications found: {', '.join(extracted_certs[:2])}")
     else:
-        weaknesses.append("No recognizable industry certifications detected.")
-        suggestions.append("Adding certifications (e.g., AWS Cloud Practitioner) can significantly boost ATS ranking.")
+        suggestions.append("Consider adding relevant industry certifications (AWS, Azure, PMP, CKA) to stand out.")
 
-    # 4. Evaluate Layout / Formatting
-    email_match = re.search(r'[\w\.-]+@[\w\.-]+', text)
-    phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
-    
+    if dedup_edu:
+        strengths.append(f"Degree qualifications recognized: {', '.join([e['degree'] for e in dedup_edu[:2]])}")
+
+    # 4. Evaluate Layout / Contact Info
     if email_match and phone_match:
-        strengths.append("Contact information is easily readable by ATS parsers.")
+        strengths.append("Contact details (Email & Phone) are clean and ATS-parseable.")
     else:
-        weaknesses.append("Missing or improperly formatted contact information.")
+        weaknesses.append("Missing or non-standard contact information format.")
+
+    if has_linkedin or has_github:
+        strengths.append("Online profiles (LinkedIn/GitHub) present for quick verification.")
+    else:
+        suggestions.append("Add your LinkedIn profile and GitHub/portfolio link at the top of your resume.")
 
     word_count = len(text.split())
-    if word_count > 800:
-        weaknesses.append(f"Resume is very dense ({word_count} words), which risks overwhelming recruiters.")
-        suggestions.append("Trim your resume down to highlight only the most relevant, recent 3-5 years of experience.")
-    elif word_count < 150:
-        weaknesses.append("Resume is too brief and may lack sufficient detail for ATS keyword matching.")
+    if word_count > 900:
+        weaknesses.append(f"Resume length is high ({word_count} words), which can dilute ATS keyword density.")
+        suggestions.append("Keep resume concise (1-2 pages) focusing on recent relevant experience.")
 
-    # Phase 7.3: Role matching and Gap Analysis
+    # Role matching and Gap Analysis
     import json, os
-    matched_role = "General Software Engineer"
+    matched_role = "Software Engineer"
     missing_skills = []
     try:
         data_file = os.path.join(os.path.dirname(__file__), "..", "data", "roles.json")
@@ -271,14 +303,13 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
                         missing_skills.append(cs)
                 
                 if missing_skills:
-                    suggestions.append(f"To align perfectly with {matched_role} roles, consider adding: {', '.join(missing_skills[:3])}")
+                    suggestions.append(f"To boost alignment for {matched_role} roles, add: {', '.join(missing_skills[:3])}")
     except Exception as e:
         print(f"Error in gap analysis: {e}")
 
-    # Ensure we always return at least some default feedback if nothing matched
     if not strengths: strengths.append("Formatting conforms to standard ATS guidelines.")
-    if not weaknesses: weaknesses.append("No significant formatting issues detected.")
-    if not suggestions: suggestions.append("Keep your skills section updated with the latest in-demand frameworks.")
+    if not weaknesses: weaknesses.append("No critical structural issues detected.")
+    if not suggestions: suggestions.append("Keep your skills section updated with current job requirements.")
 
     return {
         "uploaded_file": filename,

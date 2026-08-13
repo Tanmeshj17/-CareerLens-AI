@@ -2045,65 +2045,155 @@ def get_interview_prep(role: str, current_user: models.User = Depends(auth.get_c
     role_lower = role.lower()
     questions = []
     
+    # Universal Behavioral & HR Questions
     questions.extend([
         {
             "category": "Behavioral",
             "difficulty": "Medium",
-            "question": "Tell me about a time you had to overcome a significant challenge.",
+            "question": "Tell me about a time you had to handle a tight deadline with conflicting priorities.",
             "estimated_time": 5,
-            "model_answer": "Use the STAR method: Situation, Task, Action, Result. Focus on what YOU did and the positive outcome."
+            "model_answer": "Use the STAR framework (Situation, Task, Action, Result). Highlight how you prioritized tasks based on business impact, communicated proactively with stakeholders, and delivered the critical deliverables on time without compromising quality."
+        },
+        {
+            "category": "Behavioral",
+            "difficulty": "Medium",
+            "question": "Describe a technical disagreement you had with a team member. How did you resolve it?",
+            "estimated_time": 6,
+            "model_answer": "Explain how you evaluated both approaches objectively using benchmark data, trade-off analyses, or proof-of-concept code rather than opinion. Focus on collaborative problem-solving and driving alignment behind the best solution for the product."
         },
         {
             "category": "HR",
             "difficulty": "Easy",
-            "question": "Where do you see yourself in 5 years?",
+            "question": "Why do you want to work at our company specifically?",
             "estimated_time": 3,
-            "model_answer": "Connect your goals to the company's trajectory and the role you're applying for."
+            "model_answer": "Demonstrate clear research: mention specific products, recent technical milestones, engineering culture, or company values that align with your personal career growth and passion."
+        },
+        {
+            "category": "HR",
+            "difficulty": "Easy",
+            "question": "Where do you see your career evolving over the next 3 to 5 years?",
+            "estimated_time": 4,
+            "model_answer": "Outline a clear growth trajectory: mastering domain expertise, taking on higher technical ownership, mentoring junior engineers, and contributing directly to business-critical architecture."
         }
     ])
-    
-    if "data" in role_lower:
-        questions.extend([
-            {
-                "category": "Technical",
-                "difficulty": "Hard",
-                "question": "Explain the difference between a Star and Snowflake schema.",
-                "estimated_time": 6,
-                "model_answer": "Star schema is denormalized with a central fact table and simple dimension tables. Snowflake is normalized where dimension tables are broken down into sub-dimensions."
-            },
-            {
-                "category": "System Design",
-                "difficulty": "Hard",
-                "question": "How would you design a real-time leaderboard for a global gaming platform?",
-                "estimated_time": 15,
-                "model_answer": "Discuss Redis Sorted Sets, partitioning by region, handling massive write loads vs read loads."
-            }
-        ])
-    elif "software" in role_lower or "developer" in role_lower:
+
+    # Role-Specific Deep Dives
+    if "data" in role_lower or "analytics" in role_lower or "ai" in role_lower or "ml" in role_lower:
         questions.extend([
             {
                 "category": "Technical",
                 "difficulty": "Medium",
-                "question": "What is the difference between a process and a thread?",
-                "estimated_time": 4,
-                "model_answer": "A process has its own memory space, while threads share memory within the same process."
+                "question": "Explain the difference between Star Schema and Snowflake Schema in data warehousing.",
+                "estimated_time": 6,
+                "model_answer": "Star Schema features a central fact table surrounded by denormalized dimension tables (faster query performance, simpler joins). Snowflake Schema normalizes dimension tables into sub-dimensions (reduces data redundancy, but requires complex multi-table joins)."
+            },
+            {
+                "category": "Technical",
+                "difficulty": "Hard",
+                "question": "How do you detect and handle data skewness (hotspots) in Apache Spark or distributed SQL engines?",
+                "estimated_time": 8,
+                "model_answer": "Detect skewness via Spark UI stage timelines or skewed partition sizes. Mitigate using salting (adding a random key prefix to distribute join keys), repartitioning, broadcasting small dimension tables, or adjusting shuffle partition configs."
             },
             {
                 "category": "System Design",
                 "difficulty": "Hard",
-                "question": "Design a URL shortener like Bitly.",
-                "estimated_time": 20,
-                "model_answer": "Discuss database schema, Base62 encoding for the hash, caching with Redis, and handling collisions."
+                "question": "Design a real-time event streaming pipeline to process 1 million events per second for anomaly detection.",
+                "estimated_time": 15,
+                "model_answer": "Architecture: Ingestion via Apache Kafka / AWS Kinesis with partition keys -> Stream Processing via Apache Flink or Spark Streaming -> Windowed Aggregations & ML Inference model -> Storage in ClickHouse/TimescaleDB for metrics & Redis for real-time alerting."
+            },
+            {
+                "category": "Case Study",
+                "difficulty": "Hard",
+                "question": "User retention dropped by 12% in the last quarter. Walk me through how you would investigate the root cause.",
+                "estimated_time": 12,
+                "model_answer": "1. Verify data integrity (check for broken tracking events). 2. Segment by geography, platform (iOS/Android/Web), app version, and user cohort. 3. Analyze funnel drop-off points (onboarding, checkout). 4. Isolate external factors (competitor launches, seasonality) vs internal changes (recent releases, latency spikes)."
+            }
+        ])
+    elif "devops" in role_lower or "cloud" in role_lower or "sre" in role_lower or "security" in role_lower:
+        questions.extend([
+            {
+                "category": "Technical",
+                "difficulty": "Medium",
+                "question": "What is the difference between Blue/Green Deployment and Canary Deployment?",
+                "estimated_time": 6,
+                "model_answer": "Blue/Green runs two identical production environments (active & idle) and switches traffic instantly via load balancer. Canary gradually routes a small percentage of traffic (e.g. 5%) to the new version to monitor metrics before full rollout."
+            },
+            {
+                "category": "Technical",
+                "difficulty": "Hard",
+                "question": "Explain Kubernetes pod lifecycle and how readiness/liveness probes prevent zero-downtime failures.",
+                "estimated_time": 8,
+                "model_answer": "Liveness probes restart a container if it becomes unresponsive or deadlocked. Readiness probes control whether a container receives network traffic (preventing traffic routing before app initialization completes)."
+            },
+            {
+                "category": "System Design",
+                "difficulty": "Hard",
+                "question": "Design a multi-region highly available infrastructure on AWS/GCP with auto-failover and zero data loss.",
+                "estimated_time": 15,
+                "model_answer": "Multi-region Route53 DNS latency routing with health checks -> CloudFront CDN -> ALB across 3 AZs -> EKS clusters with HPA -> Amazon Aurora Global Database with sub-second cross-region replication -> Terraform IAC for automated failover orchestration."
+            },
+            {
+                "category": "Case Study",
+                "difficulty": "Medium",
+                "question": "A production server CPU spikes to 100% and HTTP 504 gateway timeouts spike. How do you triage this incident?",
+                "estimated_time": 10,
+                "model_answer": "1. Check APM/Grafana dashboards for request throughput & latency. 2. Identify heavy processes (`top`, `htop`, thread dumps). 3. Inspect connection pools, slow DB queries, or memory leaks. 4. Apply immediate mitigation (scale replicas, block rogue traffic), followed by post-mortem root cause analysis."
+            }
+        ])
+    elif "product" in role_lower or "project" in role_lower or "agile" in role_lower:
+        questions.extend([
+            {
+                "category": "Technical",
+                "difficulty": "Medium",
+                "question": "How do you define key performance indicators (KPIs) and North Star Metrics for a new product feature?",
+                "estimated_time": 6,
+                "model_answer": "Identify the primary value delivery metric (North Star) that directly correlates with user engagement and revenue. Complement with input metrics (acquisition, activation, retention, monetization, referral - AARRR framework)."
+            },
+            {
+                "category": "System Design",
+                "difficulty": "Medium",
+                "question": "How do you prioritize a product roadmap when engineering capacity is cut by 30%?",
+                "estimated_time": 10,
+                "model_answer": "Apply RICE scoring (Reach * Impact * Confidence / Effort). Re-align with executive business goals, protect core revenue-generating features, defer non-essential tech debt/nice-to-haves, and transparently communicate scope changes to stakeholders."
+            },
+            {
+                "category": "Case Study",
+                "difficulty": "Hard",
+                "question": "Design a feature for LinkedIn to increase engagement among college students and fresh graduates.",
+                "estimated_time": 12,
+                "model_answer": "1. Identify pain points: lack of experience, networking anxiety. 2. Propose solution: Peer Mock Interviews & Campus Mentorship Hub. 3. Define MVP specs, target metrics (daily active engagement, connection requests sent), and rollout strategy."
             }
         ])
     else:
+        # Software Engineer / Developer / General Tech
         questions.extend([
             {
                 "category": "Technical",
                 "difficulty": "Medium",
-                "question": f"What are the core principles of {role.title()}?",
+                "question": "What is the difference between a process and a thread? How does memory sharing work?",
                 "estimated_time": 5,
-                "model_answer": "Focus on the foundational concepts specific to the role."
+                "model_answer": "A process is an isolated executing program with its own memory space (heap, stack, file descriptors). Threads run within a process and share the heap and data segment, but maintain independent call stacks and registers."
+            },
+            {
+                "category": "Technical",
+                "difficulty": "Medium",
+                "question": "Explain Event Loop in JavaScript / Node.js and how Asynchronous I/O operations are handled.",
+                "estimated_time": 6,
+                "model_answer": "Node.js utilizes a single-threaded Event Loop backed by libuv thread pool for async I/O. Tasks execute through Call Stack -> WebAPIs/C++ APIs -> Microtask Queue (Promises, process.nextTick) -> Macrotask Queue (setTimeout, I/O callbacks)."
+            },
+            {
+                "category": "System Design",
+                "difficulty": "Hard",
+                "question": "Design a scalable URL Shortener service like Bitly or TinyURL capable of handling 100M daily active users.",
+                "estimated_time": 20,
+                "model_answer": "Key components: API Gateway -> Load Balancer -> Stateless App instances -> Base62 encoding / KGS (Key Generation Service) for 7-char short URLs -> Redis Cache (80/20 read/write rule) -> PostgreSQL/NoSQL DB with read replicas."
+            },
+            {
+                "category": "Case Study",
+                "difficulty": "Hard",
+                "question": "Your web application experiences memory leaks in production under peak load. How do you isolate and fix it?",
+                "estimated_time": 10,
+                "model_answer": "1. Analyze heap dumps using Chrome DevTools or Node/Java memory profilers. 2. Identify detached DOM nodes, uncleaned event listeners, or uncleared global timers/closures. 3. Apply fix, run stress tests under load, and verify heap garbage collection stabilization."
             }
         ])
         

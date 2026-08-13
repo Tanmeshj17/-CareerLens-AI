@@ -13,17 +13,36 @@ const categoryMeta = {
 };
 
 const defaultQuestions = [
-  { id: 1,  category: 'Technical', difficulty: 'Medium', time: '8 min', question: 'Explain the difference between `useEffect` cleanup functions and `componentWillUnmount`. When would each be used?', answer: 'useEffect cleanup runs before every re-render (if deps change) and on unmount, making it more versatile than componentWillUnmount which only fires once. Cleanup functions handle subscription removal, timer clearing, and API call cancellation. The key advantage is that useEffect ties cleanup to the specific effect instance, preventing stale closure bugs common in class components.' },
-  { id: 4,  category: 'Behavioral', difficulty: 'Medium', time: '6 min', question: 'Tell me about a time you had to push back on a stakeholder\'s request. How did you handle it and what was the outcome?', answer: 'Use the STAR framework: describe the Situation (tight deadline, conflicting requirements), Task (your responsibility), Action (data-driven communication, proposed alternatives, scheduled follow-up), and Result (measurable outcome). Emphasize empathy, active listening, and finding common ground while maintaining technical integrity.' },
+  // Technical
+  { id: 1, category: 'Technical', difficulty: 'Medium', time: '8 min', question: 'Explain the difference between `useEffect` cleanup functions and `componentWillUnmount`. When would each be used?', answer: 'useEffect cleanup runs before every re-render (if deps change) and on unmount, making it more versatile than componentWillUnmount which only fires once. Cleanup functions handle subscription removal, timer clearing, and API call cancellation. The key advantage is that useEffect ties cleanup to the specific effect instance, preventing stale closure bugs common in class components.' },
+  { id: 2, category: 'Technical', difficulty: 'Hard', time: '10 min', question: 'How does indexing work under the hood in PostgreSQL/B-Trees, and how do composite indexes impact multi-column query performance?', answer: 'B-Tree indexes maintain a balanced tree structure where leaf nodes contain pointers to table rows. A composite index (colA, colB) follows left-to-right prefix matching rule: queries filtering on colA or (colA + colB) use the index effectively, whereas queries filtering only on colB cannot use the index.' },
+  { id: 3, category: 'Technical', difficulty: 'Medium', time: '7 min', question: 'What is the difference between optimistic and pessimistic locking in database transaction management?', answer: 'Pessimistic locking locks the records immediately upon reading (SELECT ... FOR UPDATE) to prevent concurrency conflicts. Optimistic locking assumes conflicts are rare, checking a version timestamp/number column at update time (UPDATE ... WHERE version = old_version) and rolling back if modified.' },
+  
+  // Behavioral
+  { id: 4, category: 'Behavioral', difficulty: 'Medium', time: '6 min', question: 'Tell me about a time you had to push back on a stakeholder\'s request. How did you handle it and what was the outcome?', answer: 'Use the STAR framework: describe the Situation (tight deadline, conflicting requirements), Task (your responsibility), Action (data-driven communication, proposed alternatives, scheduled follow-up), and Result (measurable outcome). Emphasize empathy, active listening, and finding common ground while maintaining technical integrity.' },
+  { id: 5, category: 'Behavioral', difficulty: 'Medium', time: '6 min', question: 'Describe a situation where a project failed or missed a critical deadline. What did you learn?', answer: 'Structure with STAR: focus on accountability without blaming others. Highlight what systemic improvements you implemented post-incident (e.g. setting up automated regression tests, improving task breakdown granularity, or adding buffer margins to estimates).' },
+
+  // System Design
+  { id: 6, category: 'System Design', difficulty: 'Hard', time: '20 min', question: 'Design a distributed rate limiter (e.g. 100 requests per minute per user IP) for an API gateway.', answer: 'Discuss Token Bucket or Sliding Window Log algorithms. Implement via Redis using Atomic Lua scripts (`EVAL`) to check and increment key counters across multi-node stateless API gateways to prevent race conditions.' },
+  { id: 7, category: 'System Design', difficulty: 'Hard', time: '18 min', question: 'How would you design a real-time notifications system delivering push/email/SMS alerts to 10M users?', answer: 'Architecture: Microservices publishing events to Kafka -> Consumer workers querying user notification preferences -> Dispatching to Push services (FCM/APNS), Email gateways (SendGrid/SES), or SMS APIs (Twilio) with exponential backoff retry queues in Celery/RabbitMQ.' },
+
+  // HR
+  { id: 8, category: 'HR', difficulty: 'Easy', time: '4 min', question: 'What are your salary expectations for this role, and how do you evaluate compensation packages?', answer: 'State that your expectations are aligned with industry standard market benchmarks for senior roles in India/remote. Emphasize evaluating total compensation (Base Salary, Performance Bonuses, ESOPs/Stocks, Health Benefits, and Learning Allowances).' },
+  { id: 9, category: 'HR', difficulty: 'Easy', time: '3 min', question: 'Why are you looking to leave your current position?', answer: 'Keep the response positive and forward-looking. Focus on seeking new technical challenges, greater scope of ownership, faster career growth, and alignment with the target company\'s technology stack and vision.' },
+
+  // Case Study
+  { id: 10, category: 'Case Study', difficulty: 'Hard', time: '15 min', question: 'A critical checkout API latency increased from 200ms to 4.5 seconds during a flash sale. How do you debug it live?', answer: '1. Check APM trace spans (New Relic/Datadog) to identify whether latency is in DB queries, third-party payment gateway, or CPU throttling. 2. Inspect DB connection pool starvation. 3. Temporarily enable circuit breaker / fallback caches, and apply rate limiting.' }
 ];
 
 const tips = [
-  { icon: 'lightbulb',      title: 'Use the STAR Method',        desc: 'Structure behavioral answers with Situation, Task, Action, and Result for maximum clarity.' },
-  { icon: 'timer',           title: 'Practice Under Time Pressure', desc: 'Real interviews have time limits. Use mock sessions to build comfort with constraints.' },
-  { icon: 'record_voice_over', title: 'Think Out Loud',           desc: 'Interviewers value your thought process as much as the final answer. Narrate your reasoning.' },
-  { icon: 'edit_note',       title: 'Prepare Questions',          desc: 'Always have 3-5 thoughtful questions ready for your interviewer. It shows genuine interest.' },
-  { icon: 'trending_up',     title: 'Quantify Your Impact',       desc: 'Use metrics and numbers to demonstrate the impact of your past work and contributions.' },
-  { icon: 'groups',          title: 'Mock with Peers',            desc: 'Practice with friends or mentors for realistic feedback you can\'t get from solo prep.' },
+  { icon: 'lightbulb', title: 'Use the STAR Method', desc: 'Structure behavioral answers with Situation, Task, Action, and Result for maximum clarity.' },
+  { icon: 'timer', title: 'Practice Under Time Pressure', desc: 'Real interviews have strict time limits. Use mock sessions to build comfort under constraints.' },
+  { icon: 'record_voice_over', title: 'Think Out Loud', desc: 'Interviewers value your thought process as much as the final answer. Speak through your reasoning.' },
+  { icon: 'edit_note', title: 'Prepare Questions', desc: 'Always have 3-5 thoughtful questions ready for your interviewer about tech stack & culture.' },
+  { icon: 'trending_up', title: 'Quantify Your Impact', desc: 'Use concrete metrics and numbers to demonstrate the impact of your past accomplishments.' },
+  { icon: 'architecture', title: 'Start System Design Broad', desc: 'Outline high-level components (load balancer, DB, cache) before diving into deep technical trade-offs.' },
+  { icon: 'groups', title: 'Mock with Peers', desc: 'Practice with friends or mentors for realistic feedback you can\'t get from solo prep.' },
+  { icon: 'verified', title: 'Be Honest About Gaps', desc: 'If you don\'t know an answer, admit it confidently and explain how you would research it.' }
 ];
 
 const difficultyStyles = {
