@@ -312,7 +312,7 @@ export default function FreeResources() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
 
             {/* Right gradient fade + click area */}
