@@ -30,7 +30,7 @@ ecdsa==0.19.2
 pyasn1==0.6.4
 
 # --- Database ---
-SQLAlchemy==2.0.35
+SQLAlchemy==2.0.51
 alembic==1.13.3
 psycopg2-binary==2.9.10
 greenlet==3.5.2
