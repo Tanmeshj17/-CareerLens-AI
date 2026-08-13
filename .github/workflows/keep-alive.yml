@@ -1,0 +1,22 @@
+name: Keep Backend Alive
+
+# Runs every 10 minutes — keeps Render free tier from sleeping
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Also allows manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up backend
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://careerlens-api-f74a.onrender.com/health)
+          echo "Backend responded with HTTP $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Warning: Backend returned non-200 status"
+          else
+            echo "✅ Backend is alive!"
+          fi
