@@ -578,20 +578,17 @@ def startup_event():
             logger.warning(f"Schema migration check: {mig_err}")
             db.rollback()
 
-        # 2b. Purge ALL legacy/synthetic/fake/generic records from the database using raw SQL
+        # 2b. Purge ONLY clearly fake/invalid records — NOT real API job URLs
+        # ⚠️  DO NOT delete '/careers' URLs — Google, Microsoft, Cognizant all use them!
         try:
             purge_stmt = text("""
                 DELETE FROM opportunities 
-                WHERE apply_url LIKE '%linkedin.com%'
+                WHERE apply_url LIKE '%linkedin.com/jobs/search%'
                    OR apply_url LIKE '%?req_id=%'
-                   OR apply_url LIKE '%?q=%'
+                   OR apply_url LIKE '%?q=jobs%'
                    OR apply_url LIKE '%?keyword=%'
-                   OR apply_url LIKE '%/careers%'
-                   OR apply_url LIKE '%/careers'
                    OR apply_url LIKE '%joblist%'
-                   OR primary_source LIKE '%Careers%'
-                   OR data_origin IS NULL
-                   OR data_origin != 'LIVE_API';
+                   OR (data_origin IS NULL AND posted_date < NOW() - INTERVAL '60 days');
             """)
             res = db.execute(purge_stmt)
             db.commit()

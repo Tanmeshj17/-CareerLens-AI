@@ -131,7 +131,7 @@ def collect_lever_jobs() -> list:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 GREENHOUSE_COMPANIES = [
-    # (display_name, greenhouse_board_slug) — Confirmed open Greenhouse API boards
+    # Confirmed open Greenhouse API boards — Indian & Global
     ("PhonePe", "phonepe"),
     ("Thoughtworks", "thoughtworks"),
     ("Stripe", "stripe"),
@@ -142,7 +142,16 @@ GREENHOUSE_COMPANIES = [
     ("Coinbase", "coinbase"),
     ("Figma", "figma"),
     ("Okta", "okta"),
-    ("TCS (Global)", "tcs"),
+    ("Postman", "postman"),
+    ("HackerRank", "hackerrank"),
+    ("BrowserStack", "browserstack"),
+    ("Gojek", "gojek"),
+    ("Razorpay", "razorpay"),
+    ("Zendesk", "zendesk"),
+    ("MongoDB", "mongodb"),
+    ("Databricks", "databricks"),
+    ("Freshworks", "freshworks"),
+    ("Zoho", "zoho"),
 ]
 
 
@@ -565,7 +574,7 @@ def _expire_old_jobs(db) -> int:
     except ImportError:
         from backend.app import models
 
-    cutoff = datetime.utcnow() - timedelta(days=7)
+    cutoff = datetime.utcnow() - timedelta(days=30)  # 30-day window (was 7)
     stale_count = db.query(models.Opportunity).filter(
         models.Opportunity.is_active == True,
         models.Opportunity.last_seen < cutoff,
