@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import { analyzeResume, getResumeGapAnalysis, getResumeReadiness } from '../api';
 
 function getScoreColor(score) {
@@ -84,10 +84,13 @@ export default function ResumeAnalysis() {
     const selectedFile = e.target.files && e.target.files[0];
     if (!selectedFile) return;
 
+    // Set analyzing immediately for fast feedback (low INP)
     setAnalyzing(true);
-    setResult(null);
-    setGapData(null);
-    setReadinessData(null);
+    startTransition(() => {
+      setResult(null);
+      setGapData(null);
+      setReadinessData(null);
+    });
 
     try {
       const analyzeRes = await analyzeResume(selectedFile);
@@ -98,21 +101,24 @@ export default function ResumeAnalysis() {
         getResumeReadiness(resumeId).catch(() => null),
       ]);
 
-      setResult({
-        score: analyzeRes.ats_score || 0,
-        skills: analyzeRes.extracted_skills || [],
-        strengths: analyzeRes.strengths || [],
-        weaknesses: analyzeRes.weaknesses || [],
-        suggestions: analyzeRes.suggestions || [],
-        targetRole: analyzeRes.target_role || (gapRes?.target_role) || 'Software Engineer',
-        certs: analyzeRes.extracted_certifications || [],
-        experience: analyzeRes.extracted_experience || [],
-        education: analyzeRes.extracted_education || [],
-        scoreBreakdown: analyzeRes.score_breakdown || null,
-        metricsFound: analyzeRes.metrics_found || null,
+      // Defer heavy state update so it doesn't block the main thread (fixes INP)
+      startTransition(() => {
+        setResult({
+          score: analyzeRes.ats_score || 0,
+          skills: analyzeRes.extracted_skills || [],
+          strengths: analyzeRes.strengths || [],
+          weaknesses: analyzeRes.weaknesses || [],
+          suggestions: analyzeRes.suggestions || [],
+          targetRole: analyzeRes.target_role || (gapRes?.target_role) || 'Software Engineer',
+          certs: analyzeRes.extracted_certifications || [],
+          experience: analyzeRes.extracted_experience || [],
+          education: analyzeRes.extracted_education || [],
+          scoreBreakdown: analyzeRes.score_breakdown || null,
+          metricsFound: analyzeRes.metrics_found || null,
+        });
+        setGapData(gapRes);
+        setReadinessData(readinessRes);
       });
-      setGapData(gapRes);
-      setReadinessData(readinessRes);
     } catch (err) {
       console.error(err);
       alert('Failed to analyze resume. Please try uploading again.');
@@ -132,7 +138,7 @@ export default function ResumeAnalysis() {
 
       {/* Upload Zone */}
       {!result && !analyzing && (
-        <div className="border-2 border-dashed border-outline-variant rounded-xl p-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer relative">
+        <div className="border-2 border-dashed border-outline-variant rounded-xl p-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer relative min-h-[180px]">
           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleUpload} accept=".pdf,.doc,.docx" />
           <span className="material-symbols-outlined text-4xl text-primary mb-sm">upload_file</span>
           <p className="text-lg font-bold text-on-surface">Drop your resume here or click to browse</p>
@@ -140,12 +146,61 @@ export default function ResumeAnalysis() {
         </div>
       )}
 
-      {/* Analyzing spinner */}
+      {/* Skeleton grid — same layout as results to prevent CLS */}
       {analyzing && (
-        <div className="p-xl text-center space-y-md">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-lg font-bold animate-pulse">Analyzing your resume with AI...</p>
-          <p className="text-sm text-on-surface-variant">Detecting 300+ skills, scoring ATS fit, checking skill gaps…</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+          {/* Left skeleton */}
+          <div className="md:col-span-1 space-y-md">
+            <div className="glass-effect p-lg rounded-xl text-center space-y-sm">
+              <div className="h-4 w-24 mx-auto rounded bg-white/[0.06] animate-pulse" />
+              <div className="w-40 h-40 mx-auto rounded-full bg-white/[0.06] animate-pulse" />
+              <div className="h-3 w-16 mx-auto rounded bg-white/[0.06] animate-pulse" />
+              <div className="flex justify-center gap-4 pt-2">
+                <div className="h-3 w-12 rounded bg-white/[0.06] animate-pulse" />
+                <div className="h-3 w-12 rounded bg-white/[0.06] animate-pulse" />
+              </div>
+            </div>
+            <div className="glass-effect p-md rounded-xl space-y-3">
+              <div className="h-3 w-28 rounded bg-white/[0.06] animate-pulse" />
+              {[1,2,3,4,5].map(i => (
+                <div key={i}>
+                  <div className="flex justify-between mb-1">
+                    <div className="h-2.5 w-28 rounded bg-white/[0.06] animate-pulse" />
+                    <div className="h-2.5 w-8 rounded bg-white/[0.06] animate-pulse" />
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/[0.06] animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="glass-effect p-md rounded-xl">
+              <div className="h-3 w-24 rounded bg-white/[0.06] animate-pulse mb-3" />
+              <div className="flex flex-wrap gap-2">
+                {[1,2,3,4,5,6].map(i => <div key={i} className="h-6 w-16 rounded-full bg-white/[0.06] animate-pulse" />)}
+              </div>
+            </div>
+          </div>
+          {/* Right skeleton */}
+          <div className="md:col-span-2 space-y-md">
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg space-y-md">
+              <div className="h-5 w-40 rounded bg-white/[0.06] animate-pulse" />
+              <div className="h-2 rounded-full bg-white/[0.06] animate-pulse" />
+              <div className="space-y-2">
+                {[1,2,3].map(i => <div key={i} className="h-6 w-24 rounded-full bg-white/[0.06] animate-pulse inline-block mr-2" />)}
+              </div>
+            </div>
+            <div className="bg-surface-container-low border-l-4 border-success/30 p-md rounded-r-xl space-y-2">
+              <div className="h-4 w-20 rounded bg-white/[0.06] animate-pulse" />
+              {[1,2].map(i => <div key={i} className="h-3 w-full rounded bg-white/[0.06] animate-pulse" />)}
+            </div>
+            <div className="bg-surface-container-low border-l-4 border-warning/30 p-md rounded-r-xl space-y-2">
+              <div className="h-4 w-20 rounded bg-white/[0.06] animate-pulse" />
+              {[1,2,3].map(i => <div key={i} className="h-3 w-full rounded bg-white/[0.06] animate-pulse" />)}
+            </div>
+            <div className="flex items-center justify-center gap-3 text-on-surface-variant py-4">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm animate-pulse">Analyzing with AI — detecting skills, scoring ATS fit…</span>
+            </div>
+          </div>
         </div>
       )}
 
