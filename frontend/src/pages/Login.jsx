@@ -48,6 +48,33 @@ export default function Login() {
     }
   }
 
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotMsg, setForgotMsg] = useState('')
+  const [forgotError, setForgotError] = useState('')
+  const [forgotDebugUrl, setForgotDebugUrl] = useState('')
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setForgotError('')
+    setForgotMsg('')
+    setForgotDebugUrl('')
+    try {
+      const { forgotPassword } = await import('../api')
+      const res = await forgotPassword(forgotEmail)
+      setForgotMsg(res.message || 'Reset link sent!')
+      if (res.debug_reset_url) {
+        setForgotDebugUrl(res.debug_reset_url)
+      }
+    } catch (err) {
+      setForgotError(err.message || 'Failed to request reset')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
   return (
     <div className="bg-surface-bright text-on-surface min-h-screen flex flex-col lg:flex-row">
       {/* Left Side: Branding */}
@@ -128,7 +155,13 @@ export default function Login() {
             <div className="space-y-xs relative">
               <div className="flex justify-between items-center mb-1">
                 <label className="text-sm font-medium font-[Geist] text-on-surface" htmlFor="password">Password</label>
-                <Link to="/forgot-password" className="text-xs font-medium font-[Geist] text-primary hover:underline cursor-pointer">Forgot Password?</Link>
+                <button 
+                  type="button" 
+                  onClick={() => { setShowForgotModal(true); setForgotEmail(email); }} 
+                  className="text-xs font-medium font-[Geist] text-primary hover:underline cursor-pointer focus:outline-none"
+                >
+                  Forgot Password?
+                </button>
               </div>
               <div className="relative">
                 <Input 
@@ -169,6 +202,51 @@ export default function Login() {
           </div>
         </div>
       </main>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl p-xl max-w-md w-full shadow-2xl relative border border-outline-variant space-y-md">
+            <button 
+              onClick={() => setShowForgotModal(false)}
+              className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface rounded-full p-1 transition"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            <div className="text-center space-y-1">
+              <span className="material-symbols-outlined text-3xl text-primary">lock_reset</span>
+              <h3 className="text-xl font-bold text-on-surface">Forgot Password</h3>
+              <p className="text-xs text-on-surface-variant">Enter your email to receive a password reset link.</p>
+            </div>
+
+            {forgotError && <Alert type="error" message={forgotError} />}
+            {forgotMsg && <Alert type="success" message={forgotMsg} />}
+
+            {forgotDebugUrl && (
+              <div className="p-3 bg-primary-container/20 border border-primary/30 rounded-xl text-xs space-y-1">
+                <span className="font-bold text-primary block">Direct Reset Link:</span>
+                <a href={forgotDebugUrl} className="text-primary underline break-all font-mono">
+                  {forgotDebugUrl}
+                </a>
+              </div>
+            )}
+
+            <form onSubmit={handleForgotSubmit} className="space-y-md">
+              <Input
+                label="Email Address"
+                type="email"
+                required
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="alex@company.com"
+              />
+              <Button type="submit" variant="primary" isLoading={forgotLoading} className="w-full h-11">
+                Send Reset Link
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
