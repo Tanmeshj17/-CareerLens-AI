@@ -92,6 +92,12 @@ LEVER_COMPANIES = [
     ("ShareChat", "sharechat"),
     ("Pharmeasy", "pharmeasy"),
     ("Zeta", "zeta"),
+    ("BharatPe", "bharatpe"),
+    ("Upstox", "upstox"),
+    ("Spinny", "spinny"),
+    ("Khatabook", "khatabook"),
+    ("Slice", "slice"),
+    ("Zepto", "zepto"),
 ]
 
 
@@ -166,6 +172,10 @@ GREENHOUSE_COMPANIES = [
     ("BrowserStack", "browserstack"),
     ("Freshworks", "freshworks"),
     ("Thoughtworks", "thoughtworks"),
+    ("Swiggy", "swiggy"),
+    ("Ola", "olacabs"),
+    ("Acko", "acko"),
+    ("Blinkit", "blinkit"),
     ("Zoho", "zoho"),
     ("Gojek", "gojek"),
     ("Stripe", "stripe"),
