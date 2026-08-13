@@ -51,7 +51,7 @@ slowapi==0.1.10
 limits==5.8.0
 
 # --- Scheduler ---
-APScheduler==3.10.4
+APScheduler==3.11.3
 sortedcontainers==2.4.0
 tzlocal==5.4.3
 pytz==2026.2
