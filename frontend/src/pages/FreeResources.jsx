@@ -251,10 +251,15 @@ export default function FreeResources() {
 
             <div 
               ref={(el) => (scrollRefs.current['Featured Picks'] = el)}
-              className="flex gap-md overflow-x-auto pb-sm scroll-smooth custom-scrollbar"
+              className="flex gap-md overflow-x-auto pb-sm scroll-smooth custom-scrollbar min-h-[320px]"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {featured.map((r, idx) => (
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="shrink-0 w-80 rounded-xl bg-white/[0.02] animate-pulse border border-white/[0.05]" />
+                ))
+              ) : (
+                featured.map((r, idx) => (
                 <div
                   key={r.id}
                   className="group shrink-0 w-80 relative overflow-hidden rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
@@ -351,7 +356,15 @@ export default function FreeResources() {
           )}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="relative group/slider">
+            <div className="flex gap-md overflow-x-auto pb-sm scroll-smooth min-h-[220px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-80 h-52 rounded-xl bg-white/[0.02] animate-pulse border border-white/[0.05]" />
+              ))}
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 glass-effect rounded-xl border border-white/[0.06]">
             <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-md">search_off</span>
             <p className="text-on-surface-variant text-sm">No resources match your filters.</p>
@@ -374,7 +387,7 @@ export default function FreeResources() {
             {/* Scrollable container */}
             <div
               ref={mainScrollRef}
-              className="flex gap-md overflow-x-auto pb-sm scroll-smooth"
+              className="flex gap-md overflow-x-auto pb-sm scroll-smooth min-h-[220px]"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {filtered.map((r, idx) => (
