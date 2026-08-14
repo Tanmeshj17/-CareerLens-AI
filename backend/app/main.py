@@ -1553,11 +1553,23 @@ def get_user_match_scores(db: Session = Depends(database.get_db), current_user: 
 # --- Analytics & Insights Routes ---
 @app.get("/api/insights/stats")
 def get_insights_stats(db: Session = Depends(database.get_db)):
-    total_opps = db.query(models.Opportunity).count()
-    total_jobs = db.query(models.Opportunity).filter(models.Opportunity.job_type != "Internship").count()
-    total_internships = db.query(models.Opportunity).filter(models.Opportunity.job_type == "Internship").count()
-    total_companies = db.query(models.Opportunity.company).distinct().count()
-    total_locations = db.query(models.Opportunity.location).distinct().count()
+    total_opps = db.query(models.Opportunity).filter(models.Opportunity.is_active == True).count()
+    total_jobs = db.query(models.Opportunity).filter(
+        models.Opportunity.is_active == True,
+        models.Opportunity.job_type != "Internship"
+    ).count()
+    total_internships = db.query(models.Opportunity).filter(
+        models.Opportunity.is_active == True,
+        models.Opportunity.job_type == "Internship"
+    ).count()
+    total_companies = db.query(models.Opportunity.company).filter(
+        models.Opportunity.is_active == True,
+        models.Opportunity.company.isnot(None)
+    ).distinct().count()
+    total_locations = db.query(models.Opportunity.location).filter(
+        models.Opportunity.is_active == True,
+        models.Opportunity.location.isnot(None)
+    ).distinct().count()
     return {
         "total_opportunities": total_opps,
         "total_jobs": total_jobs,
@@ -1624,25 +1636,26 @@ def get_insights_locations(db: Session = Depends(database.get_db)):
 def get_insights_trends(db: Session = Depends(database.get_db)):
     from app.cache import get_or_compute
     def _compute():
+        from sqlalchemy import cast, Date
         try:
             results = db.query(
-                func.strftime('%Y-%m-%d', models.Opportunity.posted_date).label('date'),
+                cast(models.Opportunity.posted_date, Date).label('date'),
                 func.count(models.Opportunity.id).label('count')
             ).filter(
                 models.Opportunity.posted_date.isnot(None),
                 models.Opportunity.is_active == True
             ).group_by('date').order_by('date').all()
-            trends = [{"date": r.date, "count": r.count} for r in results]
-        except Exception:
+            trends = [{"date": str(r.date), "count": r.count} for r in results]
+        except Exception as e:
+            print(f"Error computing trends: {e}")
             trends = []
         
         if len(trends) <= 1:
             base_date = datetime.utcnow() - timedelta(days=6)
             trends = []
-            organic_counts = [12, 18, 25, 22, 30, 28, 35]
             for i in range(7):
                 d = (base_date + timedelta(days=i)).strftime('%Y-%m-%d')
-                trends.append({"date": d, "count": organic_counts[i]})
+                trends.append({"date": d, "count": 0})
         return trends
     return get_or_compute("insights_trends", _compute, ttl_seconds=3600)
 
