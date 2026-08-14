@@ -27,7 +27,7 @@ function ScoreRing({ score }) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
   return (
-    <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+    <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto flex items-center justify-center">
       <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
         <circle cx="60" cy="60" r={radius} fill="none" stroke="currentColor" strokeWidth="10" className="text-white/8" />
         <circle
@@ -37,7 +37,7 @@ function ScoreRing({ score }) {
           style={{ stroke: getScoreStroke(score), transition: 'stroke-dashoffset 1s ease-in-out' }}
         />
       </svg>
-      <span className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</span>
+      <span className={`text-3xl sm:text-4xl font-bold ${getScoreColor(score)}`}>{score}</span>
     </div>
   );
 }
@@ -132,17 +132,17 @@ export default function ResumeAnalysis() {
 
       {/* Header */}
       <header>
-        <h1 className="text-3xl font-bold text-on-surface">Resume ATS Analysis</h1>
-        <p className="text-on-surface-variant">Upload your resume to get instant ATS score, skill gap, and AI feedback.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-on-surface">Resume ATS Analysis</h1>
+        <p className="text-sm sm:text-base text-on-surface-variant">Upload your resume to get instant ATS score, skill gap, and AI feedback.</p>
       </header>
 
       {/* Upload Zone */}
       {!result && !analyzing && (
-        <div className="border-2 border-dashed border-outline-variant rounded-xl p-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer relative min-h-[180px]">
+        <div className="border-2 border-dashed border-outline-variant rounded-xl p-6 sm:p-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer relative min-h-[160px] sm:min-h-[180px] text-center">
           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleUpload} accept=".pdf,.doc,.docx" />
-          <span className="material-symbols-outlined text-4xl text-primary mb-sm">upload_file</span>
-          <p className="text-lg font-bold text-on-surface">Drop your resume here or click to browse</p>
-          <p className="text-sm text-on-surface-variant mt-1">Accepted formats: PDF, DOCX</p>
+          <span className="material-symbols-outlined text-3xl sm:text-4xl text-primary mb-sm">upload_file</span>
+          <p className="text-base sm:text-lg font-bold text-on-surface">Drop your resume here or click to browse</p>
+          <p className="text-xs sm:text-sm text-on-surface-variant mt-1">Accepted formats: PDF, DOCX</p>
         </div>
       )}
 

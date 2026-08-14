@@ -166,7 +166,7 @@ export default function FreeResources() {
       </div>
 
       {/* ══════════ CATEGORY TABS + BOOKMARK TOGGLE ══════════ */}
-      <div className="flex flex-wrap items-center gap-sm">
+      <div className="flex overflow-x-auto no-scrollbar md:flex-wrap items-center gap-sm pb-1 -my-0.5">
         {CATEGORIES.map((cat) => {
           const active = activeTab === cat
           return (

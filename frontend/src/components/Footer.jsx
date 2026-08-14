@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom';
+import CareerLensLogo from './CareerLensLogo';
 
 export default function Footer() {
   return (
-    <footer className="bg-surface-container-lowest border-t border-outline-variant py-xl mt-auto">
-      <div className="max-w-7xl mx-auto px-lg">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-xl">
-          <div className="md:col-span-1">
-            <span className="text-xl font-bold text-primary-fixed mb-sm block">CareerLens AI</span>
-            <p className="text-sm text-on-surface-variant mb-md">
+    <footer className="bg-surface-container-lowest border-t border-outline-variant py-lg sm:py-xl mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-lg">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-lg sm:gap-xl">
+          <div className="col-span-2 md:col-span-1">
+            <div className="mb-sm">
+              <CareerLensLogo size="sm" />
+            </div>
+            <p className="text-xs sm:text-sm text-on-surface-variant mb-md max-w-sm">
               Unlock your career potential with AI-driven insights, job matching, and structured learning paths.
             </p>
           </div>

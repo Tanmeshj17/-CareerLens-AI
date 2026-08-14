@@ -164,12 +164,12 @@ export default function Dashboard() {
 
 
   return (
-    <div className="space-y-xl animate-fade-in-up">
+    <div className="space-y-lg sm:space-y-xl animate-fade-in-up">
       {/* Welcome Message */}
-      <section className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-md">
+      <section className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-md">
         <div>
-          <h2 className="text-3xl font-semibold text-on-surface">Welcome back, {user?.full_name?.split(' ')[0]}</h2>
-          <p className="text-base text-on-surface-variant">Your career growth is 12% faster than last month. Here's what's happening today.</p>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-on-surface">Welcome back, {user?.full_name?.split(' ')[0]}</h2>
+          <p className="text-sm sm:text-base text-on-surface-variant">Your career growth is 12% faster than last month. Here's what's happening today.</p>
         </div>
         <Link to="/app/tracker" className="hidden md:flex bg-primary text-on-primary px-lg py-sm rounded-lg text-sm font-medium font-[Geist] shadow-sm hover:brightness-110 transition-all items-center gap-sm">
           <span className="material-symbols-outlined text-[20px]">add</span>
@@ -178,17 +178,17 @@ export default function Dashboard() {
       </section>
 
       {/* Stats Row — 6 exclusive categories, sum = total_opportunities */}
-      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-md stagger-children">
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-md stagger-children">
         {marketStats.map((stat, i) => (
-          <div key={i} className="bg-surface border border-outline-variant p-lg rounded-xl hover:shadow-lg transition-shadow duration-300">
-            <div className="flex justify-between items-start mb-md">
-              <div className={`p-sm ${stat.colorBg} rounded-lg`}>
-                <span className={`material-symbols-outlined ${stat.colorIcon}`}>{stat.icon}</span>
+          <div key={i} className="bg-surface border border-outline-variant p-3 sm:p-lg rounded-xl hover:shadow-lg transition-shadow duration-300">
+            <div className="flex justify-between items-start mb-2 sm:mb-md">
+              <div className={`p-1.5 sm:p-sm ${stat.colorBg} rounded-lg`}>
+                <span className={`material-symbols-outlined text-lg sm:text-2xl ${stat.colorIcon}`}>{stat.icon}</span>
               </div>
-              <span className={`text-xs font-medium font-[Geist] ${stat.colorTrend}`}>{stat.trend}</span>
+              <span className={`text-[10px] sm:text-xs font-medium font-[Geist] ${stat.colorTrend}`}>{stat.trend}</span>
             </div>
-            <p className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider">{stat.title}</p>
-            <h3 className="text-2xl font-bold mt-xs">
+            <p className="text-[10px] sm:text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider line-clamp-1">{stat.title}</p>
+            <h3 className="text-xl sm:text-2xl font-bold mt-0.5 sm:mt-xs">
               {stat.val !== undefined ? stat.val.toLocaleString() : <span className="inline-block w-16 h-7 bg-surface-variant animate-pulse rounded" />}
             </h3>
           </div>

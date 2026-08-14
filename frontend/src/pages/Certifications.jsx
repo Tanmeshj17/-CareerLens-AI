@@ -260,7 +260,7 @@ export default function Certifications() {
       </div>
 
       {/* ─── Filter Bar ─── */}
-      <div className="flex flex-wrap items-center gap-sm">
+      <div className="flex overflow-x-auto no-scrollbar md:flex-wrap items-center gap-sm pb-1 -my-0.5">
         {categories.map((cat) => (
           <button
             key={cat}

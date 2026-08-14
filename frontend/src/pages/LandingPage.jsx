@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import Footer from '../components/Footer'
+import CareerLensLogo from '../components/CareerLensLogo'
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const hiringCompanies = [
     { name: 'Paytm', tag: 'FinTech' },
@@ -100,17 +102,11 @@ export default function LandingPage() {
       {/* ── Top Navbar (Fully Responsive) ── */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#0050cb] to-[#0284c7] flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-white text-lg sm:text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                auto_awesome
-              </span>
-            </div>
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#0b1c30]">
-              CareerLens <span className="text-[#0284c7]">AI</span>
-            </span>
+          <Link to="/" className="flex items-center gap-2 group">
+            <CareerLensLogo size="md" />
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
             <a href="#home" className="text-[#0050cb] font-bold">Home</a>
             <a href="#services" className="hover:text-[#0050cb] transition-colors">Services</a>
@@ -119,18 +115,80 @@ export default function LandingPage() {
             <a href="#faq" className="hover:text-[#0050cb] transition-colors">FAQ</a>
           </nav>
 
-          <div className="flex items-center gap-2.5 sm:gap-4">
+          {/* Desktop & Mobile Actions */}
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login" className="text-xs sm:text-sm font-bold text-slate-700 hover:text-[#0050cb] transition-colors px-2 sm:px-3 py-1.5">
               Log In
             </Link>
             <Link 
               to="/register" 
-              className="bg-[#0050cb] hover:bg-[#003fa4] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all active:scale-95"
+              className="bg-[#0050cb] hover:bg-[#003fa4] text-white px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all active:scale-95 shrink-0"
             >
               Get Started
             </Link>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-slate-700 hover:text-[#0050cb] hover:bg-slate-100 rounded-lg transition-colors ml-1"
+              aria-label="Toggle navigation menu"
+            >
+              <span className="material-symbols-outlined text-2xl">
+                {mobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3 shadow-lg animate-fade-in-up">
+            <a 
+              href="#home" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-bold text-[#0050cb] hover:bg-slate-50 rounded-lg px-3"
+            >
+              Home
+            </a>
+            <a 
+              href="#services" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-semibold text-slate-700 hover:text-[#0050cb] hover:bg-slate-50 rounded-lg px-3"
+            >
+              Services
+            </a>
+            <a 
+              href="#about" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-semibold text-slate-700 hover:text-[#0050cb] hover:bg-slate-50 rounded-lg px-3"
+            >
+              About Us
+            </a>
+            <a 
+              href="#testimonials" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-semibold text-slate-700 hover:text-[#0050cb] hover:bg-slate-50 rounded-lg px-3"
+            >
+              Reviews
+            </a>
+            <a 
+              href="#faq" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-semibold text-slate-700 hover:text-[#0050cb] hover:bg-slate-50 rounded-lg px-3"
+            >
+              FAQ
+            </a>
+            <div className="pt-2 border-t border-slate-100 flex gap-2">
+              <Link 
+                to="/app/opportunities" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 py-2.5 text-center bg-blue-50 text-[#0050cb] rounded-lg text-xs font-bold"
+              >
+                Browse Opportunities
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
 

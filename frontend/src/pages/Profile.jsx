@@ -202,27 +202,27 @@ export default function Profile() {
   )
 
   return (
-    <div className="space-y-xl animate-fade-in-up max-w-4xl mx-auto pb-3xl">
+    <div className="space-y-lg sm:space-y-xl animate-fade-in-up max-w-4xl mx-auto pb-3xl">
 
       {/* ═══════════════ PROFILE HEADER ═══════════════ */}
-      <section className="glass-effect rounded-2xl p-xl relative overflow-hidden">
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl relative overflow-hidden">
         {/* Decorative gradient band */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/10 via-primary-container/5 to-transparent rounded-t-2xl" />
         <div className="relative flex flex-col sm:flex-row items-center gap-lg pt-sm">
           {/* Avatar */}
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-3xl font-bold text-on-primary shadow-lg ring-4 ring-white/80 group-hover:scale-105 transition-transform duration-300">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-2xl sm:text-3xl font-bold text-on-primary shadow-lg ring-4 ring-white/80 group-hover:scale-105 transition-transform duration-300">
               {initials}
             </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-surface border border-outline-variant rounded-full flex items-center justify-center shadow-sm hover:bg-primary hover:text-on-primary hover:border-primary transition-all duration-200">
+            <button className="absolute bottom-0 right-0 w-8 h-8 bg-surface border border-outline-variant rounded-full flex items-center justify-center shadow-sm hover:bg-primary hover:text-on-primary hover:border-primary transition-all duration-200" title="Change photo">
               <span className="material-symbols-outlined text-[16px]">photo_camera</span>
             </button>
           </div>
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-on-surface">{personalInfo.fullName}</h2>
-            <p className="text-sm text-on-surface-variant mt-xs">{personalInfo.email}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-on-surface">{personalInfo.fullName}</h2>
+            <p className="text-xs sm:text-sm text-on-surface-variant mt-xs">{personalInfo.email}</p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-sm mt-md">
               <span className="inline-flex items-center gap-xs px-sm py-xs bg-primary/10 text-primary text-xs font-bold font-[Geist] rounded-full">
                 <span className="material-symbols-outlined text-[14px]">verified</span>
@@ -253,7 +253,7 @@ export default function Profile() {
       </section>
 
       {/* ═══════════════ PERSONAL INFORMATION ═══════════════ */}
-      <section className="glass-effect rounded-2xl p-xl">
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl">
         <SectionHeader icon="person" title="Personal Information" subtitle="Manage your personal details">
           <div className="flex items-center gap-sm">
             <SavedBadge section="personal" />

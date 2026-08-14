@@ -86,7 +86,7 @@ const JobCard = memo(({ job, navigate, savedIds, savingId, handleSave, handleApp
   const isFallback = job.search_level === 3
   
   return (
-    <div className={`bg-white p-lg rounded-xl border transition-all flex flex-col justify-between group ${
+    <div className={`bg-white p-4 sm:p-lg rounded-xl border transition-all flex flex-col justify-between group ${
       isFallback ? 'border-outline-variant/50 opacity-80 hover:opacity-100' : 'border-outline-variant hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5'
     }`}>
       {isFallback && (
@@ -95,17 +95,17 @@ const JobCard = memo(({ job, navigate, savedIds, savingId, handleSave, handleApp
           Related Opportunity
         </div>
       )}
-      <div className="flex justify-between items-start gap-md">
-        <div className="flex gap-md">
-          <div className="w-14 h-14 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant overflow-hidden shrink-0">
-            <span className="text-xl font-bold text-primary">{(job.company || '?')[0]}</span>
+      <div className="flex justify-between items-start gap-3 sm:gap-md">
+        <div className="flex gap-3 sm:gap-md min-w-0">
+          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant overflow-hidden shrink-0">
+            <span className="text-lg sm:text-xl font-bold text-primary">{(job.company || '?')[0]}</span>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-on-background group-hover:text-primary transition-colors cursor-pointer"
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-xl font-bold text-on-background group-hover:text-primary transition-colors cursor-pointer leading-snug"
                 onClick={() => navigate(`/app/opportunities/${job.id}`)}>
               {job.title}
             </h3>
-            <p className="text-base text-on-surface-variant font-medium">{job.company}</p>
+            <p className="text-xs sm:text-base text-on-surface-variant font-medium">{job.company}</p>
             <div className="flex flex-wrap gap-sm mt-sm items-center">
               {job.location && (
                 <span className="flex items-center gap-xs text-xs font-medium font-[Geist] text-on-surface-variant bg-surface-container-low px-sm py-xs rounded">
@@ -543,10 +543,10 @@ export default function OpportunitiesHub() {
       </section>
 
       {/* Quick Sorting Filters */}
-      <div className="flex gap-sm overflow-x-auto pb-1 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+      <div className="flex gap-sm overflow-x-auto no-scrollbar pb-1 -my-0.5 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
         <button 
           onClick={() => { setSortBy('newest'); setCurrentPage(1); fetchJobs(false, 1, 'newest'); }}
-          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'newest' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+          className={`flex items-center gap-xs px-md py-xs rounded-full border text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'newest' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
         >
           <span className="material-symbols-outlined text-[16px]">bolt</span>
           Latest Jobs

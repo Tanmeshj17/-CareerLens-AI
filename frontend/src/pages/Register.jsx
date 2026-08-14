@@ -5,6 +5,7 @@ import { AuthContext } from '../App'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Alert } from '../components/ui/Alert'
+import CareerLensLogo from '../components/CareerLensLogo'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -36,12 +37,12 @@ export default function Register() {
     <div className="bg-surface-bright text-on-surface min-h-screen flex flex-col lg:flex-row">
       <main className="w-full lg:w-[55%] xl:w-1/2 flex items-center justify-center p-lg sm:p-2xl bg-white relative min-w-0">
         <div className="w-full max-w-md animate-fade-in-up">
-          <div className="mb-xl lg:hidden">
-            <span className="text-2xl font-bold text-primary">CareerLens AI</span>
+          <div className="mb-lg lg:hidden">
+            <CareerLensLogo size="md" />
           </div>
           <div className="mb-xl">
-            <h2 className="text-3xl font-semibold text-on-surface mb-xs">Create an Account</h2>
-            <p className="text-base text-on-surface-variant">Join CareerLens AI to transform your career path.</p>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-on-surface mb-xs">Create an Account</h2>
+            <p className="text-sm sm:text-base text-on-surface-variant">Join CareerLens AI to transform your career path.</p>
           </div>
 
           <Button variant="secondary" disabled className="w-full gap-md mb-xl h-12">
@@ -101,10 +102,10 @@ export default function Register() {
         </div>
       </main>
 
-      <section className="w-full lg:w-[45%] xl:w-1/2 bg-on-background relative overflow-hidden flex items-center justify-center p-xl md:p-2xl min-w-0 min-h-[350px] lg:min-h-screen">
+      <section className="w-full lg:w-[45%] xl:w-1/2 bg-on-background relative overflow-hidden flex items-center justify-center p-xl md:p-2xl min-w-0 min-h-[320px] lg:min-h-screen">
         <div className="relative z-10 max-w-lg w-full">
           <div className="mb-xl">
-            <span className="text-2xl font-bold text-primary-fixed block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">CareerLens AI</span>
+            <CareerLensLogo size="lg" variant="white" />
           </div>
           <h1 className="hero-title font-bold text-white mb-lg leading-tight">
             Your intelligence advantage in the job market.

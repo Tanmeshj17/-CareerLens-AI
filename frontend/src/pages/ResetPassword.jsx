@@ -4,6 +4,7 @@ import { resetPassword } from '../api'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Alert } from '../components/ui/Alert'
+import CareerLensLogo from '../components/CareerLensLogo'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -53,10 +54,12 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="bg-surface-bright text-on-surface min-h-screen flex items-center justify-center p-md">
-      <div className="w-full max-w-md bg-white rounded-2xl p-xl shadow-lg border border-outline-variant animate-fade-in-up">
+    <div className="bg-surface-bright text-on-surface min-h-screen flex items-center justify-center p-4 sm:p-md">
+      <div className="w-full max-w-md bg-white rounded-2xl p-6 sm:p-xl shadow-lg border border-outline-variant animate-fade-in-up">
         <div className="mb-lg text-center">
-          <span className="text-2xl font-bold text-primary block mb-xs">CareerLens AI</span>
+          <div className="flex justify-center mb-md">
+            <CareerLensLogo size="md" />
+          </div>
           <h2 className="text-2xl font-semibold text-on-surface">Reset Password</h2>
           <p className="text-sm text-on-surface-variant mt-1">
             Enter your new password below.
