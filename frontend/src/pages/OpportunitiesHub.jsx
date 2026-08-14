@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, memo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { getOpportunities, getRecommendedOpportunities, createApplication } from '../api'
 import { AuthContext } from '../App'
 import { Alert } from '../components/ui/Alert'
@@ -270,6 +270,9 @@ const JobCard = memo(({ job, navigate, savedIds, savingId, handleSave, handleApp
 export default function OpportunitiesHub() {
   const { user } = useContext(AuthContext)
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const initialQuery = searchParams.get('query') || searchParams.get('search') || searchParams.get('q') || ''
 
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -281,7 +284,7 @@ export default function OpportunitiesHub() {
   const [searchMeta, setSearchMeta] = useState(null) // Phase 8.65: search confidence
 
   // Filter state
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [suggestions, setSuggestions] = useState({roles:[], skills:[], companies:[]})
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locationFilter, setLocationFilter] = useState('')
@@ -292,14 +295,15 @@ export default function OpportunitiesHub() {
   const [savedIds, setSavedIds] = useState(new Set())
   const [savingId, setSavingId] = useState(null)
 
-  const fetchJobs = async (append = false, page = 1, currentSort = sortBy) => {
+  const fetchJobs = async (append = false, page = 1, currentSort = sortBy, queryOverride = null) => {
     try {
       if (append) setLoadingMore(true)
       else setLoading(true)
       setError(null)
 
+      const activeSearch = queryOverride !== null ? queryOverride : searchQuery
       const params = {
-        search: searchQuery || undefined,
+        search: activeSearch && activeSearch.trim() ? activeSearch.trim() : undefined,
         type: jobType !== 'All' ? jobType : undefined,
         location: locationFilter || undefined,
         sort: currentSort,
@@ -342,9 +346,12 @@ export default function OpportunitiesHub() {
     }
   }
 
+  // Handle URL param changes or initial load
   useEffect(() => {
-    fetchJobs()
-  }, [])
+    const q = searchParams.get('query') || searchParams.get('search') || searchParams.get('q') || ''
+    setSearchQuery(q)
+    fetchJobs(false, 1, sortBy, q)
+  }, [searchParams])
 
   // Autocomplete debouncer
   useEffect(() => {
@@ -620,14 +627,52 @@ export default function OpportunitiesHub() {
 
       {/* Empty State */}
       {!loading && !error && jobs.length === 0 && (
-        <EmptyState 
-          icon="search_off"
-          title="No results found"
-          description="We couldn't find any opportunities matching your current filters. Try adjusting your search criteria."
-          actionLabel="Clear All Filters"
-          onAction={resetFilters}
-          className="flex-1 animate-fade-in-up mt-lg border-none"
-        />
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 sm:p-xl text-center flex-1 flex flex-col items-center justify-center max-w-xl mx-auto my-8 animate-fade-in-up">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+            <span className="material-symbols-outlined text-3xl">search_off</span>
+          </div>
+          <h3 className="text-xl font-bold text-on-surface">
+            {searchQuery ? `No direct openings for "${searchQuery}"` : 'No opportunities found'}
+          </h3>
+          <p className="text-sm text-on-surface-variant mt-2 mb-6 max-w-md">
+            {searchQuery 
+              ? `We couldn't find active jobs matching "${searchQuery}" right now. New roles are crawled and indexed continuously every hour.`
+              : 'Try loosening your filters or clearing search criteria to see all available opportunities.'}
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 w-full">
+            <Button variant="primary" onClick={resetFilters} className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+              Clear Filters & View All Jobs
+            </Button>
+            <Link
+              to="/app/explore"
+              className="px-4 py-2 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container text-xs sm:text-sm font-semibold text-on-surface transition-colors flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[16px] text-primary">explore</span>
+              Explore Career Roadmaps
+            </Link>
+          </div>
+
+          {/* Quick Search Suggestions */}
+          <div className="mt-8 pt-6 border-t border-outline-variant/50 w-full text-center">
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Popular Search Categories</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['Software Engineer', 'Full Stack', 'Data Scientist', 'Python', 'React', 'Internship'].map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    setSearchQuery(tag);
+                    setSearchParams({ query: tag });
+                  }}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-on-primary transition-colors text-on-surface-variant"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Job Cards */}

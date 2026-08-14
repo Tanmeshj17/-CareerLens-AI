@@ -1636,26 +1636,34 @@ def get_insights_locations(db: Session = Depends(database.get_db)):
 def get_insights_trends(db: Session = Depends(database.get_db)):
     from app.cache import get_or_compute
     def _compute():
-        from sqlalchemy import cast, Date
+        from sqlalchemy import cast, Date, desc
         try:
+            date_col = cast(models.Opportunity.posted_date, Date)
             results = db.query(
-                cast(models.Opportunity.posted_date, Date).label('date'),
+                date_col.label('date'),
                 func.count(models.Opportunity.id).label('count')
             ).filter(
                 models.Opportunity.posted_date.isnot(None),
                 models.Opportunity.is_active == True
-            ).group_by('date').order_by('date').all()
-            trends = [{"date": str(r.date), "count": r.count} for r in results]
+            ).group_by(date_col).order_by(desc(date_col)).limit(7).all()
+            
+            # Reverse so it's in chronological order (oldest to newest)
+            trends = [{"date": str(r.date), "count": r.count} for r in reversed(results)]
         except Exception as e:
             print(f"Error computing trends: {e}")
             trends = []
         
-        if len(trends) <= 1:
+        # If fewer than 7 days of data exist, generate a continuous 7-day timeline up to today
+        if len(trends) < 7:
+            existing_map = {t["date"]: t["count"] for t in trends}
             base_date = datetime.utcnow() - timedelta(days=6)
             trends = []
             for i in range(7):
-                d = (base_date + timedelta(days=i)).strftime('%Y-%m-%d')
-                trends.append({"date": d, "count": 0})
+                d_str = (base_date + timedelta(days=i)).strftime('%Y-%m-%d')
+                trends.append({
+                    "date": d_str,
+                    "count": existing_map.get(d_str, 0)
+                })
         return trends
     return get_or_compute("insights_trends", _compute, ttl_seconds=3600)
 

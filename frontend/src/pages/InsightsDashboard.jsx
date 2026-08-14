@@ -63,7 +63,8 @@ export default function InsightsDashboard() {
   const maxSkillCount = skills.length > 0 ? Math.max(...skills.map(s => s.count), 1) : 1;
   const maxCompanyCount = companies.length > 0 ? Math.max(...companies.map(c => c.count), 1) : 1;
   const maxLocCount = locations.length > 0 ? Math.max(...locations.map(l => l.count), 1) : 1;
-  const maxTrendCount = trends.length > 0 ? Math.max(...trends.map(t => t.count), 1) : 1;
+  const displayTrends = (trends || []).slice(-7);
+  const maxTrendCount = displayTrends.length > 0 ? Math.max(...displayTrends.map(t => t.count), 1) : 1;
   const totalSalaryOpps = salary.reduce((acc, curr) => acc + (curr.count || 0), 0) || 1;
 
   if (loading) {
@@ -286,28 +287,34 @@ export default function InsightsDashboard() {
                   <span className="text-xs text-on-surface-variant">Daily volume</span>
                 </div>
 
-                <div className="h-[210px] flex items-end gap-2 border-b border-outline-variant pb-2 pt-6">
-                  {trends.map((trend, idx) => {
-                    const heightPct = (trend.count / maxTrendCount) * 100;
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
-                        <div
-                          className="w-full bg-primary/20 group-hover:bg-primary rounded-t-md transition-all relative flex flex-col justify-end"
-                          style={{ height: `${Math.max(heightPct, 8)}%` }}
-                        >
-                          <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                <div className="relative pt-6 pb-2">
+                  <div className="h-44 sm:h-48 flex items-end gap-1.5 sm:gap-3 border-b border-outline-variant pb-2">
+                    {displayTrends.map((trend, idx) => {
+                      const heightPct = Math.min((trend.count / maxTrendCount) * 100, 100);
+                      return (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative min-w-0">
+                          {/* Tooltip */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-md">
                             {trend.count} jobs
                           </div>
+                          {/* Bar */}
+                          <div
+                            className="w-full max-w-[42px] bg-primary/25 group-hover:bg-primary rounded-t-md transition-all duration-300 flex flex-col justify-end"
+                            style={{ height: `${Math.max(heightPct, 8)}%` }}
+                          >
+                            <div className="h-1 bg-primary rounded-t-md" />
+                          </div>
+                          {/* Date Label */}
+                          <span className="text-[10px] sm:text-xs text-on-surface-variant font-medium truncate w-full text-center">
+                            {trend.date ? new Date(trend.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-on-surface-variant truncate w-full text-center">
-                          {trend.date.substring(5)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {trends.length === 0 && (
-                    <p className="text-xs text-on-surface-variant self-center w-full text-center">No trend telemetry available.</p>
-                  )}
+                      );
+                    })}
+                    {displayTrends.length === 0 && (
+                      <p className="text-xs text-on-surface-variant self-center w-full text-center">No trend telemetry available.</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
