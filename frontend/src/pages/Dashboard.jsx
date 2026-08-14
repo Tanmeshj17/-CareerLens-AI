@@ -18,63 +18,120 @@ export default function Dashboard() {
   const { user } = useContext(AuthContext)
   const navigate = useNavigate()
   
-  const [dbStats, setDbStats] = useState(null)
-  const [topCompanies, setTopCompanies] = useState([])
-  const [topLocations, setTopLocations] = useState([])
-  const [topSkills, setTopSkills] = useState([])
-  const [salaryTrends, setSalaryTrends] = useState([])
-  const [fastGrowing, setFastGrowing] = useState([])
-  const [readinessData, setReadinessData] = useState([])
-  const [completenessData, setCompletenessData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Initialize with cached snapshot for 0ms instant paint
+  const [dbStats, setDbStats] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_stats')) || null } catch { return null }
+  })
+  const [topCompanies, setTopCompanies] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_companies')) || [] } catch { return [] }
+  })
+  const [topLocations, setTopLocations] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_locations')) || [] } catch { return [] }
+  })
+  const [topSkills, setTopSkills] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_skills')) || [] } catch { return [] }
+  })
+  const [salaryTrends, setSalaryTrends] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_salary')) || [] } catch { return [] }
+  })
+  const [fastGrowing, setFastGrowing] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_fast_growing')) || [] } catch { return [] }
+  })
+  const [readinessData, setReadinessData] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_readiness')) || [] } catch { return [] }
+  })
+  const [completenessData, setCompletenessData] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('cl_completeness')) || null } catch { return null }
+  })
+  
+  const [loadingStats, setLoadingStats] = useState(!dbStats)
+  const [loadingInsights, setLoadingInsights] = useState(!topCompanies.length)
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const promises = [
-          getDashboardStats(),
-          getInsightsCompanies(),
-          getInsightsLocations(),
-          getInsightsSkills(),
-          getInsightsSalary(),
-          getFastGrowingCareers()
-        ]
-        
-        if (user) {
-          promises.push(getReadiness())
-          promises.push(getProfileCompleteness())
-        }
+    let isMounted = true
 
-        const results = await Promise.allSettled(promises)
-        
-        if (results[0].status === 'fulfilled') setDbStats(results[0].value)
-        if (results[1].status === 'fulfilled') setTopCompanies(results[1].value)
-        if (results[2].status === 'fulfilled') setTopLocations(results[2].value)
-        if (results[3].status === 'fulfilled') setTopSkills(results[3].value)
-        if (results[4].status === 'fulfilled') setSalaryTrends(results[4].value)
-        if (results[5].status === 'fulfilled') setFastGrowing(results[5].value?.roles || [])
-        
-        if (user && results[6] && results[6].status === 'fulfilled') {
-          setReadinessData(results[6].value.readiness_cards || [])
-        }
-        if (user && results[7] && results[7].status === 'fulfilled') {
-          setCompletenessData(results[7].value)
-        }
-      } catch (e) {
-        console.error("Failed to load dashboard data", e)
-      } finally {
-        setLoading(false)
-      }
+    // Progressive independent data fetching (non-blocking)
+    getDashboardStats()
+      .then(data => {
+        if (!isMounted) return
+        setDbStats(data)
+        setLoadingStats(false)
+        try { sessionStorage.setItem('cl_stats', JSON.stringify(data)) } catch {}
+      })
+      .catch(() => { if (isMounted) setLoadingStats(false) })
+
+    getInsightsCompanies()
+      .then(data => {
+        if (!isMounted) return
+        setTopCompanies(data || [])
+        try { sessionStorage.setItem('cl_companies', JSON.stringify(data)) } catch {}
+      })
+      .catch(() => {})
+
+    getInsightsLocations()
+      .then(data => {
+        if (!isMounted) return
+        setTopLocations(data || [])
+        try { sessionStorage.setItem('cl_locations', JSON.stringify(data)) } catch {}
+      })
+      .catch(() => {})
+
+    getInsightsSkills()
+      .then(data => {
+        if (!isMounted) return
+        setTopSkills(data || [])
+        setLoadingInsights(false)
+        try { sessionStorage.setItem('cl_skills', JSON.stringify(data)) } catch {}
+      })
+      .catch(() => { if (isMounted) setLoadingInsights(false) })
+
+    getInsightsSalary()
+      .then(data => {
+        if (!isMounted) return
+        setSalaryTrends(data || [])
+        try { sessionStorage.setItem('cl_salary', JSON.stringify(data)) } catch {}
+      })
+      .catch(() => {})
+
+    getFastGrowingCareers()
+      .then(data => {
+        if (!isMounted) return
+        setFastGrowing(data?.roles || [])
+        try { sessionStorage.setItem('cl_fast_growing', JSON.stringify(data?.roles || [])) } catch {}
+      })
+      .catch(() => {})
+
+    if (user) {
+      getReadiness()
+        .then(data => {
+          if (!isMounted) return
+          setReadinessData(data?.readiness_cards || [])
+          try { sessionStorage.setItem('cl_readiness', JSON.stringify(data?.readiness_cards || [])) } catch {}
+        })
+        .catch(() => {})
+
+      getProfileCompleteness()
+        .then(data => {
+          if (!isMounted) return
+          setCompletenessData(data)
+          try { sessionStorage.setItem('cl_completeness', JSON.stringify(data)) } catch {}
+        })
+        .catch(() => {})
     }
-    loadData()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   const stats = [
-    { title: 'Total Opportunities', val: dbStats?.total_opportunities || '0', icon: 'travel_explore', trend: 'Live', colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success' },
-    { title: 'Fresher Openings', val: dbStats?.freshers_jobs || '0', icon: 'school', trend: 'Hiring Now', colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-success' },
-    { title: 'Internships', val: dbStats?.internships || '0', icon: 'local_library', trend: 'Summer Intake', colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success' },
-    { title: 'Applied Jobs', val: dbStats?.applied_opportunities || '0', icon: 'send', trend: 'Track', colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error' },
+    { title: 'Total Opportunities', val: dbStats?.total_opportunities, icon: 'travel_explore', trend: 'Live', colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success' },
+    { title: 'Fresher Openings', val: dbStats?.freshers_jobs, icon: 'school', trend: 'Hiring Now', colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-success' },
+    { title: 'Internships', val: dbStats?.internships, icon: 'local_library', trend: 'Summer Intake', colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success' },
+    { title: 'Applied Jobs', val: dbStats?.applied_opportunities ?? 0, icon: 'send', trend: 'Track', colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error' },
   ]
+
+  const loading = loadingInsights && !topCompanies.length
 
 
   return (
@@ -102,7 +159,9 @@ export default function Dashboard() {
               <span className={`text-xs font-medium font-[Geist] ${stat.colorTrend}`}>{stat.trend}</span>
             </div>
             <p className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider">{stat.title}</p>
-            <h3 className="text-2xl font-bold mt-xs">{stat.val}</h3>
+            <h3 className="text-2xl font-bold mt-xs">
+              {stat.val !== undefined ? stat.val : <span className="inline-block w-16 h-7 bg-surface-variant animate-pulse rounded" />}
+            </h3>
           </div>
         ))}
       </section>
