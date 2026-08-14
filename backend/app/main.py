@@ -568,12 +568,26 @@ def startup_event():
         db = database.SessionLocal()
         from sqlalchemy import text
 
-        # 2a. Schema column safety
+        # 2a. Schema column safety & Phase 11.8 Migration
         try:
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS data_origin VARCHAR;"))
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS apply_url_status VARCHAR;"))
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS verified_apply_url VARCHAR;"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS last_validated_at TIMESTAMP;"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS validation_status VARCHAR DEFAULT 'PENDING';"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS validation_attempts INTEGER DEFAULT 0;"))
+            db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS validation_reason VARCHAR;"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS ix_opportunities_last_validated_at ON opportunities (last_validated_at);"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS ix_opportunities_validation_status ON opportunities (validation_status);"))
             db.commit()
+            
+            # Run strict deduplication
+            try:
+                from .duplicate_detector_v2 import run_strict_deduplication
+                dedup_res = run_strict_deduplication(db)
+                logger.info(f"Startup strict deduplication: {dedup_res}")
+            except Exception as dedup_err:
+                logger.warning(f"Startup strict deduplication error: {dedup_err}")
         except Exception as mig_err:
             logger.warning(f"Schema migration check: {mig_err}")
             db.rollback()
