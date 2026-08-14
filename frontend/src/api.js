@@ -420,5 +420,38 @@ export async function updatePreferences(data) {
   });
 }
 
+// ── Feedback API ──────────────────────────────────────────────
+
+export async function submitFeedback(data) {
+  return request('/api/feedback', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function getMyFeedback() {
+  return request('/api/feedback/me');
+}
+
+export async function getFeedbackStats() {
+  return request('/api/feedback/stats');
+}
+
+export async function adminGetFeedback({ status, category, limit = 100, offset = 0 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (category) params.append('category', category);
+  params.append('limit', limit);
+  params.append('offset', offset);
+  return request(`/api/admin/feedback?${params.toString()}`);
+}
+
+export async function adminUpdateFeedback(feedbackId, data) {
+  return request(`/api/admin/feedback/${feedbackId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  });
+}
+
 // ── Utility Exports ───────────────────────────────────────────
 export { getToken, setToken, clearToken, API_BASE };

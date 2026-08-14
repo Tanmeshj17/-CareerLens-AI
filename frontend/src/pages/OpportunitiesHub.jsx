@@ -7,15 +7,16 @@ import { Badge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
 
-// --- Phase 8.55: Link Integrity Badge ---
+// --- Link Integrity & Truthful Classification Badges ---
 const LINK_BADGE_CONFIG = {
-  VERIFIED_DIRECT:               { label: 'Verified Apply', icon: 'verified', cls: 'bg-success/10 text-success border-success/20' },
-  VERIFIED_POSTING:              { label: 'Posting Page',   icon: 'link',      cls: 'bg-primary/10 text-primary border-primary/20' },
-  BROWSER_VERIFICATION_REQUIRED: { label: 'ATS Protected',  icon: 'shield',    cls: 'bg-secondary-container/30 text-on-secondary-container border-secondary-container/50' },
-  CAREER_BOARD:                  { label: 'Careers Page',   icon: 'open_in_new',cls: 'bg-warning/10 text-warning border-warning/20' },
-  UNKNOWN:                       { label: 'Unverified',     icon: 'help',      cls: 'bg-surface-container text-on-surface-variant border-outline-variant' },
-  HOMEPAGE_ONLY:                 { label: 'Homepage Only',  icon: 'warning',   cls: 'bg-error/10 text-error border-error/20' },
-  BROKEN:                        { label: 'Broken Link',    icon: 'link_off',  cls: 'bg-error/10 text-error border-error/20' },
+  VERIFIED_DIRECT:               { label: 'Direct Apply',   icon: 'verified',   cls: 'bg-success/10 text-success border-success/20' },
+  VERIFIED_SEARCH:               { label: 'Search Portal',  icon: 'search',     cls: 'bg-primary/10 text-primary border-primary/20' },
+  UNVERIFIED_SEARCH:             { label: 'Unverified',     icon: 'help',       cls: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  UNKNOWN:                       { label: 'Unverified',     icon: 'help',       cls: 'bg-surface-container text-on-surface-variant border-outline-variant' },
+  CLOSED:                        { label: 'Closed',         icon: 'lock',       cls: 'bg-error/10 text-error border-error/20' },
+  INVALID_LINK:                  { label: 'Invalid Link',   icon: 'link_off',   cls: 'bg-error/10 text-error border-error/20' },
+  BROKEN:                        { label: 'Broken Link',    icon: 'link_off',   cls: 'bg-error/10 text-error border-error/20' },
+  HOMEPAGE_ONLY:                 { label: 'Homepage Only',  icon: 'warning',    cls: 'bg-error/10 text-error border-error/20' },
 }
 
 function LinkBadge({ status }) {
@@ -208,23 +209,48 @@ const JobCard = memo(({ job, navigate, savedIds, savingId, handleSave, handleApp
               {savingId === job.id ? 'progress_activity' : 'bookmark'}
             </span>
           </Button>
-          {/* Don't show active Apply button for CLOSED, EXPIRED, or INVALID jobs */}
-          {job.status === 'CLOSED' || job.status === 'INVALID' || job.lifecycle_status === 'CLOSED' || job.lifecycle_status === 'EXPIRED' || job.lifecycle_status === 'INVALID_LINK' || job.apply_url_status === 'INVALID_LINK' ? (
+          {/* Truthful Button Rendering based on Backend Classification */}
+          {job.status === 'CLOSED' || job.lifecycle_status === 'CLOSED' || job.lifecycle_status === 'EXPIRED' || job.apply_url_status === 'CLOSED' ? (
             <Button
               variant="secondary"
               disabled
               className="w-full md:w-auto flex items-center justify-center gap-2 opacity-60"
             >
-              <span className="material-symbols-outlined text-[16px]">block</span>
-              {job.lifecycle_status === 'EXPIRED' ? 'Expired' : (job.status === 'CLOSED' || job.lifecycle_status === 'CLOSED' ? 'Position Closed' : 'Link Invalid')}
+              <span className="material-symbols-outlined text-[16px]">lock</span>
+              Position Closed
             </Button>
-          ) : job.apply_url ? (
+          ) : job.status === 'INVALID' || job.lifecycle_status === 'INVALID_LINK' || job.apply_url_status === 'INVALID_LINK' || job.apply_url_status === 'BROKEN' ? (
+            <Button
+              variant="secondary"
+              disabled
+              className="w-full md:w-auto flex items-center justify-center gap-2 opacity-60"
+            >
+              <span className="material-symbols-outlined text-[16px]">link_off</span>
+              Link Invalid
+            </Button>
+          ) : job.apply_url_status === 'VERIFIED_DIRECT' ? (
             <Button
               variant="primary"
               onClick={() => handleApply(job.id, job.apply_url, job.apply_url_status)}
               className="w-full md:w-auto flex items-center justify-center gap-2"
             >
               Apply Now <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            </Button>
+          ) : job.apply_url_status === 'VERIFIED_SEARCH' ? (
+            <Button
+              variant="secondary"
+              onClick={() => handleApply(job.id, job.apply_url, job.apply_url_status)}
+              className="w-full md:w-auto flex items-center justify-center gap-2 border-primary/40 text-primary hover:bg-primary/5"
+            >
+              View Matching Jobs <span className="material-symbols-outlined text-[16px]">search</span>
+            </Button>
+          ) : job.apply_url ? (
+            <Button
+              variant="secondary"
+              onClick={() => handleApply(job.id, job.apply_url, job.apply_url_status)}
+              className="w-full md:w-auto flex items-center justify-center gap-2 text-on-surface-variant hover:bg-surface-container border-outline-variant"
+            >
+              Unverified Opportunity <span className="material-symbols-outlined text-[16px]">open_in_new</span>
             </Button>
           ) : (
             <Button

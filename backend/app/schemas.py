@@ -787,3 +787,44 @@ class ResumeGapAnalysisResponse(BaseModel):
     skill_coverage: float
     role_alignment_score: int
     recommendations: List[str]
+
+
+# Feedback Schemas
+class FeedbackCreate(BaseModel):
+    rating: Optional[int] = None
+    category: str
+    priority: Optional[str] = "Medium"
+    subject: str
+    description: str
+    file_attachment: Optional[str] = None
+
+class FeedbackUpdate(BaseModel):
+    status: Optional[str] = None
+    admin_notes: Optional[str] = None
+
+class FeedbackResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    rating: Optional[int] = None
+    category: str
+    priority: str
+    subject: str
+    description: str
+    file_attachment: Optional[str] = None
+    status: str
+    admin_notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class FeedbackStatsResponse(BaseModel):
+    total_feedback: int
+    resolved_count: int
+    open_count: int
+    in_review_count: int
+    average_rating: float
+    features_shipped: int
+    avg_response_hours: str
+

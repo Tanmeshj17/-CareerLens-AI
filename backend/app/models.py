@@ -970,3 +970,25 @@ class DataAlert(Base):
     resolved_at = Column(DateTime, nullable=True)
     cooldown_key = Column(String, nullable=True, index=True)   # dedup: alert_type+source
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class Feedback(Base):
+    """
+    Feedback model for user reviews, bug reports, feature requests, and inquiries.
+    Stored exclusively in PostgreSQL with optional foreign key to users.id.
+    """
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    rating = Column(Integer, nullable=True)                      # 1 to 5 stars
+    category = Column(String(50), nullable=False, index=True)   # Bug Report, Feature Request, UI/UX Improvement, Performance, General Feedback
+    priority = Column(String(20), default="Medium")             # Low, Medium, High, Critical
+    subject = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    file_attachment = Column(String(255), nullable=True)
+    status = Column(String(20), default="Open", index=True)     # Open, In Review, Resolved, Closed
+    admin_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
