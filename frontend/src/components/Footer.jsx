@@ -8,10 +8,10 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-lg sm:gap-xl">
           <div className="col-span-2 md:col-span-1">
             <div className="mb-sm">
-              <CareerLensLogo size="sm" />
+              <CareerLensLogo size="sm" showTagline={true} />
             </div>
             <p className="text-xs sm:text-sm text-on-surface-variant mb-md max-w-sm">
-              Unlock your career potential with AI-driven insights, job matching, and structured learning paths.
+              See Your Career Clearly — AI-driven job intelligence, ATS resume analysis, and structured career roadmaps.
             </p>
           </div>
           <div>

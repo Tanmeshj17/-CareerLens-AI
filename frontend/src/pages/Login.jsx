@@ -82,7 +82,7 @@ export default function Login() {
       <section className="w-full lg:w-[45%] xl:w-1/2 bg-on-background relative overflow-hidden flex items-center justify-center p-xl md:p-2xl min-w-0 min-h-[320px] lg:min-h-screen">
         <div className="relative z-10 max-w-lg w-full">
           <div className="mb-xl">
-            <CareerLensLogo size="lg" variant="white" />
+            <CareerLensLogo size="lg" variant="white" showTagline={true} />
           </div>
           <h1 className="hero-title font-bold text-white mb-lg leading-tight">
             Unlock your career potential with AI.
