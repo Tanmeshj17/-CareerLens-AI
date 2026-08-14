@@ -75,6 +75,12 @@ class Opportunity(Base):
     required_skills = Column(Text, nullable=True)
     collected_by = Column(String, nullable=True)
 
+    # Smart Validation Tracking (Phase 11.8)
+    last_validated_at = Column(DateTime, nullable=True, index=True)
+    validation_status = Column(String, default="PENDING", index=True) # PENDING, VALID, STALE, CLOSED
+    validation_attempts = Column(Integer, default=0)
+    validation_reason = Column(String, nullable=True)
+
     # Phase 8.6: Opportunity Quality Intelligence Engine
     legacy_hash = Column(String, index=True, nullable=True)
     lifecycle_status = Column(String, default="NEW", index=True)

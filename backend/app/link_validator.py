@@ -1,14 +1,15 @@
 """
-CareerLens AI — Comprehensive Link & Resource Validator
-========================================================
-Audits, validates, and classifies:
-  1. Opportunities: ACTIVE | STALE | CLOSED | EXPIRED | INVALID_LINK
-  2. Learning Resources: VERIFIED | INVALID_RESOURCE
+CareerLens AI — Smart Link & Resource Validator (Phase 11.8)
+=============================================================
+Audits, validates, and classifies using a safe lifecycle:
+  ACTIVE → STALE → CLOSED → ARCHIVED
 
-Detects HTTP status codes (404, 410, 403, 429) & in-page dead strings:
-  - "video isn't available" / "video unavailable" / "this video has been removed" / "private video"
-  - "page not found" / "we were not able to find the page"
-  - "no longer accepting applications" / "job expired" / "applications closed" / "position no longer available"
+Rules:
+  - Single HTTP 4xx / 5xx / timeout → STALE (retry next cycle)
+  - Explicit page text confirming closure → CLOSED immediately
+  - Repeated (validation_attempts ≥ 2) confirmed 404/410 → CLOSED
+  - VERIFIED_DIRECT jobs are NEVER closed due to bot-protection (403/429)
+  - No permanent DELETE operations — all lifecycle changes preserve historical data
 """
 
 import asyncio
@@ -21,8 +22,18 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger("careerlens.link_validator")
 
-# Regex patterns that indicate a job is CLOSED or EXPIRED
+# Regex patterns that indicate a job is definitively CLOSED.
+# These are only matched against actual page body text.
 CLOSED_JOB_PATTERNS = [
+    # Requested patterns (Phase 11.8)
+    re.compile(r"job (is )?not available", re.IGNORECASE),
+    re.compile(r"job is no longer available", re.IGNORECASE),
+    re.compile(r"job is no longer open", re.IGNORECASE),
+    re.compile(r"this job is no longer available", re.IGNORECASE),
+    re.compile(r"position (is )?closed", re.IGNORECASE),
+    re.compile(r"this position is no longer accepting applications", re.IGNORECASE),
+    re.compile(r"no results found", re.IGNORECASE),
+    # Legacy patterns (preserved)
     re.compile(r"applications (are )?closed", re.IGNORECASE),
     re.compile(r"job (has )?expired", re.IGNORECASE),
     re.compile(r"position (is )?no longer available", re.IGNORECASE),
@@ -31,6 +42,10 @@ CLOSED_JOB_PATTERNS = [
     re.compile(r"this job is no longer active", re.IGNORECASE),
     re.compile(r"requisition (is )?closed", re.IGNORECASE),
     re.compile(r"posting (has )?expired", re.IGNORECASE),
+    # ATS-specific patterns
+    re.compile(r"this req is (no longer )?open", re.IGNORECASE),
+    re.compile(r"vacancy (is )?closed", re.IGNORECASE),
+    re.compile(r"application deadline (has )?passed", re.IGNORECASE),
 ]
 
 # Regex patterns that indicate a learning resource / video is BROKEN
@@ -88,20 +103,23 @@ async def _fetch_url(session: aiohttp.ClientSession, url: str, is_resource: bool
             final_url = str(resp.url)
             status_code = resp.status
 
+            # Bot-protection / rate-limit responses: STALE, never CLOSED
             if status_code in (403, 429):
-                # Bot protection / Cloudflare challenge: URL exists, treat as valid active URL
-                cls = "VERIFIED" if is_resource else "ACTIVE"
-                return ValidationResult(True, cls, final_url)
+                cls = "VERIFIED" if is_resource else "STALE"
+                return ValidationResult(True, cls, final_url, error=f"HTTP {status_code} (bot protection — STALE)")
 
-            if status_code in (404, 410):
-                cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
-                return ValidationResult(False, cls, final_url, error=f"HTTP {status_code}")
-
+            # Server errors: STALE (transient)
             if status_code >= 500:
-                cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+                cls = "INVALID_RESOURCE" if is_resource else "STALE"
+                return ValidationResult(False, cls, final_url, error=f"HTTP {status_code} (server error — STALE)")
+
+            # 404/410: classify as STALE here — run_full_audit promotes to CLOSED
+            # only after repeated failures (validation_attempts tracks this)
+            if status_code in (404, 410):
+                cls = "INVALID_RESOURCE" if is_resource else "STALE"
                 return ValidationResult(False, cls, final_url, error=f"HTTP {status_code}")
 
-            # If HTTP 200/302, check body text for dead resource / closed job keywords
+            # HTTP 200 — scan body text for explicit closure messages
             try:
                 content_type = resp.headers.get("Content-Type", "")
                 if "text/html" in content_type or "text/plain" in content_type:
@@ -114,6 +132,7 @@ async def _fetch_url(session: aiohttp.ClientSession, url: str, is_resource: bool
                     else:
                         for pat in CLOSED_JOB_PATTERNS:
                             if pat.search(body_text):
+                                # Explicit text match → CLOSED immediately (no retry needed)
                                 return ValidationResult(False, "CLOSED", final_url, is_closed=True, error="Closed job text detected")
             except Exception:
                 pass  # If reading body fails, rely on status code
@@ -122,21 +141,11 @@ async def _fetch_url(session: aiohttp.ClientSession, url: str, is_resource: bool
             return ValidationResult(True, cls, final_url)
 
     except asyncio.TimeoutError:
-        # Timeout on GET — check if it's a known trusted domain before marking invalid
-        parsed = urlparse(clean_url)
-        domain = parsed.netloc.lower()
-        if _is_trusted_domain(domain):
-            cls = "VERIFIED" if is_resource else "ACTIVE"
-            return ValidationResult(True, cls, clean_url)
-        cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
-        return ValidationResult(False, cls, clean_url, error="Connection Timeout")
+        # Timeout: treat as STALE (transient network issue)
+        cls = "INVALID_RESOURCE" if is_resource else "STALE"
+        return ValidationResult(False, cls, clean_url, error="Connection Timeout — STALE")
     except Exception as e:
-        parsed = urlparse(clean_url)
-        domain = parsed.netloc.lower()
-        if _is_trusted_domain(domain):
-            cls = "VERIFIED" if is_resource else "ACTIVE"
-            return ValidationResult(True, cls, clean_url)
-        cls = "INVALID_RESOURCE" if is_resource else "INVALID_LINK"
+        cls = "INVALID_RESOURCE" if is_resource else "STALE"
         return ValidationResult(False, cls, clean_url, error=str(e))
 
 
@@ -189,14 +198,19 @@ async def validate_urls_async(urls: List[str], is_resource: bool = False, concur
         return await asyncio.gather(*tasks)
 
 
+# Number of failed validation_attempts before STALE→CLOSED promotion
+CLOSED_AFTER_FAILURES = 2
+
+
 def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
     """
-    Complete audit and cleanup task:
-    1. Audits all Opportunities & Learning Resources in PostgreSQL
-    2. Sanitizes legacy ?req_id= query strings
-    3. Classifies invalid/closed/expired/stale records
-    4. Updates DB statuses
-    5. Returns statistics dictionary
+    Smart audit and lifecycle cleanup (Phase 11.8):
+    - ACTIVE → STALE on first HTTP failure (any error)
+    - STALE → CLOSED only after CLOSED_AFTER_FAILURES repeated failures
+    - CLOSED immediately on explicit page-text match
+    - VERIFIED_DIRECT jobs cannot be CLOSED due to bot-protection (403/429)
+    - No permanent DELETE — all changes preserve history
+    - Validates only the oldest last_validated_at batch (rate-limited)
     """
     try:
         from app import models
@@ -210,7 +224,6 @@ def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
     stats = {
         "audited_at": now.isoformat(),
         "total_jobs_audited": 0,
-        "jobs_invalid_link": 0,
         "jobs_closed": 0,
         "jobs_expired": 0,
         "jobs_stale": 0,
@@ -230,7 +243,7 @@ def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
             row.apply_url = row.apply_url.split("?req_id=")[0]
         db.commit()
 
-    # Step 2: Classify Expired jobs (>45 days old)
+    # Step 2: Classify Expired jobs (>45 days old) → ARCHIVED (inactive)
     expired_jobs = db.query(models.Opportunity).filter(
         models.Opportunity.posted_date < expired_cutoff,
         models.Opportunity.is_active == True
@@ -239,10 +252,12 @@ def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
         j.lifecycle_status = "EXPIRED"
         j.is_active = False
         j.status = "Expired"
+        j.validation_status = "EXPIRED"
+        j.validation_reason = "Exceeded 45-day age limit"
         stats["jobs_expired"] += 1
     db.commit()
 
-    # Step 3: Classify Stale jobs (30-45 days old)
+    # Step 3: Classify Stale jobs (30-45 days old) → STALE (still active)
     stale_jobs = db.query(models.Opportunity).filter(
         models.Opportunity.posted_date >= expired_cutoff,
         models.Opportunity.posted_date < stale_cutoff,
@@ -250,14 +265,25 @@ def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
     ).all()
     for j in stale_jobs:
         j.lifecycle_status = "STALE"
+        j.validation_status = "STALE"
+        j.validation_reason = "Job is 30-45 days old"
         stats["jobs_stale"] += 1
     db.commit()
 
-    # Step 4: Audit & validate active jobs
-    active_jobs = db.query(models.Opportunity).filter(
-        models.Opportunity.is_active == True,
-        models.Opportunity.lifecycle_status.in_(["ACTIVE", "NEW", None])
-    ).limit(500).all()
+    # Step 4: Batched smart URL validation (oldest last_validated_at first)
+    # Pick up to 200 active jobs that haven't been checked recently
+    active_jobs = (
+        db.query(models.Opportunity)
+        .filter(
+            models.Opportunity.is_active == True,
+            models.Opportunity.lifecycle_status.in_(["ACTIVE", "NEW", "STALE", None])
+        )
+        .order_by(
+            models.Opportunity.last_validated_at.asc().nullsfirst()
+        )
+        .limit(200)
+        .all()
+    )
 
     stats["total_jobs_audited"] = len(active_jobs)
 
@@ -267,30 +293,59 @@ def run_full_audit_and_cleanup(db) -> Dict[str, Any]:
 
         for job, res in zip(active_jobs, results):
             job.last_url_verified_at = now
-            job.last_verified_at = now
+            job.last_validated_at = now
+            job.validation_attempts = (job.validation_attempts or 0) + 1
 
             if not res.is_valid:
                 src = job.primary_source or "Unknown"
                 stats["noisy_sources"][src] = stats["noisy_sources"].get(src, 0) + 1
 
                 if res.classification == "CLOSED" or res.is_closed:
+                    # Explicit page-text match → CLOSED immediately (no retry needed)
                     job.lifecycle_status = "CLOSED"
                     job.apply_url_status = "CLOSED"
                     job.is_active = False
                     job.status = "Closed"
+                    job.validation_status = "CLOSED"
+                    job.validation_reason = res.error or "Page text confirms closure"
                     stats["jobs_closed"] += 1
-                else:
-                    job.lifecycle_status = "INVALID_LINK"
-                    job.apply_url_status = "INVALID_LINK"
-                    job.is_active = False
-                    job.status = "Invalid Link"
-                    stats["jobs_invalid_link"] += 1
+
+                elif res.classification == "STALE":
+                    # Temporary failure (403, 429, 500, timeout, single 404/410)
+                    is_verified_direct = job.apply_url_status == "VERIFIED_DIRECT"
+
+                    if is_verified_direct:
+                        # VERIFIED_DIRECT: NEVER close due to single failure / bot protection
+                        job.lifecycle_status = "ACTIVE"
+                        job.validation_status = "STALE"
+                        job.validation_reason = f"Transient error (VERIFIED_DIRECT protected): {res.error}"
+                        stats["jobs_active"] += 1
+                    elif job.validation_attempts >= CLOSED_AFTER_FAILURES:
+                        # Repeated failure → promote to CLOSED
+                        job.lifecycle_status = "CLOSED"
+                        job.apply_url_status = "CLOSED"
+                        job.is_active = False
+                        job.status = "Closed"
+                        job.validation_status = "CLOSED"
+                        job.validation_reason = f"Repeated validation failure ({job.validation_attempts}x): {res.error}"
+                        stats["jobs_closed"] += 1
+                    else:
+                        # First failure → STALE (will retry next cycle)
+                        job.lifecycle_status = "STALE"
+                        job.validation_status = "STALE"
+                        job.validation_reason = f"Transient failure (attempt {job.validation_attempts}): {res.error}"
+                        stats["jobs_stale"] += 1
+
             else:
+                # Successful validation → reset to ACTIVE
                 job.lifecycle_status = "ACTIVE"
                 job.apply_url_status = "VALID"
                 job.verified_apply_url = res.final_url
                 job.is_active = True
                 job.status = "Active"
+                job.validation_status = "VALID"
+                job.validation_reason = None
+                job.validation_attempts = 0  # Reset retry counter on success
                 stats["jobs_active"] += 1
 
         db.commit()
