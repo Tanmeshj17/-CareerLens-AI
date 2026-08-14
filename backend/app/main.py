@@ -1743,54 +1743,191 @@ def get_roles():
 
 
 # Cache for global stats to avoid heavy DB queries on every dashboard load
+# --- Global dashboard stats cache (5-minute TTL) ---
+# All 6 categories are mutually exclusive and sum exactly to total_opportunities.
+# Priority order: Internship > Apprenticeship > Graduate/Trainee > Fresher/Entry-Level
+#                 > Hiring Challenge/Competition > Experienced/Professional
 _global_stats_cache = {
     "timestamp": 0,
     "total_opps": 0,
     "internships": 0,
-    "freshers_jobs": 0
+    "apprenticeships": 0,
+    "graduate_trainee": 0,
+    "fresher_entry_level": 0,
+    "hiring_challenges": 0,
+    "experienced_professional": 0,
 }
 
 # --- Personalized Dashboard Stats Route ---
 @app.get("/api/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    from sqlalchemy import func, or_
     import time
     global _global_stats_cache
-    
+
     current_time = time.time()
-    # Cache global stats for 5 minutes
+    # Refresh cache every 5 minutes. A single SQL pass computes all 6 exclusive
+    # categories so the counts are guaranteed to add up to total_opportunities.
     if current_time - _global_stats_cache["timestamp"] > 300:
-        _global_stats_cache["total_opps"] = db.query(models.Opportunity).filter(
-            models.Opportunity.status == "Active",
-            models.Opportunity.is_active == True
-        ).count()
+        row = db.execute(text("""
+            SELECT
+                -- Total active
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                ) AS total_opps,
 
-        _global_stats_cache["internships"] = db.query(models.Opportunity).filter(
-            models.Opportunity.status == "Active",
-            models.Opportunity.is_active == True,
-            or_(
-                models.Opportunity.job_type.ilike("%intern%"),
-                models.Opportunity.title.ilike("%intern%")
-            )
-        ).count()
+                -- 1. Internship  (highest priority)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                ) AS internships,
 
-        _global_stats_cache["freshers_jobs"] = db.query(models.Opportunity).filter(
-            models.Opportunity.status == "Active",
-            models.Opportunity.is_active == True,
-            or_(
-                models.Opportunity.title.ilike("%fresher%"),
-                models.Opportunity.title.ilike("%trainee%"),
-                models.Opportunity.title.ilike("%graduate%"),
-                models.Opportunity.title.ilike("%associate%"),
-                models.Opportunity.title.ilike("%junior%"),
-                models.Opportunity.job_type.ilike("%intern%")
-            )
-        ).count()
-        _global_stats_cache["timestamp"] = current_time
+                -- 2. Apprenticeship  (not already counted as intern)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                    AND (
+                        LOWER(COALESCE(title,''))    LIKE '%apprentice%'
+                        OR LOWER(COALESCE(job_type,'')) LIKE '%apprentice%'
+                    )
+                ) AS apprenticeships,
 
-    total_opps = _global_stats_cache["total_opps"]
-    internships = _global_stats_cache["internships"]
-    freshers_jobs = _global_stats_cache["freshers_jobs"]
+                -- 3. Graduate / Trainee  (not intern, not apprentice)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,''))    LIKE '%apprentice%'
+                        OR LOWER(COALESCE(job_type,'')) LIKE '%apprentice%'
+                    )
+                    AND (
+                        LOWER(COALESCE(job_type,'')) LIKE '%trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%management trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%graduate trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus hire%'
+                    )
+                ) AS graduate_trainee,
+
+                -- 4. Fresher / Entry-Level  (not intern, apprentice, or trainee)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,''))    LIKE '%apprentice%'
+                        OR LOWER(COALESCE(job_type,'')) LIKE '%apprentice%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%trainee%'
+                    )
+                    AND (
+                        LOWER(COALESCE(title,'')) LIKE '%fresher%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry-level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%junior%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%associate %'
+                        OR LOWER(COALESCE(title,'')) LIKE '% associate'
+                    )
+                ) AS fresher_entry_level,
+
+                -- 5. Hiring Challenge / Competition  (not any above category)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,''))    LIKE '%apprentice%'
+                        OR LOWER(COALESCE(job_type,'')) LIKE '%apprentice%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%trainee%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,'')) LIKE '%fresher%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry-level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%junior%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%associate %'
+                        OR LOWER(COALESCE(title,'')) LIKE '% associate'
+                    )
+                    AND (
+                        LOWER(COALESCE(job_type,'')) IN ('hiring challenge','hackathon','case competition','coding contest','competition','scholarship','fellowship')
+                        OR LOWER(COALESCE(title,'')) LIKE '%hackathon%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%challenge%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%competition%'
+                    )
+                ) AS hiring_challenges,
+
+                -- 6. Experienced / Professional  (everything else)
+                COUNT(*) FILTER (
+                    WHERE is_active = TRUE AND status = 'Active'
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%intern%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%campus ambassador%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,''))    LIKE '%apprentice%'
+                        OR LOWER(COALESCE(job_type,'')) LIKE '%apprentice%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) LIKE '%trainee%'
+                        OR LOWER(COALESCE(title,''))  LIKE '%trainee%'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(title,'')) LIKE '%fresher%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%entry-level%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%junior%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%associate %'
+                        OR LOWER(COALESCE(title,'')) LIKE '% associate'
+                    )
+                    AND NOT (
+                        LOWER(COALESCE(job_type,'')) IN ('hiring challenge','hackathon','case competition','coding contest','competition','scholarship','fellowship')
+                        OR LOWER(COALESCE(title,'')) LIKE '%hackathon%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%challenge%'
+                        OR LOWER(COALESCE(title,'')) LIKE '%competition%'
+                    )
+                ) AS experienced_professional
+            FROM opportunities;
+        """)).fetchone()
+
+        _global_stats_cache["total_opps"]            = row[0] or 0
+        _global_stats_cache["internships"]           = row[1] or 0
+        _global_stats_cache["apprenticeships"]       = row[2] or 0
+        _global_stats_cache["graduate_trainee"]      = row[3] or 0
+        _global_stats_cache["fresher_entry_level"]   = row[4] or 0
+        _global_stats_cache["hiring_challenges"]     = row[5] or 0
+        _global_stats_cache["experienced_professional"] = row[6] or 0
+        _global_stats_cache["timestamp"]             = current_time
+
+    total_opps             = _global_stats_cache["total_opps"]
+    internships            = _global_stats_cache["internships"]
+    apprenticeships        = _global_stats_cache["apprenticeships"]
+    graduate_trainee       = _global_stats_cache["graduate_trainee"]
+    fresher_entry_level    = _global_stats_cache["fresher_entry_level"]
+    hiring_challenges      = _global_stats_cache["hiring_challenges"]
+    experienced_professional = _global_stats_cache["experienced_professional"]
     
     apps = db.query(models.Application).filter(models.Application.user_id == current_user.id).all()
     saved = len([a for a in apps if a.status == "Saved"])
@@ -1827,17 +1964,26 @@ def get_dashboard_stats(db: Session = Depends(database.get_db), current_user: mo
         })
         
     return {
-        "total_opportunities": total_opps,
-        "freshers_jobs": freshers_jobs,
-        "internships": internships,
-        "saved_opportunities": saved,
-        "applied_opportunities": applied,
-        "interviews_scheduled": interviews,
-        "offers_received": offers,
-        "rejected_opportunities": rejected,
-        "ats_score": ats_score,
-        "profile_completeness": completeness,
-        "recent_applications": recent_apps_data
+        # ── Global opportunity market counts (mutually exclusive, sum = total_opportunities) ──
+        "total_opportunities":       total_opps,
+        "internships":               internships,
+        "apprenticeships":           apprenticeships,
+        "graduate_trainee":          graduate_trainee,
+        "fresher_entry_level":       fresher_entry_level,
+        "hiring_challenges":         hiring_challenges,
+        "experienced_professional":  experienced_professional,
+        # ── Legacy alias kept for any older clients still reading this field ──
+        # DEPRECATED: was double-counting interns — use fresher_entry_level instead
+        "freshers_jobs":             fresher_entry_level,
+        # ── Per-user activity stats ──
+        "saved_opportunities":       saved,
+        "applied_opportunities":     applied,
+        "interviews_scheduled":      interviews,
+        "offers_received":           offers,
+        "rejected_opportunities":    rejected,
+        "ats_score":                 ats_score,
+        "profile_completeness":      completeness,
+        "recent_applications":       recent_apps_data
     }
 
 

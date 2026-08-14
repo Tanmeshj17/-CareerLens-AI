@@ -124,11 +124,40 @@ export default function Dashboard() {
     }
   }, [user])
 
-  const stats = [
-    { title: 'Total Opportunities', val: dbStats?.total_opportunities, icon: 'travel_explore', trend: 'Live', colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success' },
-    { title: 'Fresher Openings', val: dbStats?.freshers_jobs, icon: 'school', trend: 'Hiring Now', colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-success' },
-    { title: 'Internships', val: dbStats?.internships, icon: 'local_library', trend: 'Summer Intake', colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success' },
-    { title: 'Applied Jobs', val: dbStats?.applied_opportunities ?? 0, icon: 'send', trend: 'Track', colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error' },
+  // Mutually-exclusive opportunity categories — each record appears in exactly one bucket.
+  // Priority: Internship > Apprenticeship > Graduate/Trainee > Fresher/Entry-Level
+  //           > Hiring Challenge/Competition > Experienced/Professional
+  const marketStats = [
+    {
+      title: 'Total Opportunities', val: dbStats?.total_opportunities,
+      icon: 'travel_explore', trend: 'Live',
+      colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-success',
+    },
+    {
+      title: 'Internships', val: dbStats?.internships,
+      icon: 'local_library', trend: 'Exclusive',
+      colorBg: 'bg-surface-container-highest/20', colorIcon: 'text-on-surface-variant', colorTrend: 'text-success',
+    },
+    {
+      title: 'Fresher / Entry-Level', val: dbStats?.fresher_entry_level,
+      icon: 'school', trend: 'Exclusive',
+      colorBg: 'bg-secondary-container/10', colorIcon: 'text-secondary', colorTrend: 'text-success',
+    },
+    {
+      title: 'Hiring Challenges', val: dbStats?.hiring_challenges,
+      icon: 'emoji_events', trend: 'Compete & Get Hired',
+      colorBg: 'bg-tertiary-container/10', colorIcon: 'text-tertiary', colorTrend: 'text-success',
+    },
+    {
+      title: 'Experienced / Professional', val: dbStats?.experienced_professional,
+      icon: 'work', trend: 'Mid & Senior',
+      colorBg: 'bg-primary-container/10', colorIcon: 'text-primary', colorTrend: 'text-on-surface-variant',
+    },
+    {
+      title: 'Applied Jobs', val: dbStats?.applied_opportunities ?? 0,
+      icon: 'send', trend: 'Track',
+      colorBg: 'bg-error-container/10', colorIcon: 'text-error', colorTrend: 'text-error',
+    },
   ]
 
   const loading = loadingInsights && !topCompanies.length
@@ -148,9 +177,9 @@ export default function Dashboard() {
         </Link>
       </section>
 
-      {/* Stats Row */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md stagger-children">
-        {stats.map((stat, i) => (
+      {/* Stats Row — 6 exclusive categories, sum = total_opportunities */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-md stagger-children">
+        {marketStats.map((stat, i) => (
           <div key={i} className="bg-surface border border-outline-variant p-lg rounded-xl hover:shadow-lg transition-shadow duration-300">
             <div className="flex justify-between items-start mb-md">
               <div className={`p-sm ${stat.colorBg} rounded-lg`}>
@@ -160,7 +189,7 @@ export default function Dashboard() {
             </div>
             <p className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider">{stat.title}</p>
             <h3 className="text-2xl font-bold mt-xs">
-              {stat.val !== undefined ? stat.val : <span className="inline-block w-16 h-7 bg-surface-variant animate-pulse rounded" />}
+              {stat.val !== undefined ? stat.val.toLocaleString() : <span className="inline-block w-16 h-7 bg-surface-variant animate-pulse rounded" />}
             </h3>
           </div>
         ))}
