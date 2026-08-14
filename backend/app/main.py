@@ -596,6 +596,13 @@ def startup_event():
             logger.warning(f"Database purge error: {purge_err}")
             db.rollback()
 
+        # 2b1. Ensure necessary indexes for fast querying
+        try:
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_opp_data_origin ON opportunities (data_origin);"))
+            db.commit()
+        except Exception as idx_err:
+            db.rollback()
+
         # 2b2. India-First: normalize locations and purge all non-India overseas records
         try:
             # Normalize Unstop 'online'/'offline' locations
@@ -1028,11 +1035,6 @@ def read_opportunities(
 
     # Phase 8.55: Enforce 100% Direct-Apply Verified Sources ONLY
     filters.append(models.Opportunity.data_origin == "LIVE_API")
-    filters.append(models.Opportunity.primary_source.notlike("%Careers%"))
-    filters.append(models.Opportunity.apply_url.notlike("%linkedin.com%"))
-    filters.append(models.Opportunity.apply_url.notlike("%?req_id=%"))
-    filters.append(models.Opportunity.apply_url.notlike("%?q=%"))
-    filters.append(models.Opportunity.apply_url.notlike("%?keyword=%"))
     filters.append(
         or_(
             models.Opportunity.link_quality_score > 0,
@@ -1069,7 +1071,6 @@ def read_opportunities(
     # Dynamic sort handling
     if sort == "newest":
         results_q = results_q.order_by(
-            models.Opportunity.last_seen.desc().nulls_last(),
             models.Opportunity.posted_date.desc().nulls_last(),
             models.Opportunity.id.desc()
         )
@@ -1721,37 +1722,55 @@ def get_roles():
     return []
 
 
+# Cache for global stats to avoid heavy DB queries on every dashboard load
+_global_stats_cache = {
+    "timestamp": 0,
+    "total_opps": 0,
+    "internships": 0,
+    "freshers_jobs": 0
+}
+
 # --- Personalized Dashboard Stats Route ---
 @app.get("/api/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    # Live counts computed directly from DB (cache was stale — always count live)
     from sqlalchemy import func, or_
-    total_opps = db.query(models.Opportunity).filter(
-        models.Opportunity.status == "Active",
-        models.Opportunity.is_active == True
-    ).count()
+    import time
+    global _global_stats_cache
+    
+    current_time = time.time()
+    # Cache global stats for 5 minutes
+    if current_time - _global_stats_cache["timestamp"] > 300:
+        _global_stats_cache["total_opps"] = db.query(models.Opportunity).filter(
+            models.Opportunity.status == "Active",
+            models.Opportunity.is_active == True
+        ).count()
 
-    internships = db.query(models.Opportunity).filter(
-        models.Opportunity.status == "Active",
-        models.Opportunity.is_active == True,
-        or_(
-            models.Opportunity.job_type.ilike("%intern%"),
-            models.Opportunity.title.ilike("%intern%")
-        )
-    ).count()
+        _global_stats_cache["internships"] = db.query(models.Opportunity).filter(
+            models.Opportunity.status == "Active",
+            models.Opportunity.is_active == True,
+            or_(
+                models.Opportunity.job_type.ilike("%intern%"),
+                models.Opportunity.title.ilike("%intern%")
+            )
+        ).count()
 
-    freshers_jobs = db.query(models.Opportunity).filter(
-        models.Opportunity.status == "Active",
-        models.Opportunity.is_active == True,
-        or_(
-            models.Opportunity.title.ilike("%fresher%"),
-            models.Opportunity.title.ilike("%trainee%"),
-            models.Opportunity.title.ilike("%graduate%"),
-            models.Opportunity.title.ilike("%associate%"),
-            models.Opportunity.title.ilike("%junior%"),
-            models.Opportunity.job_type.ilike("%intern%")
-        )
-    ).count()
+        _global_stats_cache["freshers_jobs"] = db.query(models.Opportunity).filter(
+            models.Opportunity.status == "Active",
+            models.Opportunity.is_active == True,
+            or_(
+                models.Opportunity.title.ilike("%fresher%"),
+                models.Opportunity.title.ilike("%trainee%"),
+                models.Opportunity.title.ilike("%graduate%"),
+                models.Opportunity.title.ilike("%associate%"),
+                models.Opportunity.title.ilike("%junior%"),
+                models.Opportunity.job_type.ilike("%intern%")
+            )
+        ).count()
+        _global_stats_cache["timestamp"] = current_time
+
+    total_opps = _global_stats_cache["total_opps"]
+    internships = _global_stats_cache["internships"]
+    freshers_jobs = _global_stats_cache["freshers_jobs"]
     
     apps = db.query(models.Application).filter(models.Application.user_id == current_user.id).all()
     saved = len([a for a in apps if a.status == "Saved"])

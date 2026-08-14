@@ -528,6 +528,12 @@ def purge_non_india_jobs(db) -> int:
                 OR location ILIKE '%Ireland%'
                 OR (primary_source = 'Jobicy' AND location NOT ILIKE '%India%')
                 OR (primary_source = 'Remotive' AND location NOT ILIKE '%India%')
+                OR apply_url LIKE '%linkedin.com/jobs/search%'
+                OR apply_url LIKE '%?req_id=%'
+                OR apply_url LIKE '%?q=jobs%'
+                OR apply_url LIKE '%?keyword=%'
+                OR apply_url LIKE '%joblist%'
+                OR (data_origin IS NULL AND posted_date < NOW() - INTERVAL '60 days')
             );
         """)
         res = db.execute(purge_query)
