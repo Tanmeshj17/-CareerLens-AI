@@ -578,8 +578,7 @@ def startup_event():
             logger.warning(f"Schema migration check: {mig_err}")
             db.rollback()
 
-        # 2b. Purge ONLY clearly fake/invalid records — NOT real API job URLs
-        # ⚠️  DO NOT delete '/careers' URLs — Google, Microsoft, Cognizant all use them!
+        # 2b. Purge fake/invalid records and non-India overseas listings
         try:
             purge_stmt = text("""
                 DELETE FROM opportunities 
@@ -595,6 +594,36 @@ def startup_event():
             logger.info(f"Database purge complete. Rows deleted: {res.rowcount}")
         except Exception as purge_err:
             logger.warning(f"Database purge error: {purge_err}")
+            db.rollback()
+
+        # 2b2. India-First: normalize locations and purge all non-India overseas records
+        try:
+            # Normalize Unstop 'online'/'offline' locations
+            db.execute(text("UPDATE opportunities SET location='Remote (India)' WHERE LOWER(location) IN ('online', 'virtual');"))
+            db.execute(text("UPDATE opportunities SET location='India (On-site)' WHERE LOWER(location) IN ('offline', 'in-person', 'on-site');"))
+            # Purge overseas listings
+            overseas_purge = text("""
+                DELETE FROM opportunities WHERE (
+                    location ILIKE '%LATAM%' OR location ILIKE '%Luxembourg%'
+                    OR location ILIKE '%United States%' OR location ILIKE '%USA%'
+                    OR location ILIKE '%Canada%' OR location ILIKE '%Germany%'
+                    OR location ILIKE '%United Kingdom%' OR location ILIKE '%London%'
+                    OR location ILIKE '%Berlin%' OR location ILIKE '%Australia%'
+                    OR location ILIKE '%Brazil%' OR location ILIKE '%Spain%'
+                    OR location ILIKE '%France%' OR location ILIKE '%Poland%'
+                    OR location ILIKE '%Indonesia%' OR location ILIKE '%Jakarta%'
+                    OR location ILIKE '%Singapore%' OR location ILIKE '%Ireland%'
+                    OR (location ILIKE '%Remote%'
+                        AND location NOT ILIKE '%India%'
+                        AND location NOT ILIKE '%Remote (India)%')
+                );
+            """)
+            overseas_res = db.execute(overseas_purge)
+            db.commit()
+            if overseas_res.rowcount > 0:
+                logger.info(f"India-First: Purged {overseas_res.rowcount} overseas/non-India listings on startup.")
+        except Exception as india_err:
+            logger.warning(f"India-First location normalization error (non-fatal): {india_err}")
             db.rollback()
 
         # 2c. Run live API collector to fetch/refresh real jobs
