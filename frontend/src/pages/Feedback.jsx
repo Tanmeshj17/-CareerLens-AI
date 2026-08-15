@@ -17,13 +17,13 @@ const PRIORITIES = [
   { label: 'Critical', badge: 'bg-error/20 text-error border-error/50 font-bold' },
 ]
 
-const RATINGS = [
-  { emoji: '😠', label: 'Terrible', value: 1 },
-  { emoji: '🙁', label: 'Poor', value: 2 },
-  { emoji: '😐', label: 'Okay', value: 3 },
-  { emoji: '🙂', label: 'Good', value: 4 },
-  { emoji: '😍', label: 'Amazing', value: 5 },
-]
+const RATING_LABELS = {
+  1: '1 Star — Poor / Needs Work',
+  2: '2 Stars — Fair / Minor Issues',
+  3: '3 Stars — Good / Meets Expectations',
+  4: '4 Stars — Very Good / Enjoyable',
+  5: '5 Stars — Excellent / Loved it!',
+}
 
 const STATUS_STYLE = {
   'Open': 'bg-info/10 text-info border-info/30',
@@ -32,35 +32,16 @@ const STATUS_STYLE = {
   'Closed': 'bg-surface-container text-on-surface-variant border-outline-variant',
 }
 
-const FAQ_ITEMS = [
-  {
-    q: 'How long does it take to get a response?',
-    a: 'Our team reviews feedback within 24 to 48 hours. Critical bugs are typically triaged within 4 hours during business days.'
-  },
-  {
-    q: 'Can I track the status of my feedback?',
-    a: 'Yes, every submission appears in your "My Submissions" tab with a live status update.'
-  },
-  {
-    q: 'What happens to Feature Requests?',
-    a: 'Feature requests are reviewed during our product development sprint planning. The most requested features are prioritized and built first.'
-  },
-  {
-    q: 'How do I report a security vulnerability?',
-    a: 'For security concerns, please contact security@careerlens.ai directly rather than submitting through the public feedback form.'
-  },
-]
-
 export default function Feedback() {
   const { user } = useContext(AuthContext)
-  const [form, setForm] = useState({ rating: null, category: '', priority: 'Medium', subject: '', description: '' })
+  const [form, setForm] = useState({ rating: 5, category: '', priority: 'Medium', subject: '', description: '' })
+  const [hoverRating, setHoverRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [submissions, setSubmissions] = useState([])
   const [stats, setStats] = useState(null)
   const [loadingHistory, setLoadingHistory] = useState(false)
-  const [openFaq, setOpenFaq] = useState(null)
   const [activeTab, setActiveTab] = useState('form')
 
   useEffect(() => {
@@ -95,7 +76,7 @@ export default function Feedback() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.category) {
-      setError('Please select a feedback category.')
+      setError('Please select a category.')
       return
     }
     if (!form.subject.trim()) {
@@ -128,12 +109,13 @@ export default function Feedback() {
   }
 
   function resetForm() {
-    setForm({ rating: null, category: '', priority: 'Medium', subject: '', description: '' })
+    setForm({ rating: 5, category: '', priority: 'Medium', subject: '', description: '' })
     setSubmitted(false)
     setError('')
   }
 
   const charLeft = 1000 - form.description.length
+  const currentRatingValue = hoverRating || form.rating || 0
 
   return (
     <div className="space-y-lg sm:space-y-xl animate-fade-in-up max-w-4xl mx-auto pb-3xl">
@@ -152,7 +134,7 @@ export default function Feedback() {
                 Feedback & Support
               </h1>
               <p className="text-xs sm:text-sm text-on-surface-variant font-[Geist] mt-xs">
-                Help us improve CareerLens AI. Share your suggestions, report issues, or request new features.
+                Help us improve CareerLens AI. Share your suggestions, report issues, or rate your experience.
               </p>
             </div>
           </div>
@@ -188,7 +170,7 @@ export default function Feedback() {
             </div>
             <div>
               <div className="text-lg font-bold text-on-surface">
-                {stats.average_rating > 0 ? `${stats.average_rating}/5` : 'N/A'}
+                {stats.average_rating > 0 ? `${stats.average_rating}/5` : '5.0/5'}
               </div>
               <div className="text-[11px] text-on-surface-variant font-[Geist]">Avg Rating</div>
             </div>
@@ -199,7 +181,7 @@ export default function Feedback() {
               <span className="material-symbols-outlined text-xl">schedule</span>
             </div>
             <div>
-              <div className="text-lg font-bold text-on-surface">{stats.avg_response_hours || '24h'}</div>
+              <div className="text-lg font-bold text-on-surface">{stats.avg_response_hours || '< 48h'}</div>
               <div className="text-[11px] text-on-surface-variant font-[Geist]">Avg Response</div>
             </div>
           </div>
@@ -231,18 +213,6 @@ export default function Feedback() {
           <span className="material-symbols-outlined text-[16px]">history</span>
           My Submissions ({submissions.length})
         </button>
-
-        <button
-          onClick={() => setActiveTab('faq')}
-          className={`px-md py-sm rounded-lg text-xs font-semibold font-[Geist] transition-all flex items-center gap-xs ${
-            activeTab === 'faq'
-              ? 'bg-primary text-on-primary shadow-xs'
-              : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-          }`}
-        >
-          <span className="material-symbols-outlined text-[16px]">help_outline</span>
-          FAQ
-        </button>
       </div>
 
       {/* ═══════════════ 1. SUBMIT FORM TAB ═══════════════ */}
@@ -255,7 +225,7 @@ export default function Feedback() {
               </div>
               <h2 className="text-xl font-bold text-on-surface">Thank You for Your Feedback!</h2>
               <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
-                Your submission has been received. Our team will review it and follow up as soon as possible.
+                Your feedback and rating have been recorded. Our team reviews all submissions to enhance CareerLens AI.
               </p>
               <div className="flex gap-sm justify-center pt-md">
                 <button
@@ -274,29 +244,42 @@ export default function Feedback() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-lg">
-              {/* Overall Rating */}
-              <div>
-                <label className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider block mb-sm">
-                  Overall Experience <span className="text-on-surface-variant/60 font-normal lowercase">(optional)</span>
+              {/* Star Rating Section */}
+              <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant space-y-xs">
+                <label className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider block">
+                  Overall Rating <span className="text-error">*</span>
                 </label>
-                <div className="flex flex-wrap gap-xs sm:gap-sm">
-                  {RATINGS.map(r => (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => updateField('rating', form.rating === r.value ? null : r.value)}
-                      className={`flex flex-col items-center gap-xs px-md py-sm rounded-xl border transition-all ${
-                        form.rating === r.value
-                          ? 'bg-primary/10 border-primary shadow-xs scale-105'
-                          : 'bg-surface-container-low border-outline-variant hover:border-primary/40'
-                      }`}
-                    >
-                      <span className="text-2xl">{r.emoji}</span>
-                      <span className="text-[11px] font-medium font-[Geist] text-on-surface-variant">
-                        {r.label}
-                      </span>
-                    </button>
-                  ))}
+                
+                <div className="flex items-center gap-sm pt-xs">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isFilled = star <= currentRatingValue
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => updateField('rating', star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="p-1 rounded-lg hover:scale-125 transition-transform duration-150 focus:outline-none"
+                          title={`${star} Star${star > 1 ? 's' : ''}`}
+                        >
+                          <span
+                            className={`material-symbols-outlined text-3xl sm:text-4xl transition-colors ${
+                              isFilled ? 'text-amber-400' : 'text-slate-300'
+                            }`}
+                            style={{ fontVariationSettings: isFilled ? "'FILL' 1" : "'FILL' 0" }}
+                          >
+                            star
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <span className="text-xs sm:text-sm font-semibold text-on-surface font-[Geist] pl-sm">
+                    {RATING_LABELS[currentRatingValue] || 'Select a rating'}
+                  </span>
                 </div>
               </div>
 
@@ -312,7 +295,7 @@ export default function Feedback() {
                     required
                     className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-[Geist]"
                   >
-                    <option value="">Select a category...</option>
+                    <option value="">Select category...</option>
                     {CATEGORIES.map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}
@@ -351,7 +334,7 @@ export default function Feedback() {
                   type="text"
                   value={form.subject}
                   onChange={e => updateField('subject', e.target.value)}
-                  placeholder="e.g. ATS Resume Analyzer suggestions for PDF formatting"
+                  placeholder="e.g. Suggestions for Resume Analyzer or Opportunities search"
                   maxLength={255}
                   required
                   className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
@@ -371,7 +354,7 @@ export default function Feedback() {
                 <textarea
                   value={form.description}
                   onChange={e => updateField('description', e.target.value)}
-                  placeholder="Please describe what happened, what you expected, or your feature idea..."
+                  placeholder="Please describe what happened, your suggestions, or feature requests..."
                   maxLength={1000}
                   rows={5}
                   required
@@ -438,7 +421,15 @@ export default function Feedback() {
                     className="p-md rounded-xl bg-surface-container-low border border-outline-variant flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md"
                   >
                     <div className="space-y-xs flex-1">
-                      <div className="text-sm font-semibold text-on-surface">{s.subject}</div>
+                      <div className="flex items-center gap-sm">
+                        <span className="text-sm font-semibold text-on-surface">{s.subject}</span>
+                        {s.rating && (
+                          <span className="inline-flex items-center gap-0.5 text-xs text-amber-500 font-bold">
+                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                            {s.rating}/5
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-on-surface-variant font-[Geist] flex flex-wrap items-center gap-xs">
                         <span>#{s.id}</span>
                         <span>•</span>
@@ -461,33 +452,6 @@ export default function Feedback() {
               })}
             </div>
           )}
-        </section>
-      )}
-
-      {/* ═══════════════ 3. FAQ TAB ═══════════════ */}
-      {activeTab === 'faq' && (
-        <section className="space-y-sm">
-          {FAQ_ITEMS.map((item, i) => (
-            <div
-              key={i}
-              className="rounded-xl bg-surface-container-low border border-outline-variant overflow-hidden transition-all"
-            >
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full text-left p-md sm:p-lg flex items-center justify-between gap-md hover:bg-surface-container/50 transition-all"
-              >
-                <span className="text-sm font-semibold text-on-surface">{item.q}</span>
-                <span className={`material-symbols-outlined text-primary text-xl transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}>
-                  expand_more
-                </span>
-              </button>
-              {openFaq === i && (
-                <div className="px-md sm:px-lg pb-md sm:pb-lg text-xs sm:text-sm text-on-surface-variant font-[Geist] leading-relaxed border-t border-outline-variant/40 pt-sm">
-                  {item.a}
-                </div>
-              )}
-            </div>
-          ))}
         </section>
       )}
 

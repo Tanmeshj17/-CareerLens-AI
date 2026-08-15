@@ -452,6 +452,7 @@ export async function updatePreferences(data) {
 // ── Feedback API ──────────────────────────────────────────────
 
 export async function submitFeedback(data) {
+  invalidateCache('/api/feedback');
   return request('/api/feedback', {
     method: 'POST',
     body: JSON.stringify(data)
@@ -476,6 +477,7 @@ export async function adminGetFeedback({ status, category, limit = 100, offset =
 }
 
 export async function adminUpdateFeedback(feedbackId, data) {
+  invalidateCache('/api/feedback');
   return request(`/api/admin/feedback/${feedbackId}`, {
     method: 'PATCH',
     body: JSON.stringify(data)
