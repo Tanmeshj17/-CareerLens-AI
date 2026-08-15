@@ -162,6 +162,29 @@ export async function getCurrentUser() {
   return request('/api/users/me');
 }
 
+export async function updateUserProfile(data) {
+  invalidateCache('/api/users/me');
+  return request('/api/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function changeUserPassword(current_password, new_password) {
+  return request('/api/users/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password }),
+  });
+}
+
+export async function deleteUserAccount() {
+  clearToken();
+  invalidateCache();
+  return request('/api/users/me', {
+    method: 'DELETE',
+  });
+}
+
 // ── Opportunities ─────────────────────────────────────────────
 export async function getOpportunities(params = {}) {
   const q = new URLSearchParams()

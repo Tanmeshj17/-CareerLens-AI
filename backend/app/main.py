@@ -1009,6 +1009,43 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
 
+@app.put("/api/users/me", response_model=schemas.User)
+def update_user_me(user_update: schemas.UserUpdate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if user_update.full_name is not None:
+        name = user_update.full_name.strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Full name cannot be empty")
+        current_user.full_name = name
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@app.post("/api/users/change-password")
+def change_password(data: schemas.ChangePasswordRequest, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if not auth.verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters long")
+    current_user.hashed_password = auth.get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}
+
+@app.delete("/api/users/me")
+def delete_user_me(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    user_id = current_user.id
+    # Clean up user's related data in dependent tables
+    db.query(models.UserCareerProfile).filter(models.UserCareerProfile.user_id == user_id).delete()
+    db.query(models.UserSkillProfile).filter(models.UserSkillProfile.user_id == user_id).delete()
+    db.query(models.ResumeProfile).filter(models.ResumeProfile.user_id == user_id).delete()
+    db.query(models.Resume).filter(models.Resume.user_id == user_id).delete()
+    db.query(models.Application).filter(models.Application.user_id == user_id).delete()
+    db.query(models.JobMatchScore).filter(models.JobMatchScore.user_id == user_id).delete()
+    db.query(models.CareerReadinessSnapshot).filter(models.CareerReadinessSnapshot.user_id == user_id).delete()
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account successfully deleted"}
+
+
 
 # --- Opportunities Routes ---
 @app.get("/api/opportunities")

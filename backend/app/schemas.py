@@ -12,6 +12,13 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
 
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8)
+
 # Security Schemas
 class EmailVerificationRequest(BaseModel):
     token: str = Field(..., min_length=16)
@@ -738,6 +745,10 @@ class UserSkillProfileBase(BaseModel):
 
 class UserSkillProfileCreate(UserSkillProfileBase):
     pass
+
+class UserSkillProfileUpdate(BaseModel):
+    proficiency_level: Optional[str] = None
+    skill_name: Optional[str] = None
 
 class UserSkillProfile(UserSkillProfileBase):
     id: int

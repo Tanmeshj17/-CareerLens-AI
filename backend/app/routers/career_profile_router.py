@@ -67,9 +67,21 @@ def add_skill(skill_data: schemas.UserSkillProfileCreate, current_user: schemas.
     return new_skill
 
 @router.put("/skills/{skill_id}", response_model=schemas.UserSkillProfile)
-def update_skill(skill_id: int, proficiency_level: str, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_skill(
+    skill_id: int,
+    data: schemas.UserSkillProfileUpdate = None,
+    proficiency_level: str = None,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    target_level = None
+    if data and data.proficiency_level:
+        target_level = data.proficiency_level
+    elif proficiency_level:
+        target_level = proficiency_level
+
     valid_levels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"]
-    if proficiency_level.upper() not in valid_levels:
+    if not target_level or target_level.upper() not in valid_levels:
         raise HTTPException(status_code=400, detail=f"Invalid proficiency level. Must be one of {valid_levels}")
         
     skill = db.query(models.UserSkillProfile).filter(models.UserSkillProfile.id == skill_id).first()
@@ -80,7 +92,7 @@ def update_skill(skill_id: int, proficiency_level: str, current_user: schemas.Us
     if skill.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this skill")
         
-    skill.proficiency_level = proficiency_level.upper()
+    skill.proficiency_level = target_level.upper()
     db.commit()
     db.refresh(skill)
     return skill
