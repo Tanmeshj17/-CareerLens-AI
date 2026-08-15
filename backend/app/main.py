@@ -940,14 +940,21 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
         reset_url = f"{frontend_url}/reset-password?token={raw_token}"
         email_sent = send_password_reset_email(email, reset_url)
 
-    res_data = {"message": "If an account exists with this email, a password reset link has been sent."}
-    
-    # If the email could not be delivered to the inbox (e.g. Resend sandbox restriction on unverified domains, missing API key, or SMTP failure),
-    # provide the direct reset URL in the response so the user is never blocked from resetting their password.
+    # Always return the same generic message regardless of whether the user exists or email was sent.
+    # This prevents user enumeration attacks (attacker cannot tell if an email is registered).
+    # The reset URL is NEVER exposed in the response in production — the only way to get it
+    # is to have access to the actual email inbox, which is the security guarantee of email-based reset.
+    is_production = os.getenv("ENVIRONMENT", "development") == "production"
+
+    if is_production:
+        # In production: always same message, no URL leak, no hint about account existence
+        return {"message": "If an account exists with this email, a reset link has been sent. Please check your inbox (and spam folder)."}
+
+    # In development only: expose the link so developers can test without a mail server
+    res_data = {"message": "If an account exists with this email, a reset link has been sent."}
     if reset_url and not email_sent:
         res_data["debug_reset_url"] = reset_url
-        res_data["message"] = "Password reset link generated. You can click the direct link below to reset your password immediately."
-
+        res_data["_dev_note"] = "This direct link is only shown in development mode. In production it is never exposed."
     return res_data
 
 @app.post("/api/auth/reset-password")
