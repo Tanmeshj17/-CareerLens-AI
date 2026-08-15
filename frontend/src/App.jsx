@@ -94,10 +94,13 @@ export default function App() {
   }
 
   const logout = () => {
-    setIsAuthenticated(false)
+    // Set user to null FIRST before anything else so no component can ever
+    // read stale user data between the logout call and the navigation.
     setUser(null)
-    clearToken()
-    navigate('/login')
+    setIsAuthenticated(false)
+    setAuthLoading(false)
+    clearToken()       // clears localStorage token AND the full in-memory cache
+    navigate('/login', { replace: true })
   }
 
   if (authLoading) {

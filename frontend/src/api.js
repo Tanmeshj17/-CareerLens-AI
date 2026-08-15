@@ -16,8 +16,11 @@ function setToken(token) {
   localStorage.setItem('careerlens_token', token);
 }
 
-function clearToken() {
+export function clearToken() {
   localStorage.removeItem('careerlens_token');
+  // Always flush the full cache on logout/token-clear so that
+  // stale data from the previous user is NEVER served to the next user.
+  _cache.clear();
 }
 
 // ── In-Memory Cache (5 min TTL for GET requests) ──────────────
@@ -146,12 +149,15 @@ export async function loginUser(email, password) {
   }
 
   const data = await res.json();
+  // Flush all cached data from any previous session before storing the new token.
+  // This ensures no stale data from a previous logged-in user ever appears.
+  _cache.clear();
   setToken(data.access_token);
   return data;
 }
 
 export function logoutUser() {
-  clearToken();
+  clearToken(); // clearToken already clears the cache
 }
 
 export async function getCurrentUser() {
@@ -477,4 +483,4 @@ export async function adminUpdateFeedback(feedbackId, data) {
 }
 
 // ── Utility Exports ───────────────────────────────────────────
-export { getToken, setToken, clearToken, API_BASE };
+export { getToken, setToken, API_BASE };
