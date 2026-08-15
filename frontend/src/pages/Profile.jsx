@@ -57,11 +57,11 @@ const SUGGESTED_SKILLS = [
 
 const SKILL_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']
 
-const LEVEL_CONFIG = {
-  BEGINNER: { label: 'Beginner', bg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20' },
-  INTERMEDIATE: { label: 'Intermediate', bg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
-  ADVANCED: { label: 'Advanced', bg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-  EXPERT: { label: 'Expert', bg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' },
+const LEVEL_BADGES = {
+  BEGINNER: { label: 'Beginner', style: 'bg-info/10 text-info border-info/30' },
+  INTERMEDIATE: { label: 'Intermediate', style: 'bg-warning/10 text-warning border-warning/30' },
+  ADVANCED: { label: 'Advanced', style: 'bg-success/10 text-success border-success/30' },
+  EXPERT: { label: 'Expert', style: 'bg-primary/10 text-primary border-primary/30' },
 }
 
 export default function Profile() {
@@ -265,7 +265,6 @@ export default function Profile() {
     const name = (skillNameToAdd || newSkillName).trim()
     if (!name) return
 
-    // Check if already exists
     const exists = skills.some(s => s.skill_name?.toLowerCase() === name.toLowerCase())
     if (exists) {
       setSkillError(`"${name}" is already in your skills list`)
@@ -290,7 +289,7 @@ export default function Profile() {
     }
   }
 
-  // ── Handle Cycle / Update Skill Level ──
+  // ── Handle Cycle Skill Level ──
   const handleCycleSkillLevel = async (skill) => {
     const currentIdx = SKILL_LEVELS.indexOf((skill.proficiency_level || 'BEGINNER').toUpperCase())
     const nextLevel = SKILL_LEVELS[(currentIdx + 1) % SKILL_LEVELS.length]
@@ -329,41 +328,41 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in-up max-w-4xl mx-auto pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="space-y-lg sm:space-y-xl animate-fade-in-up max-w-4xl mx-auto pb-3xl">
 
       {/* ═══════════════ PROFILE HEADER ═══════════════ */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl relative overflow-hidden">
+        {/* Subtle gradient banner */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/10 via-primary-container/5 to-transparent rounded-t-2xl pointer-events-none" />
 
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-md sm:gap-lg pt-sm">
           {/* Avatar & User Info */}
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#0050cb] via-[#2563eb] to-[#7c3aed] flex items-center justify-center text-3xl font-bold text-white shadow-md shadow-blue-500/20">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-md sm:gap-lg text-center sm:text-left">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-2xl sm:text-3xl font-bold text-on-primary shadow-lg ring-4 ring-white/80">
               {initials}
             </div>
 
             <div>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-sm mb-xs">
+                <h1 className="text-xl sm:text-2xl font-bold text-on-surface">
                   {user?.full_name || 'User'}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 text-[#0050cb] dark:text-blue-400 border border-blue-200/60 dark:border-blue-800">
-                  {user?.role === 'admin' ? 'Admin' : 'Member'}
+                <span className="px-sm py-xs rounded-full text-xs font-bold font-[Geist] uppercase tracking-wider bg-primary-container/15 text-primary border border-primary/20">
+                  {user?.role === 'admin' ? 'Administrator' : 'Career Seeker'}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
+              <p className="text-xs sm:text-sm text-on-surface-variant">{user?.email}</p>
 
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-sm mt-sm">
                 {careerData.target_role && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-full">
-                    <span className="material-symbols-outlined text-[15px] text-[#0050cb]">target</span>
+                  <span className="inline-flex items-center gap-xs px-sm py-xs bg-surface-container text-on-surface-variant text-xs font-medium font-[Geist] rounded-full border border-outline-variant">
+                    <span className="material-symbols-outlined text-[14px] text-primary">target</span>
                     {careerData.target_role}
                   </span>
                 )}
                 {careerData.location && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-full">
-                    <span className="material-symbols-outlined text-[15px] text-slate-400">location_on</span>
+                  <span className="inline-flex items-center gap-xs px-sm py-xs bg-surface-container text-on-surface-variant text-xs font-medium font-[Geist] rounded-full border border-outline-variant">
+                    <span className="material-symbols-outlined text-[14px] text-on-surface-variant">location_on</span>
                     {careerData.location}
                   </span>
                 )}
@@ -372,27 +371,27 @@ export default function Profile() {
           </div>
 
           {/* Profile Completeness Ring */}
-          <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 min-w-[150px]">
-            <div className="relative w-16 h-16 mb-2">
-              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+          <div className="flex flex-col items-center bg-surface-container-low p-md rounded-xl border border-outline-variant min-w-[140px]">
+            <div className="relative w-14 h-14 mb-xs">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 64 64">
                 <circle
                   cx="32" cy="32" r="26" fill="none"
-                  stroke="currentColor" className="text-slate-200 dark:text-slate-700" strokeWidth="5"
+                  stroke="currentColor" className="text-outline-variant/30" strokeWidth="4.5"
                 />
                 <circle
                   cx="32" cy="32" r="26" fill="none"
-                  stroke="currentColor" className="text-[#0050cb]" strokeWidth="5"
+                  stroke="currentColor" className="text-primary" strokeWidth="4.5"
                   strokeDasharray={`${(completeness.percentage / 100) * 2 * Math.PI * 26} ${2 * Math.PI * 26}`}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-800 dark:text-white">
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-on-surface">
                 {completeness.percentage}%
               </span>
             </div>
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Profile Complete</span>
+            <span className="text-xs font-semibold text-on-surface font-[Geist]">Profile Complete</span>
             {completeness.missing.length > 0 && (
-              <span className="text-[11px] text-slate-400 mt-0.5 text-center">
+              <span className="text-[10px] text-on-surface-variant mt-xs font-[Geist]">
                 {completeness.missing.length} action{completeness.missing.length > 1 ? 's' : ''} left
               </span>
             )}
@@ -401,14 +400,14 @@ export default function Profile() {
 
         {/* Missing Action items prompt */}
         {completeness.missing.length > 0 && (
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-              Complete your profile for 3x better AI job matching:
+          <div className="mt-md pt-md border-t border-outline-variant/50">
+            <p className="text-xs font-semibold text-on-surface-variant font-[Geist] uppercase tracking-wider mb-sm">
+              Complete your profile for optimized AI career matching:
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-xs">
               {completeness.missing.map((item, i) => (
-                <span key={i} className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-900/60">
-                  <span className="material-symbols-outlined text-[14px]">add_circle</span>
+                <span key={i} className="inline-flex items-center gap-xs text-xs text-warning bg-warning/10 px-md py-xs rounded-full border border-warning/30 font-[Geist]">
+                  <span className="material-symbols-outlined text-[13px]">add_circle</span>
                   {item}
                 </span>
               ))}
@@ -418,71 +417,71 @@ export default function Profile() {
       </section>
 
       {/* ═══════════════ 1. ACCOUNT INFORMATION ═══════════════ */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#0050cb] dark:text-blue-400">
-              <span className="material-symbols-outlined text-2xl">account_circle</span>
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl">
+        <div className="flex items-center justify-between mb-lg pb-sm border-b border-outline-variant/60">
+          <div className="flex items-center gap-sm">
+            <div className="p-sm bg-primary-container/10 rounded-lg">
+              <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Account Information</h2>
-              <p className="text-xs text-slate-500">Manage your name, login email, and password</p>
+              <h2 className="text-lg font-semibold text-on-surface">Account Information</h2>
+              <p className="text-xs text-on-surface-variant font-[Geist]">Manage your full name, login email, and password</p>
             </div>
           </div>
         </div>
 
         {nameSuccess && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-medium flex items-center gap-2 border border-emerald-200">
-            <span className="material-symbols-outlined text-sm">check_circle</span>
+          <div className="mb-md p-sm rounded-lg bg-success/10 text-success text-xs font-medium font-[Geist] flex items-center gap-xs border border-success/30">
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
             {nameSuccess}
           </div>
         )}
         {nameError && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium flex items-center gap-2 border border-red-200">
-            <span className="material-symbols-outlined text-sm">error</span>
+          <div className="mb-md p-sm rounded-lg bg-error/10 text-error text-xs font-medium font-[Geist] flex items-center gap-xs border border-error/30">
+            <span className="material-symbols-outlined text-[16px]">error</span>
             {nameError}
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
           {/* Full Name */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+          <div className="space-y-xs">
+            <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
               Full Name
             </label>
             {isEditingName ? (
-              <form onSubmit={handleSaveName} className="flex gap-2">
+              <form onSubmit={handleSaveName} className="flex gap-xs">
                 <input
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+                  className="flex-1 px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   placeholder="Your Full Name"
                   required
                 />
                 <button
                   type="submit"
                   disabled={savingName}
-                  className="px-4 py-2 bg-[#0050cb] hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                  className="px-md py-sm bg-primary hover:brightness-110 text-on-primary rounded-lg text-xs font-medium font-[Geist] transition-all disabled:opacity-50"
                 >
                   {savingName ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setFullName(user?.full_name || ''); setIsEditingName(false) }}
-                  className="px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium hover:bg-slate-50"
+                  className="px-sm py-sm border border-outline-variant text-on-surface-variant rounded-lg text-xs font-medium font-[Geist] hover:bg-surface-container"
                 >
                   Cancel
                 </button>
               </form>
             ) : (
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-sm font-medium text-slate-800 dark:text-white">{user?.full_name || 'Not specified'}</span>
+              <div className="flex items-center justify-between px-md py-sm rounded-lg bg-surface-container-low/60 border border-outline-variant/60">
+                <span className="text-sm font-medium text-on-surface">{user?.full_name || 'Not specified'}</span>
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="text-xs font-bold text-[#0050cb] hover:underline flex items-center gap-1"
+                  className="text-xs font-medium font-[Geist] text-primary hover:underline flex items-center gap-xs"
                 >
-                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                  <span className="material-symbols-outlined text-[14px]">edit</span>
                   Edit
                 </button>
               </div>
@@ -490,114 +489,114 @@ export default function Profile() {
           </div>
 
           {/* Email Address */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+          <div className="space-y-xs">
+            <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
               Email Address
             </label>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-              <span className="text-sm font-medium text-slate-800 dark:text-white">{user?.email}</span>
-              <span className="text-xs text-slate-400 font-normal">Primary Login</span>
+            <div className="flex items-center justify-between px-md py-sm rounded-lg bg-surface-container-low/60 border border-outline-variant/60">
+              <span className="text-sm font-medium text-on-surface">{user?.email}</span>
+              <span className="text-xs text-on-surface-variant font-[Geist]">Primary Login</span>
             </div>
           </div>
         </div>
 
         {/* Change Password Section */}
-        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+        <div className="mt-lg pt-md border-t border-outline-variant/50">
           {!showPasswordSection ? (
             <button
               onClick={() => setShowPasswordSection(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+              className="inline-flex items-center gap-xs px-md py-sm rounded-lg border border-outline-variant text-sm font-medium font-[Geist] text-on-surface hover:bg-surface-container transition-all"
             >
-              <span className="material-symbols-outlined text-[18px] text-slate-500">lock_reset</span>
+              <span className="material-symbols-outlined text-[16px] text-primary">lock_reset</span>
               Change Account Password
             </button>
           ) : (
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-[#0050cb]">key</span>
+            <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant animate-fade-in-up">
+              <div className="flex items-center justify-between mb-md">
+                <h3 className="text-sm font-semibold text-on-surface flex items-center gap-xs">
+                  <span className="material-symbols-outlined text-[16px] text-primary">key</span>
                   Change Password
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowPasswordSection(false)}
-                  className="text-xs text-slate-400 hover:text-slate-600"
+                  className="text-xs text-on-surface-variant hover:text-on-surface font-[Geist]"
                 >
                   Close
                 </button>
               </div>
 
               {passwordSuccess && (
-                <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-medium flex items-center gap-2 border border-emerald-200">
-                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                <div className="mb-sm p-sm rounded-lg bg-success/10 text-success text-xs font-medium font-[Geist] flex items-center gap-xs border border-success/30">
+                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
                   {passwordSuccess}
                 </div>
               )}
               {passwordError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium flex items-center gap-2 border border-red-200">
-                  <span className="material-symbols-outlined text-sm">error</span>
+                <div className="mb-sm p-sm rounded-lg bg-error/10 text-error text-xs font-medium font-[Geist] flex items-center gap-xs border border-error/30">
+                  <span className="material-symbols-outlined text-[16px]">error</span>
                   {passwordError}
                 </div>
               )}
 
-              <form onSubmit={handleChangePassword} className="space-y-3 max-w-md">
+              <form onSubmit={handleChangePassword} className="space-y-sm max-w-md">
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Current Password</label>
+                  <label className="text-xs font-medium font-[Geist] text-on-surface-variant mb-xs block">Current Password</label>
                   <input
                     type={showPw ? 'text' : 'password'}
                     required
                     value={currentPassword}
                     onChange={e => setCurrentPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb]"
+                    className="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">New Password (min 8 characters)</label>
+                  <label className="text-xs font-medium font-[Geist] text-on-surface-variant mb-xs block">New Password (min 8 characters)</label>
                   <input
                     type={showPw ? 'text' : 'password'}
                     required
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb]"
+                    className="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Confirm New Password</label>
+                  <label className="text-xs font-medium font-[Geist] text-on-surface-variant mb-xs block">Confirm New Password</label>
                   <input
                     type={showPw ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb]"
+                    className="w-full px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex items-center justify-between pt-xs">
+                  <label className="flex items-center gap-xs cursor-pointer">
                     <input
                       type="checkbox"
                       checked={showPw}
                       onChange={e => setShowPw(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-[#0050cb]"
+                      className="w-3.5 h-3.5 rounded text-primary"
                     />
-                    <span className="text-xs text-slate-500">Show passwords</span>
+                    <span className="text-xs text-on-surface-variant font-[Geist]">Show passwords</span>
                   </label>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-xs">
                     <button
                       type="button"
                       onClick={() => setShowPasswordSection(false)}
-                      className="px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium hover:bg-slate-100"
+                      className="px-md py-xs border border-outline-variant text-on-surface-variant rounded-lg text-xs font-medium font-[Geist] hover:bg-surface-container"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={passwordLoading}
-                      className="px-4 py-2 bg-[#0050cb] hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                      className="px-md py-xs bg-primary hover:brightness-110 text-on-primary rounded-lg text-xs font-medium font-[Geist] transition-all disabled:opacity-50"
                     >
                       {passwordLoading ? 'Updating...' : 'Update Password'}
                     </button>
@@ -610,37 +609,37 @@ export default function Profile() {
       </section>
 
       {/* ═══════════════ 2. CAREER PREFERENCES ═══════════════ */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-              <span className="material-symbols-outlined text-2xl">work</span>
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl">
+        <div className="flex items-center justify-between mb-lg pb-sm border-b border-outline-variant/60">
+          <div className="flex items-center gap-sm">
+            <div className="p-sm bg-primary-container/10 rounded-lg">
+              <span className="material-symbols-outlined text-primary text-xl">work</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Career Goals & Preferences</h2>
-              <p className="text-xs text-slate-500">Powers your personalized AI job recommendations & skill roadmaps</p>
+              <h2 className="text-lg font-semibold text-on-surface">Career Goals & Preferences</h2>
+              <p className="text-xs text-on-surface-variant font-[Geist]">Powers your personalized AI job recommendations & skill roadmaps</p>
             </div>
           </div>
         </div>
 
         {careerSuccess && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-medium flex items-center gap-2 border border-emerald-200">
-            <span className="material-symbols-outlined text-sm">check_circle</span>
+          <div className="mb-md p-sm rounded-lg bg-success/10 text-success text-xs font-medium font-[Geist] flex items-center gap-xs border border-success/30">
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
             {careerSuccess}
           </div>
         )}
         {careerError && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium flex items-center gap-2 border border-red-200">
-            <span className="material-symbols-outlined text-sm">error</span>
+          <div className="mb-md p-sm rounded-lg bg-error/10 text-error text-xs font-medium font-[Geist] flex items-center gap-xs border border-error/30">
+            <span className="material-symbols-outlined text-[16px]">error</span>
             {careerError}
           </div>
         )}
 
-        <form onSubmit={handleSaveCareer} className="space-y-5">
+        <form onSubmit={handleSaveCareer} className="space-y-md">
           {/* Target Role */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-              Target Dream Role <span className="text-red-500">*</span>
+          <div className="space-y-xs">
+            <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
+              Target Dream Role <span className="text-error">*</span>
             </label>
             <input
               type="text"
@@ -648,20 +647,20 @@ export default function Profile() {
               value={careerData.target_role}
               onChange={e => setCareerData(prev => ({ ...prev, target_role: e.target.value }))}
               placeholder="e.g. Full Stack Developer, Data Scientist"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+              className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
             {/* Quick Role Suggestions */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="text-[11px] text-slate-400 self-center mr-1">Popular:</span>
+            <div className="flex flex-wrap gap-xs pt-xs">
+              <span className="text-[11px] text-on-surface-variant font-[Geist] self-center mr-xs">Popular:</span>
               {POPULAR_ROLES.slice(0, 6).map(role => (
                 <button
                   type="button"
                   key={role}
                   onClick={() => setCareerData(prev => ({ ...prev, target_role: role }))}
-                  className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                  className={`text-xs font-[Geist] font-medium px-sm py-xs rounded-full border transition-all ${
                     careerData.target_role === role
-                      ? 'bg-[#0050cb] text-white border-[#0050cb]'
-                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                      ? 'bg-primary text-on-primary border-primary shadow-xs'
+                      : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary/40 hover:text-primary'
                   }`}
                 >
                   {role}
@@ -670,10 +669,10 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             {/* Current Role */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+            <div className="space-y-xs">
+              <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
                 Current Role / Status
               </label>
               <input
@@ -681,19 +680,19 @@ export default function Profile() {
                 value={careerData.current_role}
                 onChange={e => setCareerData(prev => ({ ...prev, current_role: e.target.value }))}
                 placeholder="e.g. Student / Intern / Junior SDE"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+                className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             {/* Experience Level */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+            <div className="space-y-xs">
+              <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
                 Experience Level
               </label>
               <select
                 value={careerData.experience_level}
                 onChange={e => setCareerData(prev => ({ ...prev, experience_level: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+                className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-[Geist]"
               >
                 {EXPERIENCE_LEVELS.map(exp => (
                   <option key={exp.value} value={exp.value}>{exp.label}</option>
@@ -702,14 +701,14 @@ export default function Profile() {
             </div>
 
             {/* Education */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+            <div className="space-y-xs">
+              <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
                 Highest Education
               </label>
               <select
                 value={careerData.education}
                 onChange={e => setCareerData(prev => ({ ...prev, education: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+                className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-[Geist]"
               >
                 {EDUCATION_OPTIONS.map(edu => (
                   <option key={edu} value={edu}>{edu}</option>
@@ -718,8 +717,8 @@ export default function Profile() {
             </div>
 
             {/* Preferred Location */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+            <div className="space-y-xs">
+              <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block">
                 Preferred Job Location
               </label>
               <input
@@ -727,23 +726,23 @@ export default function Profile() {
                 value={careerData.location}
                 onChange={e => setCareerData(prev => ({ ...prev, location: e.target.value }))}
                 placeholder="e.g. Remote, Bengaluru, San Francisco"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+                className="w-full px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
           </div>
 
           {/* Quick Location Pills */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[11px] text-slate-400 self-center mr-1">Locations:</span>
+          <div className="flex flex-wrap gap-xs pt-xs">
+            <span className="text-[11px] text-on-surface-variant font-[Geist] self-center mr-xs">Locations:</span>
             {POPULAR_LOCATIONS.map(loc => (
               <button
                 type="button"
                 key={loc}
                 onClick={() => setCareerData(prev => ({ ...prev, location: loc }))}
-                className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                className={`text-xs font-[Geist] font-medium px-sm py-xs rounded-full border transition-all ${
                   careerData.location === loc
-                    ? 'bg-[#0050cb] text-white border-[#0050cb]'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                    ? 'bg-primary text-on-primary border-primary shadow-xs'
+                    : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary/40 hover:text-primary'
                 }`}
               >
                 {loc}
@@ -751,69 +750,69 @@ export default function Profile() {
             ))}
           </div>
 
-          <div className="pt-2 flex justify-end">
+          <div className="pt-sm flex justify-end">
             <button
               type="submit"
               disabled={careerLoading}
-              className="px-6 py-3 bg-[#0050cb] hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-lg py-sm bg-primary hover:brightness-110 text-on-primary rounded-lg text-sm font-medium font-[Geist] shadow-sm transition-all disabled:opacity-50 flex items-center gap-xs"
             >
-              <span className="material-symbols-outlined text-[18px]">save</span>
-              {careerLoading ? 'Saving...' : 'Save Career Preferences'}
+              <span className="material-symbols-outlined text-[16px]">save</span>
+              {careerLoading ? 'Saving...' : 'Save Preferences'}
             </button>
           </div>
         </form>
       </section>
 
       {/* ═══════════════ 3. SKILLS & EXPERTISE ═══════════════ */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-              <span className="material-symbols-outlined text-2xl">psychology</span>
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl">
+        <div className="flex items-center justify-between mb-lg pb-sm border-b border-outline-variant/60">
+          <div className="flex items-center gap-sm">
+            <div className="p-sm bg-primary-container/10 rounded-lg">
+              <span className="material-symbols-outlined text-primary text-xl">psychology</span>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-slate-800 dark:text-white">Skills & Technologies</h2>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+              <div className="flex items-center gap-xs">
+                <h2 className="text-lg font-semibold text-on-surface">Skills & Technologies</h2>
+                <span className="px-sm py-xs rounded-full text-xs font-bold font-[Geist] bg-primary-container/15 text-primary">
                   {skills.length}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Click a badge to adjust proficiency level (Beginner → Expert)</p>
+              <p className="text-xs text-on-surface-variant font-[Geist]">Click level badge to cycle proficiency (Beginner → Expert)</p>
             </div>
           </div>
         </div>
 
         {skillError && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium flex items-center gap-2 border border-red-200">
-            <span className="material-symbols-outlined text-sm">error</span>
+          <div className="mb-md p-sm rounded-lg bg-error/10 text-error text-xs font-medium font-[Geist] flex items-center gap-xs border border-error/30">
+            <span className="material-symbols-outlined text-[16px]">error</span>
             {skillError}
           </div>
         )}
 
         {/* Add Skill Form */}
-        <div className="flex flex-col sm:flex-row gap-2.5 mb-6">
+        <div className="flex flex-col sm:flex-row gap-xs mb-md">
           <input
             type="text"
-            placeholder="Add a new skill (e.g. Next.js, Kubernetes)"
+            placeholder="Add a new skill (e.g. Next.js, Docker)"
             value={newSkillName}
             onChange={e => setNewSkillName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddSkill()}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-[#0050cb] focus:bg-white"
+            className="flex-1 px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
           />
           <select
             value={newSkillLevel}
             onChange={e => setNewSkillLevel(e.target.value)}
-            className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none font-medium"
+            className="px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none font-medium font-[Geist]"
           >
             {SKILL_LEVELS.map(lvl => (
-              <option key={lvl} value={lvl}>{LEVEL_CONFIG[lvl]?.label || lvl}</option>
+              <option key={lvl} value={lvl}>{LEVEL_BADGES[lvl]?.label || lvl}</option>
             ))}
           </select>
           <button
             type="button"
             onClick={() => handleAddSkill()}
             disabled={!newSkillName.trim() || skillLoading}
-            className="px-5 py-2.5 bg-[#0050cb] hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+            className="px-lg py-sm bg-primary hover:brightness-110 text-on-primary rounded-lg text-xs font-medium font-[Geist] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-xs shadow-sm"
           >
             <span className="material-symbols-outlined text-[16px]">add</span>
             Add Skill
@@ -821,19 +820,19 @@ export default function Profile() {
         </div>
 
         {/* Suggested Skills to Add */}
-        <div className="mb-6">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+        <div className="mb-lg">
+          <span className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase tracking-wider block mb-xs">
             Quick Add Suggested Skills:
           </span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-xs">
             {SUGGESTED_SKILLS.filter(s => !skills.some(userSkill => userSkill.skill_name?.toLowerCase() === s.toLowerCase())).map(suggested => (
               <button
                 key={suggested}
                 type="button"
                 onClick={() => handleAddSkill(suggested, 'INTERMEDIATE')}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-[#0050cb] transition-all"
+                className="inline-flex items-center gap-xs px-sm py-xs rounded-full text-xs font-medium font-[Geist] bg-surface-container-low text-on-surface-variant border border-outline-variant hover:border-primary/40 hover:text-primary transition-all"
               >
-                <span className="material-symbols-outlined text-[13px] text-slate-400">+</span>
+                <span className="material-symbols-outlined text-[12px] text-on-surface-variant">+</span>
                 {suggested}
               </button>
             ))}
@@ -841,25 +840,25 @@ export default function Profile() {
         </div>
 
         {/* Current Skills List */}
-        <div className="pt-2">
+        <div className="pt-xs">
           {skills.length === 0 ? (
-            <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-              <span className="material-symbols-outlined text-4xl text-slate-300 mb-2 block">psychology</span>
-              <p className="text-sm text-slate-600 font-medium">No skills added yet</p>
-              <p className="text-xs text-slate-400 mt-1">Add at least 5 skills to boost your AI match rate.</p>
+            <div className="text-center py-xl bg-surface-container-low/40 rounded-xl border border-dashed border-outline-variant">
+              <span className="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-xs block">psychology</span>
+              <p className="text-sm text-on-surface font-medium font-[Geist]">No skills added yet</p>
+              <p className="text-xs text-on-surface-variant mt-xs">Add at least 5 skills to boost your AI match rate.</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-xs">
               {skills.map(skill => {
                 const lvlKey = (skill.proficiency_level || 'BEGINNER').toUpperCase()
-                const config = LEVEL_CONFIG[lvlKey] || LEVEL_CONFIG.BEGINNER
+                const badgeConfig = LEVEL_BADGES[lvlKey] || LEVEL_BADGES.BEGINNER
 
                 return (
                   <div
                     key={skill.id || skill.skill_name}
-                    className="group inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-slate-300 transition-all"
+                    className="group inline-flex items-center gap-xs px-md py-xs rounded-full bg-surface-container-low border border-outline-variant shadow-xs hover:border-primary/30 transition-all"
                   >
-                    <span className="text-sm font-semibold text-slate-800 dark:text-white">
+                    <span className="text-sm font-medium text-on-surface">
                       {skill.skill_name}
                     </span>
 
@@ -868,9 +867,9 @@ export default function Profile() {
                       type="button"
                       onClick={() => handleCycleSkillLevel(skill)}
                       title="Click to cycle level: Beginner → Intermediate → Advanced → Expert"
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border transition-all cursor-pointer hover:scale-105 ${config.bg}`}
+                      className={`text-[10px] font-bold font-[Geist] uppercase px-sm py-0.5 rounded-full border transition-all cursor-pointer hover:scale-105 ${badgeConfig.style}`}
                     >
-                      {config.label}
+                      {badgeConfig.label}
                     </button>
 
                     {/* Delete Button */}
@@ -878,9 +877,9 @@ export default function Profile() {
                       type="button"
                       onClick={() => handleDeleteSkill(skill.id)}
                       title="Remove skill"
-                      className="text-slate-400 hover:text-red-500 transition-colors p-0.5 rounded-full"
+                      className="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all p-0.5 rounded-full"
                     >
-                      <span className="material-symbols-outlined text-[15px]">close</span>
+                      <span className="material-symbols-outlined text-[14px]">close</span>
                     </button>
                   </div>
                 )
@@ -890,85 +889,85 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* ═══════════════ 4. RESUMES & QUICK ACTIONS ═══════════════ */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-              <span className="material-symbols-outlined text-2xl">description</span>
+      {/* ═══════════════ 4. RESUMES & APPLICATION HUB ═══════════════ */}
+      <section className="glass-effect rounded-2xl p-4 sm:p-xl">
+        <div className="flex items-center justify-between mb-lg pb-sm border-b border-outline-variant/60">
+          <div className="flex items-center gap-sm">
+            <div className="p-sm bg-primary-container/10 rounded-lg">
+              <span className="material-symbols-outlined text-primary text-xl">description</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Resume & Application Hub</h2>
-              <p className="text-xs text-slate-500">Track your uploaded resumes and job applications</p>
+              <h2 className="text-lg font-semibold text-on-surface">Resume & Application Hub</h2>
+              <p className="text-xs text-on-surface-variant font-[Geist]">Track your analyzed resumes and job applications</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+          <div className="p-md rounded-xl bg-surface-container-low/70 border border-outline-variant flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">ATS Resume Scanner</span>
+              <div className="flex items-center justify-between mb-xs">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">ATS Resume Scanner</span>
                 {latestAtsScore != null && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                  <span className="px-sm py-xs rounded-full text-xs font-bold font-[Geist] bg-success/15 text-success border border-success/30">
                     ATS {latestAtsScore}/100
                   </span>
                 )}
               </div>
-              <p className="text-sm font-bold text-slate-800 dark:text-white">
+              <p className="text-sm font-bold text-on-surface">
                 {resumeCount > 0 ? `${resumeCount} Analyzed Resume(s)` : 'No Resumes Uploaded'}
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-on-surface-variant mt-xs">
                 Upload your resume to extract skills and unlock ATS score optimization.
               </p>
             </div>
             <Link
               to="/app/resume"
-              className="mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-bold hover:border-[#0050cb] hover:text-[#0050cb] transition-all"
+              className="mt-md inline-flex items-center justify-center gap-xs px-md py-sm bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg text-xs font-medium font-[Geist] hover:border-primary hover:text-primary transition-all shadow-xs"
             >
               <span className="material-symbols-outlined text-[16px]">upload_file</span>
               Go to Resume Analysis
             </Link>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+          <div className="p-md rounded-xl bg-surface-container-low/70 border border-outline-variant flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Application Tracker</span>
-                <span className="material-symbols-outlined text-[18px] text-blue-500">inventory_2</span>
+              <div className="flex items-center justify-between mb-xs">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Application Tracker</span>
+                <span className="material-symbols-outlined text-[18px] text-primary">inventory_2</span>
               </div>
-              <p className="text-sm font-bold text-slate-800 dark:text-white">Applied Opportunities</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm font-bold text-on-surface">Applied Opportunities</p>
+              <p className="text-xs text-on-surface-variant mt-xs">
                 Manage interviews, application statuses, and follow-ups in your pipeline.
               </p>
             </div>
             <Link
               to="/app/tracker"
-              className="mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-bold hover:border-[#0050cb] hover:text-[#0050cb] transition-all"
+              className="mt-md inline-flex items-center justify-center gap-xs px-md py-sm bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg text-xs font-medium font-[Geist] hover:border-primary hover:text-primary transition-all shadow-xs"
             >
               <span className="material-symbols-outlined text-[16px]">view_kanban</span>
-              View Tracker
+              View Application Tracker
             </Link>
           </div>
         </div>
       </section>
 
       {/* ═══════════════ 5. DANGER ZONE ═══════════════ */}
-      <section className="bg-red-50/50 dark:bg-red-950/20 rounded-3xl p-6 sm:p-8 border border-red-200/80 dark:border-red-900/40">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <section className="border border-error/30 rounded-2xl p-4 sm:p-xl bg-error/[0.03]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
           <div>
-            <h3 className="text-base font-bold text-red-900 dark:text-red-300 flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-600">warning</span>
+            <h3 className="text-sm font-bold text-error flex items-center gap-xs">
+              <span className="material-symbols-outlined text-error text-[18px]">warning</span>
               Delete Account
             </h3>
-            <p className="text-xs text-red-700/80 dark:text-red-400 mt-1 max-w-lg">
-              Permanently delete your CareerLens AI account and all saved applications, career profiles, and resume scans. This action cannot be undone.
+            <p className="text-xs text-on-surface-variant mt-xs max-w-lg">
+              Permanently delete your CareerLens AI account and all saved applications, career preferences, and resume scans. This action is irreversible.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowDeleteModal(true)}
-            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm shrink-0"
+            className="px-md py-sm rounded-lg bg-error text-on-error text-xs font-medium font-[Geist] hover:brightness-110 transition-all shadow-xs shrink-0"
           >
             Delete Account
           </button>
@@ -978,20 +977,20 @@ export default function Profile() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-red-200 dark:border-red-900/60 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+          <div className="bg-surface-container-lowest rounded-2xl p-md sm:p-xl max-w-md w-full shadow-2xl border border-error/30 space-y-md">
+            <div className="w-12 h-12 rounded-xl bg-error/10 text-error flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-2xl">delete_forever</span>
             </div>
 
             <div className="text-center">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Are you absolutely sure?</h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                This will immediately delete your account and all associated data. Type <strong className="text-red-600 font-bold">DELETE</strong> to confirm.
+              <h3 className="text-lg font-bold text-on-surface">Are you absolutely sure?</h3>
+              <p className="text-xs text-on-surface-variant mt-xs leading-relaxed">
+                This will immediately delete your account and all associated data. Type <strong className="text-error font-bold">DELETE</strong> to confirm.
               </p>
             </div>
 
             {deleteError && (
-              <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium border border-red-200">
+              <div className="p-sm rounded-lg bg-error/10 text-error text-xs font-medium font-[Geist] border border-error/30">
                 {deleteError}
               </div>
             )}
@@ -1001,14 +1000,14 @@ export default function Profile() {
               value={deleteConfirmText}
               onChange={e => setDeleteConfirmText(e.target.value)}
               placeholder="Type DELETE to confirm"
-              className="w-full px-4 py-3 rounded-xl border border-red-200 dark:border-red-900 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:border-red-500 text-center font-bold"
+              className="w-full px-md py-sm rounded-lg border border-error/30 bg-surface-container-low text-sm text-on-surface outline-none focus:ring-2 focus:ring-error/30 text-center font-bold font-[Geist]"
             />
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-sm pt-xs">
               <button
                 type="button"
                 onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); setDeleteError('') }}
-                className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all"
+                className="flex-1 py-sm rounded-lg border border-outline-variant text-on-surface-variant text-xs font-medium font-[Geist] hover:bg-surface-container transition-all"
               >
                 Cancel
               </button>
@@ -1016,7 +1015,7 @@ export default function Profile() {
                 type="button"
                 disabled={deleteConfirmText !== 'DELETE' || deleteLoading}
                 onClick={handleDeleteAccount}
-                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 py-sm rounded-lg bg-error hover:brightness-110 text-on-error text-xs font-medium font-[Geist] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {deleteLoading ? 'Deleting...' : 'Permanently Delete'}
               </button>
