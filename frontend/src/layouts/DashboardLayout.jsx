@@ -104,23 +104,25 @@ export default function DashboardLayout() {
           </div>
 
           <div className="space-y-xs">
-            {accountItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-md py-sm px-md transition-all text-sm font-medium rounded-lg ${
-                    isActive
-                      ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-semibold'
-                      : 'text-on-surface-variant hover:bg-surface-container'
-                  }`
-                }
-              >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                <span className="font-[Geist]">{item.label}</span>
-              </NavLink>
-            ))}
+            {accountItems
+              .filter(item => item.path !== '/app/admin' || user?.role === 'admin')
+              .map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-md py-sm px-md transition-all text-sm font-medium rounded-lg ${
+                      isActive
+                        ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-semibold'
+                        : 'text-on-surface-variant hover:bg-surface-container'
+                    }`
+                  }
+                >
+                  <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                  <span className="font-[Geist]">{item.label}</span>
+                </NavLink>
+              ))}
           </div>
         </nav>
 

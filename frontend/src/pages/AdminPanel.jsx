@@ -22,8 +22,22 @@ export default function AdminPanel() {
     }
   };
 
-  if (loading) return <div className="p-xl text-center">Loading Coverage Report...</div>;
-  if (!report) return <div className="p-xl text-center text-error">Failed to load coverage report</div>;
+  if (user?.role !== 'admin') {
+    return (
+      <div className="glass-effect rounded-2xl p-xl text-center max-w-lg mx-auto space-y-md my-xl">
+        <div className="w-16 h-16 rounded-2xl bg-error/15 text-error flex items-center justify-center mx-auto">
+          <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
+        </div>
+        <h2 className="text-xl font-bold text-on-surface">Access Denied</h2>
+        <p className="text-sm text-on-surface-variant font-[Geist]">
+          Administrator permissions are required to access the Data Coverage and Admin Dashboard.
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="p-xl text-center text-sm font-[Geist] text-on-surface-variant">Loading Coverage Report...</div>;
+  if (!report) return <div className="p-xl text-center text-error font-[Geist]">Failed to load coverage report</div>;
 
   return (
     <div className="space-y-lg animate-fade-in-up">
