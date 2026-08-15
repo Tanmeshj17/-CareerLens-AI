@@ -38,27 +38,34 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 
 
 def _send_via_smtp(to: str, subject: str, html: str) -> bool:
-    """Send email via standard SMTP (e.g. Gmail SMTP with App Password)."""
+    """Send email via standard SMTP (e.g. Gmail SMTP with App Password).
+    Works for ANY recipient email address worldwide.
+    """
     if not SMTP_USER or not SMTP_PASSWORD:
         return False
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = SMTP_USER
+        msg["From"] = f"CareerLens AI <{SMTP_USER}>"
         msg["To"] = to
         msg.attach(MIMEText(html, "html"))
 
         if SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15)
         else:
-            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15)
+            server.ehlo()
             server.starttls()
+            server.ehlo()
 
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.sendmail(SMTP_USER, [to], msg.as_string())
         server.quit()
-        logger.info(f"EMAIL SENT via SMTP: to={to} subject='{subject}'")
+        logger.info(f"EMAIL SENT via SMTP ({SMTP_HOST}): to={to} subject='{subject}'")
         return True
+    except smtplib.SMTPAuthenticationError as exc:
+        logger.error(f"SMTP authentication failed — check SMTP_USER and SMTP_PASSWORD: {exc}")
+        return False
     except Exception as exc:
         logger.warning(f"SMTP send failed to {to}: {exc}")
         return False

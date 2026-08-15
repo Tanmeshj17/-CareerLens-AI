@@ -27,6 +27,18 @@ services:
         value: "10080"
       - key: FRONTEND_URL
         value: https://career-lens-ai-wheat.vercel.app
+      # ── Email Delivery (Gmail SMTP — set these in Render Dashboard → Environment) ──
+      # SMTP_USER  = your Gmail address (e.g. careerlensai@gmail.com)
+      # SMTP_PASSWORD = your 16-char Gmail App Password (not your real Gmail password)
+      # Generate App Password at: https://myaccount.google.com/apppasswords
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
       - key: EMAIL_FROM
         value: CareerLens AI <onboarding@resend.dev>
 
