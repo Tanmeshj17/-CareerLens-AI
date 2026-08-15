@@ -15,7 +15,7 @@ export default function ForgotPassword() {
     setLoading(true); setErrorMsg(''); setSuccessMsg(''); setDebugUrl('')
     try {
       const res = await forgotPassword(email)
-      setSuccessMsg(res.message || 'If an account exists, a password reset link has been sent.')
+      setSuccessMsg(res.message || 'If an account exists with this email, a password reset link has been sent.')
       if (res.debug_reset_url) setDebugUrl(res.debug_reset_url)
     } catch (err) {
       setErrorMsg(err.message || 'Failed to request password reset.')
@@ -51,7 +51,7 @@ export default function ForgotPassword() {
 
           <h2 className="text-2xl font-bold text-center text-slate-800 mb-1">Forgot Password?</h2>
           <p className="text-sm text-center text-slate-400 mb-7 leading-relaxed">
-            Enter your email and we'll send you a secure reset link.
+            Enter your registered email address and we'll send you a secure password reset link.
           </p>
 
           {/* Error */}
@@ -70,11 +70,23 @@ export default function ForgotPassword() {
             </div>
           )}
 
-          {/* Debug URL */}
+          {/* Direct Reset Link Fallback */}
           {debugUrl && (
-            <div className="mb-5 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs space-y-1">
-              <span className="font-bold text-[#0050cb] block">Direct Reset Link:</span>
-              <a href={debugUrl} className="text-[#0050cb] underline break-all font-mono">{debugUrl}</a>
+            <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-xs space-y-3">
+              <div className="flex items-center gap-1.5 text-blue-900 font-bold">
+                <span className="material-symbols-outlined text-[18px] text-[#0050cb]">link</span>
+                Direct Password Reset Link
+              </div>
+              <p className="text-slate-600 text-xs">
+                You can proceed directly to reset your password now:
+              </p>
+              <a
+                href={debugUrl}
+                className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-[#0050cb] hover:bg-blue-700 text-white font-bold text-sm shadow-sm transition-all"
+              >
+                Proceed to Reset Password
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </a>
             </div>
           )}
 

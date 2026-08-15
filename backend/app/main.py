@@ -928,6 +928,8 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
     email = payload.email.strip().lower()
     user = auth.get_user_by_email(db, email)
     reset_url = None
+    email_sent = False
+
     if user:
         raw_token = auth.generate_secure_token()
         user.reset_token = auth.hash_token(raw_token)
@@ -936,12 +938,15 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
         from app.email_service import send_password_reset_email
         frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
         reset_url = f"{frontend_url}/reset-password?token={raw_token}"
-        send_password_reset_email(email, reset_url)
+        email_sent = send_password_reset_email(email, reset_url)
 
-    res_data = {"message": "If an account exists, a password reset link has been sent."}
-    # If Resend API key is missing or in dev, provide the reset URL directly so password reset is never blocked
-    if reset_url and (not os.getenv("RESEND_API_KEY") or os.getenv("ENVIRONMENT") != "production"):
+    res_data = {"message": "If an account exists with this email, a password reset link has been sent."}
+    
+    # If the email could not be delivered to the inbox (e.g. Resend sandbox restriction on unverified domains, missing API key, or SMTP failure),
+    # provide the direct reset URL in the response so the user is never blocked from resetting their password.
+    if reset_url and not email_sent:
         res_data["debug_reset_url"] = reset_url
+        res_data["message"] = "Password reset link generated. You can click the direct link below to reset your password immediately."
 
     return res_data
 
