@@ -496,8 +496,9 @@ def collect_unstop_jobs() -> list:
 
 def purge_non_india_jobs(db) -> int:
     """
-    Purges any remaining overseas/non-India listings (e.g. LATAM, USA, Luxembourg, Europe)
+    Purge non-India / foreign jobs and normalize raw locations
     to ensure 100% India-relevant content in CareerLens AI.
+    Handles Foreign Key constraints cleanly by clearing child references first.
     """
     try:
         from sqlalchemy import text
@@ -506,36 +507,42 @@ def purge_non_india_jobs(db) -> int:
         db.execute(text("UPDATE opportunities SET location='India (On-site)' WHERE location ILIKE 'offline';"))
         db.commit()
 
-        # 2. Delete non-India / foreign locations
-        purge_query = text("""
-            DELETE FROM opportunities
-            WHERE (
-                location ILIKE '%LATAM%'
-                OR location ILIKE '%Luxembourg%'
-                OR location ILIKE '%United States%'
-                OR location ILIKE '%USA%'
-                OR location ILIKE '%Canada%'
-                OR location ILIKE '%Germany%'
-                OR location ILIKE '%United Kingdom%'
-                OR location ILIKE '%London%'
-                OR location ILIKE '%Berlin%'
-                OR location ILIKE '%Australia%'
-                OR location ILIKE '%Brazil%'
-                OR location ILIKE '%Spain%'
-                OR location ILIKE '%France%'
-                OR location ILIKE '%Poland%'
-                OR location ILIKE '%Singapore%'
-                OR location ILIKE '%Ireland%'
-                OR (primary_source = 'Jobicy' AND location NOT ILIKE '%India%')
-                OR (primary_source = 'Remotive' AND location NOT ILIKE '%India%')
-                OR apply_url LIKE '%linkedin.com/jobs/search%'
-                OR apply_url LIKE '%?req_id=%'
-                OR apply_url LIKE '%?q=jobs%'
-                OR apply_url LIKE '%?keyword=%'
-                OR apply_url LIKE '%joblist%'
-                OR (data_origin IS NULL AND posted_date < NOW() - INTERVAL '60 days')
-            );
-        """)
+        target_cond = """(
+            location ILIKE '%LATAM%'
+            OR location ILIKE '%Luxembourg%'
+            OR location ILIKE '%United States%'
+            OR location ILIKE '%USA%'
+            OR location ILIKE '%Canada%'
+            OR location ILIKE '%Germany%'
+            OR location ILIKE '%United Kingdom%'
+            OR location ILIKE '%London%'
+            OR location ILIKE '%Berlin%'
+            OR location ILIKE '%Australia%'
+            OR location ILIKE '%Brazil%'
+            OR location ILIKE '%Spain%'
+            OR location ILIKE '%France%'
+            OR location ILIKE '%Poland%'
+            OR location ILIKE '%Singapore%'
+            OR location ILIKE '%Ireland%'
+            OR (primary_source = 'Jobicy' AND location NOT ILIKE '%India%')
+            OR (primary_source = 'Remotive' AND location NOT ILIKE '%India%')
+            OR apply_url LIKE '%linkedin.com/jobs/search%'
+            OR apply_url LIKE '%?req_id=%'
+            OR apply_url LIKE '%?q=jobs%'
+            OR apply_url LIKE '%?keyword=%'
+            OR apply_url LIKE '%joblist%'
+            OR (data_origin IS NULL AND posted_date < NOW() - INTERVAL '60 days')
+        )"""
+
+        # 2. Delete child references first to satisfy foreign key constraints
+        for child_table in ["job_match_scores", "applications", "opportunity_sources", "job_quality_metrics", "collection_lineage"]:
+            try:
+                db.execute(text(f"DELETE FROM {child_table} WHERE opportunity_id IN (SELECT id FROM opportunities WHERE {target_cond});"))
+            except Exception as child_err:
+                logger.debug(f"Child table {child_table} cleanup skipped: {child_err}")
+
+        # 3. Delete non-India / foreign locations
+        purge_query = text(f"DELETE FROM opportunities WHERE {target_cond};")
         res = db.execute(purge_query)
         db.commit()
         deleted_count = res.rowcount
