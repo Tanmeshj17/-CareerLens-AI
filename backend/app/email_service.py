@@ -41,47 +41,68 @@ def _send_via_smtp(to: str, subject: str, html: str) -> bool:
     """Send email via standard SMTP (e.g. Gmail SMTP with App Password).
     Works for ANY recipient email address worldwide.
     """
-    if not SMTP_USER or not SMTP_PASSWORD:
-        return False
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = f"CareerLens AI <{SMTP_USER}>"
-        msg["To"] = to
-        msg.attach(MIMEText(html, "html"))
+    smtp_user = (os.getenv("SMTP_USER") or os.getenv("EMAIL_USER") or "").strip()
+    smtp_pass = (os.getenv("SMTP_PASSWORD") or os.getenv("EMAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD") or "").replace(" ", "").strip()
+    smtp_host = (os.getenv("SMTP_HOST") or "smtp.gmail.com").strip()
+    smtp_port = int(os.getenv("SMTP_PORT") or "587")
 
-        if SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15)
-        else:
-            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
+    if not smtp_user or not smtp_pass:
+        logger.warning("SMTP skipped: SMTP_USER or SMTP_PASSWORD not configured.")
+        return False
 
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, [to], msg.as_string())
-        server.quit()
-        logger.info(f"EMAIL SENT via SMTP ({SMTP_HOST}): to={to} subject='{subject}'")
-        return True
-    except smtplib.SMTPAuthenticationError as exc:
-        logger.error(f"SMTP authentication failed — check SMTP_USER and SMTP_PASSWORD: {exc}")
-        return False
-    except Exception as exc:
-        logger.warning(f"SMTP send failed to {to}: {exc}")
-        return False
+    # Attempt standard delivery (try configured port, fallback to 465/587 if needed)
+    ports_to_try = [smtp_port]
+    if smtp_port != 465:
+        ports_to_try.append(465)
+    if smtp_port != 587:
+        ports_to_try.append(587)
+
+    for port in ports_to_try:
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"CareerLens AI <{smtp_user}>"
+            msg["To"] = to
+            msg.attach(MIMEText(html, "html"))
+
+            if port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, port, timeout=12)
+            else:
+                server = smtplib.SMTP(smtp_host, port, timeout=12)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, [to], msg.as_string())
+            server.quit()
+            logger.info(f"EMAIL SENT successfully via SMTP ({smtp_host}:{port}): to={to} subject='{subject}'")
+            return True
+        except smtplib.SMTPAuthenticationError as exc:
+            logger.error(f"SMTP Authentication Error ({smtp_host}:{port}) — check your Gmail App Password: {exc}")
+            return False  # Bad credentials, no need to retry other ports
+        except Exception as exc:
+            logger.warning(f"SMTP send attempt on port {port} failed: {exc}")
+            continue
+
+    logger.error(f"All SMTP attempts failed for {to}")
+    return False
 
 
 def _send_via_resend(to: str, subject: str, html: str) -> bool:
     """Send an email using Resend SDK. Returns True on success, False if blocked or failed."""
-    if not EMAIL_API_KEY or EMAIL_API_KEY.startswith("re_fake_"):
+    api_key = (os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY") or "").strip()
+    from_email = os.getenv("EMAIL_FROM", "CareerLens AI <onboarding@resend.dev>").strip()
+
+    if not api_key or api_key.startswith("re_fake_"):
         logger.info(f"[MOCKED RESEND] EMAIL SKIPPED to={to} subject='{subject}'")
         return False
 
     try:
         import resend
-        resend.api_key = EMAIL_API_KEY
+        resend.api_key = api_key
         params = {
-            "from": EMAIL_FROM,
+            "from": from_email,
             "to": [to],
             "subject": subject,
             "html": html,
@@ -94,19 +115,22 @@ def _send_via_resend(to: str, subject: str, html: str) -> bool:
         return False
     except Exception as exc:
         logger.warning(f"Resend send failed to {to}: {exc}")
-        # Note: Resend test sandbox only permits sending to the account owner's email address
         return False
 
 
 def send_email_message(to: str, subject: str, html: str) -> bool:
     """Try SMTP first if configured, then Resend. Returns True if successfully sent."""
-    # 1. Try SMTP if configured
-    if SMTP_USER and SMTP_PASSWORD:
+    smtp_user = os.getenv("SMTP_USER") or os.getenv("EMAIL_USER")
+    smtp_pass = os.getenv("SMTP_PASSWORD") or os.getenv("EMAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD")
+
+    # 1. Try SMTP first
+    if smtp_user and smtp_pass:
         if _send_via_smtp(to, subject, html):
             return True
 
-    # 2. Try Resend if configured
-    if EMAIL_API_KEY and not EMAIL_API_KEY.startswith("re_fake_"):
+    # 2. Try Resend as fallback
+    api_key = os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY")
+    if api_key and not api_key.startswith("re_fake_"):
         if _send_via_resend(to, subject, html):
             return True
 
