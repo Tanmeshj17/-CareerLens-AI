@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import React, { useState, createContext, useEffect, Suspense } from 'react'
 import { getCurrentUser, clearToken } from './api'
 import DashboardLayout from './layouts/DashboardLayout'
+import RouteTracker from './components/RouteTracker'
 
 // Lazy loaded pages for performance optimization
 const LandingPage = React.lazy(() => import('./pages/LandingPage'))
@@ -119,6 +120,7 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout, setIsAuthenticated }}>
+      <RouteTracker />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           {/* Public Routes */}
