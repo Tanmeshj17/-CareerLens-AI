@@ -17,12 +17,12 @@ const PRIORITIES = [
   { label: 'Critical', badge: 'bg-error/20 text-error border-error/50 font-bold' },
 ]
 
-const RATING_LABELS = {
-  1: '1 Star — Poor / Needs Work',
-  2: '2 Stars — Fair / Minor Issues',
-  3: '3 Stars — Good / Meets Expectations',
-  4: '4 Stars — Very Good / Enjoyable',
-  5: '5 Stars — Excellent / Loved it!',
+const RATING_EMOJIS = {
+  1: { emoji: '😞', label: 'Poor — Needs a lot of work' },
+  2: { emoji: '😕', label: 'Fair — Has some issues' },
+  3: { emoji: '😊', label: 'Good — Meets expectations' },
+  4: { emoji: '😄', label: 'Very Good — Really enjoying it!' },
+  5: { emoji: '🤩', label: 'Excellent — Absolutely love it!' },
 }
 
 const STATUS_STYLE = {
@@ -34,7 +34,7 @@ const STATUS_STYLE = {
 
 export default function Feedback() {
   const { user } = useContext(AuthContext)
-  const [form, setForm] = useState({ rating: 5, category: '', priority: 'Medium', subject: '', description: '' })
+  const [form, setForm] = useState({ rating: 0, category: '', priority: 'Medium', subject: '', description: '' })
   const [hoverRating, setHoverRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -75,6 +75,10 @@ export default function Feedback() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!form.rating) {
+      setError('Please select a rating.')
+      return
+    }
     if (!form.category) {
       setError('Please select a category.')
       return
@@ -109,7 +113,7 @@ export default function Feedback() {
   }
 
   function resetForm() {
-    setForm({ rating: 5, category: '', priority: 'Medium', subject: '', description: '' })
+    setForm({ rating: 0, category: '', priority: 'Medium', subject: '', description: '' })
     setSubmitted(false)
     setError('')
   }
@@ -131,7 +135,7 @@ export default function Feedback() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-on-surface">
-                Feedback & Support
+                Feedback &amp; Support
               </h1>
               <p className="text-xs sm:text-sm text-on-surface-variant font-[Geist] mt-xs">
                 Help us improve CareerLens AI. Share your suggestions, report issues, or rate your experience.
@@ -166,11 +170,11 @@ export default function Feedback() {
 
           <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant flex items-center gap-sm">
             <div className="w-10 h-10 rounded-lg bg-warning/15 text-warning flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-xl">star</span>
+              <span className="text-2xl">🤩</span>
             </div>
             <div>
               <div className="text-lg font-bold text-on-surface">
-                {stats.average_rating > 0 ? `${stats.average_rating}/5` : '5.0/5'}
+                {stats.average_rating > 0 ? `${stats.average_rating}/5` : '—'}
               </div>
               <div className="text-[11px] text-on-surface-variant font-[Geist]">Avg Rating</div>
             </div>
@@ -181,7 +185,7 @@ export default function Feedback() {
               <span className="material-symbols-outlined text-xl">schedule</span>
             </div>
             <div>
-              <div className="text-lg font-bold text-on-surface">{stats.avg_response_hours || '< 48h'}</div>
+              <div className="text-lg font-bold text-on-surface">{stats.avg_response_hours || '&lt; 48h'}</div>
               <div className="text-[11px] text-on-surface-variant font-[Geist]">Avg Response</div>
             </div>
           </div>
@@ -220,9 +224,7 @@ export default function Feedback() {
         <section className="glass-effect rounded-2xl p-4 sm:p-xl">
           {submitted ? (
             <div className="p-xl text-center space-y-md">
-              <div className="w-16 h-16 rounded-2xl bg-success/15 text-success flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-3xl">celebration</span>
-              </div>
+              <div className="text-6xl">🎉</div>
               <h2 className="text-xl font-bold text-on-surface">Thank You for Your Feedback!</h2>
               <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
                 Your feedback and rating have been recorded. Our team reviews all submissions to enhance CareerLens AI.
@@ -244,42 +246,55 @@ export default function Feedback() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-lg">
-              {/* Star Rating Section */}
-              <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant space-y-xs">
+              {/* Emoji Rating Section */}
+              <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant space-y-sm">
                 <label className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider block">
                   Overall Rating <span className="text-error">*</span>
                 </label>
-                
-                <div className="flex items-center gap-sm pt-xs">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => {
-                      const isFilled = star <= currentRatingValue
+
+                <div className="flex items-center gap-md flex-wrap pt-xs">
+                  <div className="flex items-center gap-sm">
+                    {[1, 2, 3, 4, 5].map((val) => {
+                      const { emoji } = RATING_EMOJIS[val]
+                      const isSelected = form.rating === val
+                      const isHovered = hoverRating === val
+                      const isActive = isSelected || isHovered
                       return (
                         <button
-                          key={star}
+                          key={val}
                           type="button"
-                          onClick={() => updateField('rating', star)}
-                          onMouseEnter={() => setHoverRating(star)}
+                          onClick={() => updateField('rating', val)}
+                          onMouseEnter={() => setHoverRating(val)}
                           onMouseLeave={() => setHoverRating(0)}
-                          className="p-1 rounded-lg hover:scale-125 transition-transform duration-150 focus:outline-none"
-                          title={`${star} Star${star > 1 ? 's' : ''}`}
+                          className={`flex flex-col items-center gap-0.5 p-sm rounded-xl border-2 transition-all duration-150 focus:outline-none ${
+                            isActive
+                              ? 'border-primary bg-primary/10 scale-110 shadow-sm'
+                              : 'border-outline-variant bg-transparent hover:scale-105'
+                          }`}
+                          title={RATING_EMOJIS[val].label}
                         >
-                          <span
-                            className={`material-symbols-outlined text-3xl sm:text-4xl transition-colors ${
-                              isFilled ? 'text-amber-400' : 'text-slate-300'
-                            }`}
-                            style={{ fontVariationSettings: isFilled ? "'FILL' 1" : "'FILL' 0" }}
-                          >
-                            star
+                          <span className={`text-3xl sm:text-4xl transition-all duration-150 ${isActive ? '' : 'grayscale opacity-60'}`}>
+                            {emoji}
+                          </span>
+                          <span className={`text-[10px] font-semibold font-[Geist] ${isActive ? 'text-primary' : 'text-on-surface-variant'}`}>
+                            {val}
                           </span>
                         </button>
                       )
                     })}
                   </div>
 
-                  <span className="text-xs sm:text-sm font-semibold text-on-surface font-[Geist] pl-sm">
-                    {RATING_LABELS[currentRatingValue] || 'Select a rating'}
-                  </span>
+                  {currentRatingValue > 0 && (
+                    <div className="flex items-center gap-xs">
+                      <span className="text-2xl">{RATING_EMOJIS[currentRatingValue]?.emoji}</span>
+                      <span className="text-sm font-semibold text-on-surface font-[Geist]">
+                        {RATING_EMOJIS[currentRatingValue]?.label}
+                      </span>
+                    </div>
+                  )}
+                  {!currentRatingValue && (
+                    <span className="text-sm text-on-surface-variant font-[Geist] italic">Pick your mood...</span>
+                  )}
                 </div>
               </div>
 
@@ -399,7 +414,7 @@ export default function Feedback() {
             </div>
           ) : submissions.length === 0 ? (
             <div className="text-center py-xl bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
-              <span className="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-xs block">inbox</span>
+              <span className="text-4xl block mb-sm">📭</span>
               <p className="text-sm font-semibold text-on-surface font-[Geist]">No feedback submitted yet</p>
               <p className="text-xs text-on-surface-variant mt-xs mb-md">Any bug reports or suggestions you submit will appear here.</p>
               <button
@@ -424,9 +439,9 @@ export default function Feedback() {
                       <div className="flex items-center gap-sm">
                         <span className="text-sm font-semibold text-on-surface">{s.subject}</span>
                         {s.rating && (
-                          <span className="inline-flex items-center gap-0.5 text-xs text-amber-500 font-bold">
-                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            {s.rating}/5
+                          <span className="inline-flex items-center gap-1 text-xs font-bold">
+                            <span className="text-base">{RATING_EMOJIS[s.rating]?.emoji}</span>
+                            <span className="text-on-surface-variant">{s.rating}/5</span>
                           </span>
                         )}
                       </div>
@@ -458,3 +473,4 @@ export default function Feedback() {
     </div>
   )
 }
+
