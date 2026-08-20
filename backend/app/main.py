@@ -855,7 +855,7 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(d
     
     # Send verification email via the email service
     from app.email_service import send_verification_email
-    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+    frontend_url = os.environ.get("FRONTEND_URL", "https://career-lens-ai-wheat.vercel.app").rstrip("/")
     verification_url = f"{frontend_url}/verify?token={raw_token}"
     email_sent = send_verification_email(email, verification_url)
     
@@ -892,7 +892,7 @@ def resend_verification(request: Request, payload: ResendVerificationRequest, db
         
         # Send via email service
         from app.email_service import send_verification_email
-        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://career-lens-ai-wheat.vercel.app").rstrip("/")
         verification_url = f"{frontend_url}/verify?token={raw_token}"
         email_sent = send_verification_email(email, verification_url)
         if not email_sent:
@@ -936,7 +936,7 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
         user.reset_expires = datetime.utcnow() + timedelta(hours=1)
         db.commit()
         from app.email_service import send_password_reset_email
-        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://career-lens-ai-wheat.vercel.app").rstrip("/")
         reset_url = f"{frontend_url}/reset-password?token={raw_token}"
         email_sent = send_password_reset_email(email, reset_url)
 
