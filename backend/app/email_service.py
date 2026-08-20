@@ -214,10 +214,6 @@ def send_verification_email(to: str, verification_url: str) -> bool:
     </div>
     """
 
-    if ENVIRONMENT != "production" and not (SMTP_USER or EMAIL_API_KEY):
-        logger.info(f"[DEVELOPMENT] Verification URL for {to}: {verification_url}")
-        return False
-
     return send_email_message(to, subject, html)
 
 
@@ -245,9 +241,5 @@ def send_password_reset_email(to: str, reset_url: str) -> bool:
       </p>
     </div>
     """
-
-    if ENVIRONMENT != "production" and not (SMTP_USER or EMAIL_API_KEY):
-        logger.info(f"[DEVELOPMENT] Password reset URL for {to}: {reset_url}")
-        return False
 
     return send_email_message(to, subject, html)
