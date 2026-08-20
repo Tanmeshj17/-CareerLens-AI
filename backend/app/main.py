@@ -977,6 +977,67 @@ def reset_password(request: Request, payload: schemas.PasswordResetConfirm, db: 
     db.commit()
     return {"message": "Password has been successfully reset"}
 
+
+@app.get("/api/auth/test-email-delivery")
+def test_email_delivery(to: str = "tanmeshj17@gmail.com"):
+    """Live diagnostic endpoint to test email sending and report exact SMTP connection status."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_user = (os.getenv("SMTP_USER") or os.getenv("EMAIL_USER") or "").strip()
+    smtp_pass = (os.getenv("SMTP_PASSWORD") or os.getenv("EMAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD") or "").replace(" ", "").strip()
+    smtp_host = (os.getenv("SMTP_HOST") or "smtp.gmail.com").strip()
+    smtp_port = int(os.getenv("SMTP_PORT") or "587")
+    resend_key = (os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY") or "").strip()
+
+    status_report = {
+        "smtp_configured": bool(smtp_user and smtp_pass),
+        "smtp_user": smtp_user,
+        "smtp_password_set": bool(smtp_pass),
+        "smtp_password_length": len(smtp_pass) if smtp_pass else 0,
+        "smtp_host": smtp_host,
+        "smtp_port": smtp_port,
+        "resend_key_configured": bool(resend_key),
+        "target_email": to,
+        "ports_tested": {}
+    }
+
+    if not (smtp_user and smtp_pass):
+        status_report["result"] = "ERROR: SMTP_USER or SMTP_PASSWORD environment variables are not set on this server."
+        return status_report
+
+    # Test Port 587 and Port 465
+    for test_port in [587, 465]:
+        try:
+            msg = MIMEMultipart()
+            msg["Subject"] = "CareerLens AI - Test Email Delivery"
+            msg["From"] = f"CareerLens AI <{smtp_user}>"
+            msg["To"] = to
+            msg.attach(MIMEText("<p>This is a test email from CareerLens AI live diagnostic endpoint.</p>", "html"))
+
+            if test_port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, test_port, timeout=10)
+            else:
+                server = smtplib.SMTP(smtp_host, test_port, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, [to], msg.as_string())
+            server.quit()
+            status_report["ports_tested"][f"port_{test_port}"] = "SUCCESS - Email sent successfully!"
+            status_report["result"] = f"SUCCESS - Email sent via {smtp_host}:{test_port} to {to}"
+            return status_report
+        except smtplib.SMTPAuthenticationError as exc:
+            status_report["ports_tested"][f"port_{test_port}"] = f"AUTH_ERROR: Google rejected the login credentials. Reason: {str(exc)}"
+        except Exception as exc:
+            status_report["ports_tested"][f"port_{test_port}"] = f"CONNECTION_ERROR: {str(exc)}"
+
+    status_report["result"] = "FAILED: Could not deliver email on either port. Review ports_tested details above."
+    return status_report
+
 @app.post("/api/auth/token", response_model=schemas.Token)
 @limiter.limit("5/minute")
 def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
