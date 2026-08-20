@@ -34,8 +34,14 @@ def get_recommended_opportunities(
             for h in db.query(models.CollectorHealth).all()
         }
 
-        # Phase 8.65: Multi-level Search Filtering
-        search_results, search_metadata = search_engine.search_opportunities(db, search, limit=200)
+        # Phase 8.65: Multi-level Search Filtering with job_type and location support
+        search_results, search_metadata = search_engine.search_opportunities(
+            db,
+            query=search,
+            job_type=type,
+            location=location,
+            limit=500
+        )
         
         scored = []
         for result in search_results:

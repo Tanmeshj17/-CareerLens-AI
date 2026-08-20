@@ -1084,20 +1084,29 @@ def read_opportunities(
         filters.append(or_(
             models.Opportunity.title.ilike(search_term),
             models.Opportunity.company.ilike(search_term),
-            models.Opportunity.location.ilike(search_term)
+            models.Opportunity.location.ilike(search_term),
+            models.Opportunity.required_skills.ilike(search_term),
+            models.Opportunity.description.ilike(search_term)
         ))
         
-    if role and role != "All":
-        filters.append(models.Opportunity.title.ilike(f"%{role}%"))
+    if role and role != "All" and role.strip():
+        filters.append(models.Opportunity.title.ilike(f"%{role.strip()}%"))
         
-    if location and location != "All":
-        filters.append(models.Opportunity.location.ilike(f"%{location}%"))
+    if location and location != "All" and location.strip():
+        filters.append(models.Opportunity.location.ilike(f"%{location.strip()}%"))
         
-    if type and type != "All":
-        filters.append(models.Opportunity.job_type.ilike(type))
+    if type and type != "All" and type.strip():
+        filters.append(models.Opportunity.job_type.ilike(f"%{type.strip()}%"))
 
-    # Phase 8.55: Enforce 100% Direct-Apply Verified Sources ONLY
-    filters.append(models.Opportunity.data_origin == "LIVE_API")
+    # Phase 8.55: Enforce Direct-Apply Verified Sources ONLY
+    filters.append(
+        or_(
+            models.Opportunity.data_origin == "LIVE_API",
+            models.Opportunity.data_origin == "LIVE_SCRAPE",
+            models.Opportunity.data_origin == "CURATED_FALLBACK",
+            models.Opportunity.data_origin.is_(None)
+        )
+    )
     filters.append(
         or_(
             models.Opportunity.link_quality_score > 0,

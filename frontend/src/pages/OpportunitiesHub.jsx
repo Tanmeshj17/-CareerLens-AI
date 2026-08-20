@@ -295,17 +295,27 @@ export default function OpportunitiesHub() {
   const [savedIds, setSavedIds] = useState(new Set())
   const [savingId, setSavingId] = useState(null)
 
-  const fetchJobs = async (append = false, page = 1, currentSort = sortBy, queryOverride = null) => {
+  const fetchJobs = async (
+    append = false,
+    page = 1,
+    currentSort = sortBy,
+    queryOverride = null,
+    typeOverride = null,
+    locationOverride = null
+  ) => {
     try {
       if (append) setLoadingMore(true)
       else setLoading(true)
       setError(null)
 
       const activeSearch = queryOverride !== null ? queryOverride : searchQuery
+      const activeType = typeOverride !== null ? typeOverride : jobType
+      const activeLoc = locationOverride !== null ? locationOverride : locationFilter
+
       const params = {
         search: activeSearch && activeSearch.trim() ? activeSearch.trim() : undefined,
-        type: jobType !== 'All' ? jobType : undefined,
-        location: locationFilter || undefined,
+        type: activeType && activeType !== 'All' ? activeType : undefined,
+        location: activeLoc && activeLoc.trim() ? activeLoc.trim() : undefined,
         sort: currentSort,
         limit: 20,
         skip: (page - 1) * 20,
@@ -333,10 +343,10 @@ export default function OpportunitiesHub() {
       if (append) {
         setJobs(prev => [...prev, ...data.opportunities])
       } else {
-        setJobs(data.opportunities)
+        setJobs(data.opportunities || [])
       }
-      setTotal(data.total)
-      setHasMore(data.has_more)
+      setTotal(data.total || 0)
+      setHasMore(data.has_more || false)
       setCurrentPage(page)
     } catch (e) {
       setError(e.message)
@@ -373,7 +383,7 @@ export default function OpportunitiesHub() {
 
   const handleSearch = () => {
     setCurrentPage(1)
-    fetchJobs(false, 1)
+    fetchJobs(false, 1, sortBy, searchQuery, jobType, locationFilter)
   }
 
   const handleKeyDown = (e) => {
@@ -384,13 +394,14 @@ export default function OpportunitiesHub() {
     setSearchQuery('')
     setLocationFilter('')
     setJobType('All')
+    setSortBy('newest')
     setCurrentPage(1)
-    setTimeout(() => fetchJobs(false, 1), 0)
+    fetchJobs(false, 1, 'newest', '', 'All', '')
   }
 
   const loadMore = () => {
     if (hasMore) {
-      fetchJobs(true, currentPage + 1)
+      fetchJobs(true, currentPage + 1, sortBy, searchQuery, jobType, locationFilter)
     }
   }
 
@@ -526,8 +537,16 @@ export default function OpportunitiesHub() {
           </div>
           <div className="space-y-xs">
             <label className="text-xs font-medium font-[Geist] text-on-surface-variant uppercase">Type</label>
-            <select value={jobType} onChange={(e) => setJobType(e.target.value)}
-              className="w-full px-sm py-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary text-sm outline-none appearance-none cursor-pointer">
+            <select
+              value={jobType}
+              onChange={(e) => {
+                const val = e.target.value
+                setJobType(val)
+                setCurrentPage(1)
+                fetchJobs(false, 1, sortBy, null, val, null)
+              }}
+              className="w-full px-sm py-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary text-sm outline-none appearance-none cursor-pointer"
+            >
               <option value="All">All Types</option>
               <option value="Full-time">Full-time</option>
               <option value="Part-time">Part-time</option>
@@ -549,29 +568,53 @@ export default function OpportunitiesHub() {
         </div>
       </section>
 
-      {/* Quick Sorting Filters */}
-      <div className="flex gap-sm overflow-x-auto no-scrollbar pb-1 -my-0.5 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-        <button 
-          onClick={() => { setSortBy('newest'); setCurrentPage(1); fetchJobs(false, 1, 'newest'); }}
-          className={`flex items-center gap-xs px-md py-xs rounded-full border text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'newest' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
-        >
-          <span className="material-symbols-outlined text-[16px]">bolt</span>
-          Latest Jobs
-        </button>
-        <button 
-          onClick={() => { setSortBy('relevance'); setCurrentPage(1); fetchJobs(false, 1, 'relevance'); }}
-          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'relevance' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
-        >
-          <span className="material-symbols-outlined text-[16px]">target</span>
-          Recommended
-        </button>
-        <button 
-          onClick={() => { setSortBy('quality'); setCurrentPage(1); fetchJobs(false, 1, 'quality'); }}
-          className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'quality' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
-        >
-          <span className="material-symbols-outlined text-[16px]">verified</span>
-          Verified Links
-        </button>
+      {/* Quick Sorting & Location Filters */}
+      <div className="flex items-center justify-between gap-sm flex-wrap animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+        <div className="flex gap-xs sm:gap-sm overflow-x-auto no-scrollbar pb-1">
+          <button 
+            onClick={() => { setSortBy('newest'); setCurrentPage(1); fetchJobs(false, 1, 'newest'); }}
+            className={`flex items-center gap-xs px-md py-xs rounded-full border text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'newest' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">bolt</span>
+            Latest Jobs
+          </button>
+          <button 
+            onClick={() => { setSortBy('relevance'); setCurrentPage(1); fetchJobs(false, 1, 'relevance'); }}
+            className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'relevance' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">target</span>
+            Recommended
+          </button>
+          <button 
+            onClick={() => { setSortBy('quality'); setCurrentPage(1); fetchJobs(false, 1, 'quality'); }}
+            className={`flex items-center gap-xs px-md py-xs rounded-full border text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'quality' ? 'bg-primary text-on-primary border-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface border-outline-variant'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">verified</span>
+            Verified Links
+          </button>
+        </div>
+
+        {/* Quick Location Pills */}
+        <div className="flex gap-xs overflow-x-auto no-scrollbar pb-1 text-xs">
+          {['Remote (India)', 'Bengaluru', 'Hyderabad', 'Pune', 'Delhi NCR'].map((loc) => (
+            <button
+              key={loc}
+              onClick={() => {
+                const newLoc = locationFilter === loc ? '' : loc
+                setLocationFilter(newLoc)
+                setCurrentPage(1)
+                fetchJobs(false, 1, sortBy, null, null, newLoc)
+              }}
+              className={`px-sm py-1 rounded-md border font-medium transition-all whitespace-nowrap ${
+                locationFilter === loc
+                  ? 'bg-secondary-container text-on-secondary-container border-primary/50 font-semibold'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container border-outline-variant/60'
+              }`}
+            >
+              {loc}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Phase 8.65: Search Confidence Banner */}
