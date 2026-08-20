@@ -930,6 +930,8 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
     reset_url = None
     email_sent = False
 
+    logger.info(f"Password reset requested for '{email}' | Account found in DB: {user is not None}")
+
     if user:
         raw_token = auth.generate_secure_token()
         user.reset_token = auth.hash_token(raw_token)
@@ -939,6 +941,9 @@ def forgot_password(request: Request, payload: schemas.PasswordResetRequest, db:
         frontend_url = os.environ.get("FRONTEND_URL", "https://career-lens-ai-wheat.vercel.app").rstrip("/")
         reset_url = f"{frontend_url}/reset-password?token={raw_token}"
         email_sent = send_password_reset_email(email, reset_url)
+        logger.info(f"Password reset email dispatch for '{email}': {'SUCCESS' if email_sent else 'FAILED'}")
+    else:
+        logger.warning(f"Password reset skipped: No user account found with email '{email}'.")
 
     # Always return the same generic message regardless of whether the user exists or email was sent.
     # This prevents user enumeration attacks (attacker cannot tell if an email is registered).
