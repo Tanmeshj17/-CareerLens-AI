@@ -89,8 +89,55 @@ def _send_via_smtp(to: str, subject: str, html: str) -> bool:
     return False
 
 
+def _send_via_brevo(to: str, subject: str, html: str) -> bool:
+    """Send an email using Brevo (formerly Sendinblue) HTTP REST API over port 443.
+    Works seamlessly on all cloud hosts (Render, Vercel, AWS) and allows sending to ANY recipient email worldwide.
+    """
+    api_key = (os.getenv("BREVO_API_KEY") or os.getenv("SENDINBLUE_API_KEY") or "").strip()
+    if not api_key:
+        return False
+
+    sender_email = (os.getenv("SMTP_USER") or os.getenv("EMAIL_USER") or "tanmeshj17@gmail.com").strip()
+    sender_name = "CareerLens AI"
+
+    import json
+    import urllib.request
+
+    try:
+        url = "https://api.brevo.com/v3/smtp/email"
+        payload = {
+            "sender": {"name": sender_name, "email": sender_email},
+            "to": [{"email": to}],
+            "subject": subject,
+            "htmlContent": html,
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "CareerLens-AI/1.0",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            if response.status in (200, 201, 202):
+                res_body = json.loads(response.read().decode())
+                logger.info(f"EMAIL SENT via Brevo: messageId={res_body.get('messageId', 'ok')} to={to}")
+                return True
+            else:
+                logger.warning(f"Brevo responded with status {response.status}")
+                return False
+    except Exception as exc:
+        logger.warning(f"Brevo send failed to {to}: {exc}")
+        return False
+
+
 def _send_via_resend(to: str, subject: str, html: str) -> bool:
-    """Send an email using Resend SDK. Returns True on success, False if blocked or failed."""
+    """Send an email using Resend SDK over HTTPS. Returns True on success, False if blocked or failed."""
     api_key = (os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY") or "").strip()
     from_email = os.getenv("EMAIL_FROM", "CareerLens AI <onboarding@resend.dev>").strip()
 
@@ -119,19 +166,24 @@ def _send_via_resend(to: str, subject: str, html: str) -> bool:
 
 
 def send_email_message(to: str, subject: str, html: str) -> bool:
-    """Try SMTP first if configured, then Resend. Returns True if successfully sent."""
-    smtp_user = os.getenv("SMTP_USER") or os.getenv("EMAIL_USER")
-    smtp_pass = os.getenv("SMTP_PASSWORD") or os.getenv("EMAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD")
-
-    # 1. Try SMTP first
-    if smtp_user and smtp_pass:
-        if _send_via_smtp(to, subject, html):
+    """Try Brevo HTTP API (global reach) -> Resend HTTP API -> SMTP. Returns True if successfully sent."""
+    # 1. Try Brevo HTTPS API first (allows sending to ANY recipient email worldwide)
+    brevo_key = os.getenv("BREVO_API_KEY") or os.getenv("SENDINBLUE_API_KEY")
+    if brevo_key:
+        if _send_via_brevo(to, subject, html):
             return True
 
-    # 2. Try Resend as fallback
-    api_key = os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY")
-    if api_key and not api_key.startswith("re_fake_"):
+    # 2. Try Resend HTTPS API
+    resend_key = os.getenv("RESEND_API_KEY") or os.getenv("EMAIL_API_KEY")
+    if resend_key and not resend_key.startswith("re_fake_"):
         if _send_via_resend(to, subject, html):
+            return True
+
+    # 3. Try standard SMTP
+    smtp_user = os.getenv("SMTP_USER") or os.getenv("EMAIL_USER")
+    smtp_pass = os.getenv("SMTP_PASSWORD") or os.getenv("EMAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD")
+    if smtp_user and smtp_pass:
+        if _send_via_smtp(to, subject, html):
             return True
 
     return False
