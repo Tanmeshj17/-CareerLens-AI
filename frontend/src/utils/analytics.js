@@ -3,7 +3,7 @@
  * Supports automatic route tracking, custom event tracking, and user engagement metrics.
  */
 
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-0000000000'
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-1H2EMTXESV'
 
 let isInitialized = false
 
@@ -13,7 +13,7 @@ let isInitialized = false
 export function initGA() {
   if (isInitialized || typeof window === 'undefined') return
 
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
+  const measurementId = GA_MEASUREMENT_ID
   if (!measurementId || measurementId === 'G-0000000000') {
     // If no custom measurement ID is provided yet, set up a stub gtag
     window.dataLayer = window.dataLayer || []
@@ -50,7 +50,7 @@ export function initGA() {
 export function trackPageView(path, title = '') {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
 
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
+  const measurementId = GA_MEASUREMENT_ID
   if (!measurementId || measurementId === 'G-0000000000') return
 
   window.gtag('event', 'page_view', {
