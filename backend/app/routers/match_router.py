@@ -1,71 +1,128 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import threading
 
 from app import models, schemas, auth, database, match_engine, rank_engine, search_engine
 
 router = APIRouter(prefix="/api", tags=["Personalization & Matching"])
 
+def _persist_scores_bg(user_id: int, scored_items: List[Dict], db_url: str):
+    """Background task: persist match scores to DB without blocking the response."""
+    from app.database import SessionLocal
+    try:
+        bg_db = SessionLocal()
+        opp_ids = [item["opportunity"]["id"] for item in scored_items]
+        existing = {
+            s.opportunity_id: s
+            for s in bg_db.query(models.JobMatchScore).filter(
+                models.JobMatchScore.user_id == user_id,
+                models.JobMatchScore.opportunity_id.in_(opp_ids)
+            ).all()
+        }
+        for item in scored_items:
+            opp = item["opportunity"]
+            md = item["match_data"]
+            scores = md["scores"]
+            opp_id = opp["id"]
+            db_score = existing.get(opp_id) or models.JobMatchScore(user_id=user_id, opportunity_id=opp_id)
+            if db_score.opportunity_id is None:
+                bg_db.add(db_score)
+            db_score.match_score = scores["total_score"]
+            db_score.skill_score = scores["skill_score"]
+            db_score.role_score = scores["role_score"]
+            db_score.location_score = scores["location_score"]
+            db_score.freshness_score = 0
+            db_score.company_score = scores["company_score"]
+            db_score.salary_score = scores.get("salary_score", 0)
+            db_score.matching_skills = md["matched_skills"]
+            db_score.missing_skills = md["missing_skills"]
+            db_score.match_level = md.get("probability", "Low Match")
+            db_score.explanation = md["breakdown"]
+            db_score.created_at = datetime.utcnow()
+        bg_db.commit()
+    except Exception:
+        pass
+    finally:
+        try:
+            bg_db.close()
+        except Exception:
+            pass
+
+
 @router.get("/opportunities/recommended")
 def get_recommended_opportunities(
+    background_tasks: BackgroundTasks,
     search: Optional[str] = None,
     type: Optional[str] = None,
     location: Optional[str] = None,
     sort: Optional[str] = "newest",
-    skip: int = 0, 
-    limit: int = 20, 
+    skip: int = 0,
+    limit: int = 20,
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(database.get_db)
 ):
     """
-    Returns personalized opportunity feed sorted by Final Score, Newest, or Quality, with search filtering.
+    Returns personalized opportunity feed — optimized for <1s response time.
+
+    Strategy:
+    - Fetch a compact candidate pool (max 80 jobs) using DB-level pre-sort.
+    - Run match scoring only on the candidate pool.
+    - Persist scores to DB asynchronously via background task.
     """
-    user_profile = db.query(models.ResumeProfile).filter(models.ResumeProfile.user_id == current_user.id).first()
-    prefs = db.query(models.UserPreference).filter(models.UserPreference.user_id == current_user.id).first()
-    
-    # Use cache to avoid N+1 and repeated scoring
     from app.cache import get_or_compute
-    
+    from app.database import engine as db_engine
+
+    user_profile = db.query(models.ResumeProfile).filter(
+        models.ResumeProfile.user_id == current_user.id
+    ).first()
+    prefs = db.query(models.UserPreference).filter(
+        models.UserPreference.user_id == current_user.id
+    ).first()
+
+    # Candidate pool size: enough for 4 pages + buffer
+    CANDIDATE_LIMIT = max(80, skip + limit * 4)
+
     def _compute():
-        # Fetch Collector Health map for Wave 4
         collector_health_map = {
-            h.collector_name: (h.collector_score or 50.0) 
+            h.collector_name: (h.collector_score or 50.0)
             for h in db.query(models.CollectorHealth).all()
         }
 
-        # Phase 8.65: Multi-level Search Filtering with job_type and location support
+        # Step 1: Fetch candidate pool — small, DB-sorted, no scoring yet
         search_results, search_metadata = search_engine.search_opportunities(
             db,
             query=search,
             job_type=type,
             location=location,
-            limit=500
+            limit=CANDIDATE_LIMIT,
         )
-        
+
+        total_count = search_metadata.get("total_db_active", len(search_results))
+
+        # Step 2: Score only the candidate pool
         scored = []
         for result in search_results:
             opp = result["opportunity"]
             search_level = result["search_level"]
-            
+
             match_data = match_engine.generate_match_score(user_profile, prefs, opp)
-            
             health_score = collector_health_map.get(opp.collected_by, 50.0) if opp.collected_by else 50.0
 
             final_score = rank_engine.compute_personalized_rank(
                 opp=opp,
                 match_score=match_data["scores"]["total_score"],
-                freshness_score=0,  # V2: freshness folded into confidence_score
+                freshness_score=0,
                 company_score=match_data["scores"]["company_score"],
                 collector_health_score=health_score
             )
-            
-            # Phase 8.65: Boost exact matches (Level 1) over fallback
+
             if search_level == 1:
                 final_score += 1000
             elif search_level == 2:
                 final_score += 500
-                
+
             scored.append({
                 "opportunity": {
                     "id": opp.id,
@@ -90,75 +147,58 @@ def get_recommended_opportunities(
                 "match_data": match_data,
                 "search_level": search_level
             })
-            
-        if sort == "newest":
-            scored.sort(key=lambda x: (x["opportunity"]["posted_date"] or "1970-01-01", x["opportunity"]["id"]), reverse=True)
-        elif sort == "quality":
-            scored.sort(key=lambda x: (x["opportunity"]["link_quality_score"], x["opportunity"]["trust_score"]), reverse=True)
-        else: # relevance
-            scored.sort(key=lambda x: (x["final_score"], x["opportunity"]["posted_date"] or "1970-01-01"), reverse=True)
-            
-        return scored, search_metadata
 
+        # Step 3: Sort the scored pool
+        if sort == "newest":
+            scored.sort(
+                key=lambda x: (x["opportunity"]["posted_date"] or "1970-01-01", x["opportunity"]["id"]),
+                reverse=True
+            )
+        elif sort == "quality":
+            scored.sort(
+                key=lambda x: (x["opportunity"]["link_quality_score"], x["opportunity"].get("trust_score", 0)),
+                reverse=True
+            )
+        else:  # relevance
+            scored.sort(
+                key=lambda x: (x["final_score"], x["opportunity"]["posted_date"] or "1970-01-01"),
+                reverse=True
+            )
+
+        return scored, search_metadata, total_count
+
+    # Cache key — per user + filters, 10 min TTL
     safe_search = (search or "").lower().strip()
-    cache_key = f"user_recs_{current_user.id}_{safe_search}_{type}_{location}_{sort}"
-    
-    # get_or_compute doesn't support returning tuples directly if we expect just the list, 
-    # but we can cache the combined dict.
-    def wrapper():
-        s, m = _compute()
-        return {"items": s, "metadata": m}
-        
-    cached_data = get_or_compute(cache_key, wrapper, ttl_seconds=1800)
+    cache_key = f"recs_v2_{current_user.id}_{safe_search}_{type}_{location}_{sort}"
+
+    cached_data = get_or_compute(
+        cache_key,
+        lambda: dict(zip(["items", "metadata", "total"], _compute())),
+        ttl_seconds=600  # 10 min
+    )
+
     scored_opportunities = cached_data["items"]
     search_metadata = cached_data["metadata"]
-    
-    # Paginate
-    paginated = scored_opportunities[skip : skip + limit]
-    
-    # Optimize N+1 queries by fetching existing scores in one go
-    opp_ids = [item["opportunity"]["id"] if isinstance(item["opportunity"], dict) else item["opportunity"].id for item in paginated]
-    existing_scores = db.query(models.JobMatchScore).filter(
-        models.JobMatchScore.user_id == current_user.id,
-        models.JobMatchScore.opportunity_id.in_(opp_ids)
-    ).all()
-    score_map = {s.opportunity_id: s for s in existing_scores}
+    total_count = cached_data["total"]
 
-    for item in paginated:
-        opp = item["opportunity"]
-        md = item["match_data"]
-        scores = md["scores"]
-        
-        opp_id = opp["id"] if isinstance(opp, dict) else opp.id
-        
-        db_score = score_map.get(opp_id)
-        
-        if not db_score:
-            db_score = models.JobMatchScore(
-                user_id=current_user.id,
-                opportunity_id=opp_id
-            )
-            db.add(db_score)
-            
-        db_score.match_score = scores["total_score"]
-        db_score.skill_score = scores["skill_score"]
-        db_score.role_score = scores["role_score"]
-        db_score.location_score = scores["location_score"]
-        db_score.freshness_score = 0  # V2: removed from match engine
-        db_score.company_score = scores["company_score"]
-        db_score.salary_score = scores["salary_score"]
-        db_score.matching_skills = md["matched_skills"]
-        db_score.missing_skills = md["missing_skills"]
-        db_score.match_level = md.get("probability", "Low Match")
-        db_score.explanation = md["breakdown"]
-        db_score.created_at = datetime.utcnow()
-        
-    db.commit()
-    
+    # Paginate from scored pool
+    paginated = scored_opportunities[skip: skip + limit]
+
+    # Persist scores async — never blocks response
+    if paginated:
+        bg_url = str(db_engine.url)
+        background_tasks.add_task(
+            _persist_scores_bg,
+            current_user.id,
+            paginated,
+            bg_url
+        )
+
     return {
-        "total": search_metadata.get("total_db_active", len(scored_opportunities)) if search_metadata else len(scored_opportunities),
+        "total": total_count,
         "items": paginated,
-        "search_metadata": search_metadata
+        "search_metadata": search_metadata,
+        "has_more": (skip + limit) < len(scored_opportunities)
     }
 
 from pydantic import BaseModel
