@@ -57,6 +57,7 @@ function EyeBtn({ show, toggle }) {
 }
 
 export default function Login() {
+  const [isAdminMode, setIsAdminMode]   = useState(false)
   const [email, setEmail]               = useState('')
   const [password, setPassword]         = useState('')
   const [showPw, setShowPw]             = useState(false)
@@ -67,6 +68,16 @@ export default function Login() {
   const { login } = useContext(AuthContext)
   const navigate  = useNavigate()
 
+  const handleToggleAdminMode = (toAdmin) => {
+    setIsAdminMode(toAdmin)
+    setErrorMsg('')
+    if (toAdmin) {
+      if (!email) setEmail('careerlensadmin')
+    } else {
+      if (email === 'careerlensadmin') setEmail('')
+    }
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true); setErrorMsg(''); setShowResend(false); setResendStatus('')
@@ -74,7 +85,11 @@ export default function Login() {
       await loginUser(email, password)
       const userData = await getCurrentUser()
       login(userData)
-      navigate('/app')
+      if (userData?.role === 'admin') {
+        navigate('/app/admin', { replace: true })
+      } else {
+        navigate('/app', { replace: true })
+      }
     } catch (err) {
       setErrorMsg(err.message || 'Login failed')
       if (err.message?.toLowerCase().includes('not verified')) setShowResend(true)
@@ -109,18 +124,50 @@ export default function Login() {
         <div className="w-full max-w-sm sm:max-w-md">
 
           {/* Desktop logo */}
-          <div className="hidden lg:block mb-8">
+          <div className="hidden lg:block mb-6">
             <CareerLensLogo size="md" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1 mt-1 lg:mt-0">
-            Welcome back
+          {/* Mode Switcher: User vs Admin */}
+          <div className="flex p-1 mb-6 rounded-xl bg-slate-100 border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => handleToggleAdminMode(false)}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                !isAdminMode
+                  ? 'bg-white text-[#0050cb] shadow-sm font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">person</span>
+              User Login
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleAdminMode(true)}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                isAdminMode
+                  ? 'bg-[#0050cb] text-white shadow-sm font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+              Admin Portal
+            </button>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">
+            {isAdminMode ? 'Admin Command Center' : 'Welcome back'}
           </h2>
-          <p className="text-sm text-slate-400 mb-6">Sign in to continue your career journey.</p>
+          <p className="text-sm text-slate-400 mb-6">
+            {isAdminMode
+              ? 'Enter root administrator credentials to access system analytics.'
+              : 'Sign in to continue your career journey.'}
+          </p>
 
           {/* Error */}
           {errorMsg && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex flex-col gap-1">
+            <div className="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex flex-col gap-1 animate-fade-in">
               <span>{errorMsg}</span>
               {showResend && (
                 <div>
@@ -136,13 +183,20 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <FloatingInput
-              id="login-email" label="Email Address" type="email"
-              value={email} onChange={e => setEmail(e.target.value)} required
+              id="login-email"
+              label={isAdminMode ? 'Admin Username or Email' : 'Email Address'}
+              type="text"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
             />
             <FloatingInput
-              id="login-password" label="Password"
+              id="login-password"
+              label="Password"
               type={showPw ? 'text' : 'password'}
-              value={password} onChange={e => setPassword(e.target.value)} required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
               rightEl={<EyeBtn show={showPw} toggle={() => setShowPw(!showPw)} />}
             />
 
@@ -155,40 +209,55 @@ export default function Login() {
                 />
                 <span className="text-sm text-slate-500">Remember me</span>
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm font-semibold text-[#0050cb] hover:text-[#003fa0] transition-colors"
-              >
-                Forgot Password?
-              </Link>
+              {!isAdminMode && (
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-semibold text-[#0050cb] hover:text-[#003fa0] transition-colors"
+                >
+                  Forgot Password?
+                </Link>
+              )}
             </div>
 
             <button
               type="submit" disabled={loading}
-              className="w-full h-14 rounded-xl font-bold text-base text-white
-                bg-gradient-to-r from-[#0050cb] to-[#6366f1]
-                hover:from-[#003fa0] hover:to-[#4f46e5] active:scale-[0.98]
+              className={`w-full h-14 rounded-xl font-bold text-base text-white
+                ${isAdminMode
+                  ? 'bg-gradient-to-r from-slate-900 via-[#0050cb] to-slate-900 hover:from-slate-800 hover:to-slate-800'
+                  : 'bg-gradient-to-r from-[#0050cb] to-[#6366f1] hover:from-[#003fa0] hover:to-[#4f46e5]'
+                }
+                active:scale-[0.98]
                 shadow-[0_4px_20px_rgba(0,80,203,0.35)]
                 hover:shadow-[0_6px_28px_rgba(0,80,203,0.45)]
                 transition-all duration-200 touch-manipulation
                 disabled:opacity-60 disabled:cursor-not-allowed
-                flex items-center justify-center gap-2"
+                flex items-center justify-center gap-2`}
             >
               {loading
                 ? <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                   </svg>
-                : 'Sign In'}
+                : (isAdminMode ? 'Access Admin Dashboard' : 'Sign In')}
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-slate-400">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-bold text-[#0050cb] hover:underline">
-              Create Account
-            </Link>
-          </p>
+          {!isAdminMode && (
+            <p className="mt-7 text-center text-sm text-slate-400">
+              Don't have an account?{' '}
+              <Link to="/register" className="font-bold text-[#0050cb] hover:underline">
+                Create Account
+              </Link>
+            </p>
+          )}
+
+          {isAdminMode && (
+            <div className="mt-6 p-3 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
+              <span className="text-xs text-slate-500 font-mono">
+                Root Account: <strong className="text-slate-700">careerlensadmin</strong>
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -206,36 +275,45 @@ export default function Login() {
           <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-white/15 backdrop-blur-sm
             flex items-center justify-center ring-2 ring-white/30 shadow-xl">
             <span className="material-symbols-outlined text-4xl text-white" style={{fontVariationSettings:"'FILL' 1"}}>
-              rocket_launch
+              {isAdminMode ? 'security' : 'rocket_launch'}
             </span>
           </div>
 
-          <h2 className="text-3xl font-bold leading-tight mb-4">New Here?</h2>
+          <h2 className="text-3xl font-bold leading-tight mb-4">
+            {isAdminMode ? 'Admin Portal' : 'New Here?'}
+          </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-8">
-            Join thousands of professionals who use CareerLens AI to discover opportunities, analyze their resume, and chart their path to success.
+            {isAdminMode
+              ? 'Complete system control, live job intake velocity, and real-time user database analytics.'
+              : 'Join thousands of professionals who use CareerLens AI to discover opportunities, analyze their resume, and chart their path to success.'}
           </p>
 
-          <div className="flex items-center gap-8 justify-center mb-10">
-            {[['10K+','Users'],['95%','Match Rate'],['500+','Companies']].map(([val, lbl]) => (
-              <div key={lbl} className="text-center">
-                <div className="text-xl font-bold">{val}</div>
-                <div className="text-[10px] text-white/60 uppercase tracking-wider">{lbl}</div>
+          {!isAdminMode && (
+            <>
+              <div className="flex items-center gap-8 justify-center mb-10">
+                {[['10K+','Users'],['95%','Match Rate'],['500+','Companies']].map(([val, lbl]) => (
+                  <div key={lbl} className="text-center">
+                    <div className="text-xl font-bold">{val}</div>
+                    <div className="text-[10px] text-white/60 uppercase tracking-wider">{lbl}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 h-12 px-8 rounded-xl font-bold text-sm
-              border-2 border-white/60 text-white
-              hover:bg-white hover:text-[#0050cb] transition-all duration-200
-              shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-          >
-            Create Account
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </Link>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 h-12 px-8 rounded-xl font-bold text-sm
+                  border-2 border-white/60 text-white
+                  hover:bg-white hover:text-[#0050cb] transition-all duration-200
+                  shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+              >
+                Create Account
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>
   )
 }
+

@@ -145,7 +145,7 @@ export default function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/app" replace /> : <Login />} />
+          <Route path="/login" element={isAuthenticated ? (user?.role === 'admin' ? <Navigate to="/app/admin" replace /> : <Navigate to="/app" replace />) : <Login />} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/app" replace /> : <Register />} />
           <Route path="/verify" element={isAuthenticated ? <Navigate to="/app" replace /> : <VerifyEmail />} />
           <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/app" replace /> : <ForgotPassword />} />
