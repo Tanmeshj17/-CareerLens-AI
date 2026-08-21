@@ -998,3 +998,20 @@ class Feedback(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+class PageView(Base):
+    """
+    PageView model for tracking page and feature usage in the application.
+    Enables Admin Panel to analyze which features and pages are most used.
+    """
+    __tablename__ = "page_views"
+
+    id = Column(Integer, primary_key=True, index=True)
+    path = Column(String(255), nullable=False, index=True)
+    page_name = Column(String(100), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+

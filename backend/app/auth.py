@@ -55,7 +55,49 @@ def get_user_by_email(db: Session, email: str):
     if not email:
         return None
     clean_email = email.strip().lower()
+    # Support logging in with 'careerlensadmin' or 'careerlensadmin@careerlens.ai'
+    if clean_email in ("careerlensadmin", "careerlensadmin@careerlens.ai", "careerlensadmin@gmail.com"):
+        admin = db.query(models.User).filter(
+            (func.lower(models.User.email) == "careerlensadmin@careerlens.ai") |
+            (func.lower(models.User.email) == "careerlensadmin")
+        ).first()
+        if admin:
+            return admin
+        # Auto-create if not yet created
+        return ensure_admin_user(db)
     return db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
+
+def ensure_admin_user(db: Session):
+    """
+    Guarantees the existence and up-to-date credentials for the system admin:
+    Username/Email: careerlensadmin / careerlensadmin@careerlens.ai
+    Password: controler_at_careerlens17tj
+    Role: admin
+    """
+    admin_pass = "controler_at_careerlens17tj"
+    admin = db.query(models.User).filter(
+        (func.lower(models.User.email) == "careerlensadmin@careerlens.ai") |
+        (func.lower(models.User.email) == "careerlensadmin")
+    ).first()
+
+    if not admin:
+        admin = models.User(
+            email="careerlensadmin@careerlens.ai",
+            full_name="CareerLens Admin",
+            role="admin",
+            is_verified=True,
+            hashed_password=get_password_hash(admin_pass)
+        )
+        db.add(admin)
+        db.commit()
+        db.refresh(admin)
+    else:
+        admin.role = "admin"
+        admin.is_verified = True
+        if not verify_password(admin_pass, admin.hashed_password):
+            admin.hashed_password = get_password_hash(admin_pass)
+        db.commit()
+    return admin
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
@@ -74,4 +116,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if user is None:
         raise credentials_exception
     return user
+
+async def require_admin(current_user: models.User = Depends(get_current_user)):
+    """Security guard: Only users with role='admin' can access admin endpoints."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required. Only authorized personnel can view this resource."
+        )
+    return current_user
+
 

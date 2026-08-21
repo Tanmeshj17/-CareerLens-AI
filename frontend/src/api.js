@@ -467,6 +467,67 @@ export async function getFeedbackStats() {
   return request('/api/feedback/stats');
 }
 
+// ── Admin Command Center APIs ────────────────────────────────
+export async function adminGetSummary() {
+  return request('/api/admin/summary');
+}
+
+export async function adminGetUsers({ q, role, verified, limit = 50, offset = 0 } = {}) {
+  const params = new URLSearchParams();
+  if (q) params.append('q', q);
+  if (role) params.append('role', role);
+  if (verified !== undefined && verified !== null && verified !== '') params.append('verified', verified);
+  params.append('limit', limit);
+  params.append('offset', offset);
+  return request(`/api/admin/users?${params.toString()}`);
+}
+
+export async function adminGetUserStats() {
+  return request('/api/admin/users/stats');
+}
+
+export async function adminUpdateUserRole(userId, role) {
+  invalidateCache('/api/admin/users');
+  return request(`/api/admin/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role })
+  });
+}
+
+export async function adminDeleteUser(userId) {
+  invalidateCache('/api/admin/users');
+  return request(`/api/admin/users/${userId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function adminGetCollectorStats() {
+  return request('/api/admin/collector/stats');
+}
+
+export async function adminTriggerCollector() {
+  invalidateCache('/api/admin/collector');
+  return request('/api/admin/collector/trigger', {
+    method: 'POST'
+  });
+}
+
+export async function adminGetPageAnalytics(days = 30) {
+  return request(`/api/admin/analytics/pages?days=${days}`);
+}
+
+export async function recordPageView(path, pageName = '') {
+  try {
+    return await request('/api/analytics/pageview', {
+      method: 'POST',
+      body: JSON.stringify({ path, page_name: pageName })
+    });
+  } catch (_) {
+    // Non-blocking telemetry
+    return null;
+  }
+}
+
 export async function adminGetFeedback({ status, category, limit = 100, offset = 0 } = {}) {
   const params = new URLSearchParams();
   if (status) params.append('status', status);
@@ -484,5 +545,10 @@ export async function adminUpdateFeedback(feedbackId, data) {
   });
 }
 
+export async function adminGetCollectorsHealth() {
+  return request('/api/admin/collectors/health');
+}
+
 // ── Utility Exports ───────────────────────────────────────────
 export { getToken, setToken, API_BASE };
+

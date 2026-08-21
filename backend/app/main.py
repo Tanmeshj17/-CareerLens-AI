@@ -570,6 +570,8 @@ def startup_event():
 
         # 2a. Schema column safety & Phase 11.8 Migration
         try:
+            database.Base.metadata.create_all(bind=database.engine)
+            auth.ensure_admin_user(db)
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS data_origin VARCHAR;"))
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS apply_url_status VARCHAR;"))
             db.execute(text("ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS verified_apply_url VARCHAR;"))
@@ -3284,4 +3286,53 @@ async def admin_update_feedback(
     db.commit()
     db.refresh(fb)
     return fb
+
+
+class PageViewPayload(schemas.BaseModel):
+    path: str
+    page_name: Optional[str] = None
+
+
+@app.post("/api/analytics/pageview")
+def record_page_view(
+    payload: PageViewPayload,
+    request: Request,
+    db: Session = Depends(database.get_db)
+):
+    """
+    Lightweight pageview recorder for internal first-party analytics.
+    Enables Admin Panel to monitor feature and page popularity.
+    """
+    try:
+        user_id = None
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            try:
+                data = auth.jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+                user_email = data.get("sub")
+                if user_email:
+                    u = auth.get_user_by_email(db, user_email)
+                    if u:
+                        user_id = u.id
+            except Exception:
+                pass
+
+        ip = request.client.host if request.client else None
+        ua = request.headers.get("user-agent", "")[:250]
+
+        pv = models.PageView(
+            path=payload.path[:250],
+            page_name=payload.page_name[:95] if payload.page_name else None,
+            user_id=user_id,
+            ip_address=ip,
+            user_agent=ua,
+            created_at=datetime.utcnow()
+        )
+        db.add(pv)
+        db.commit()
+    except Exception as e:
+        logger.debug(f"PageView log non-fatal: {e}")
+    return {"status": "ok"}
+
 
