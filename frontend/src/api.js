@@ -501,6 +501,13 @@ export async function adminDeleteUser(userId) {
   });
 }
 
+export async function adminChangePassword({ current_password, new_password }) {
+  return request('/api/admin/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password })
+  });
+}
+
 export async function adminGetCollectorStats() {
   return request('/api/admin/collector/stats');
 }

@@ -251,6 +251,41 @@ def delete_user_account(
     return {"message": f"User {email_deleted} has been permanently deleted", "success": True}
 
 
+class AdminPasswordChangePayload(schemas.BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+def change_admin_password(
+    payload: AdminPasswordChangePayload,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin)
+):
+    """
+    Securely updates the root administrator account password.
+    Requires current password verification and a minimum 8-character new password.
+    """
+    from app.auth import verify_password, get_password_hash
+
+    if not verify_password(payload.current_password, admin.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password verification failed. Please check your existing password."
+        )
+
+    new_pw = payload.new_password.strip()
+    if len(new_pw) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 8 characters long."
+        )
+
+    admin.hashed_password = get_password_hash(new_pw)
+    db.commit()
+    return {"message": "Admin password has been securely updated!", "success": True}
+
+
 # ─────────────────────────────────────────────────────────────
 # 3. Job Collector Ingestion Analytics (1h, 24h, 7d, 30d)
 # ─────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import {
   adminGetUserStats,
   adminUpdateUserRole,
   adminDeleteUser,
+  adminChangePassword,
   adminGetCollectorStats,
   adminTriggerCollector,
   adminGetPageAnalytics,
@@ -41,6 +42,15 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionMessage, setActionMessage] = useState('')
+
+  // Password Change Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [currentPw, setCurrentPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwError, setPwError] = useState('')
+  const [pwSuccess, setPwSuccess] = useState('')
+  const [changingPw, setChangingPw] = useState(false)
 
   // 1. Overview Summary Data
   const [summary, setSummary] = useState(null)
@@ -203,6 +213,36 @@ export default function AdminPanel() {
     }
   }
 
+  async function handleChangePasswordSubmit(e) {
+    e.preventDefault()
+    setPwError('')
+    setPwSuccess('')
+    if (newPw.length < 8) {
+      setPwError('New password must be at least 8 characters long')
+      return
+    }
+    if (newPw !== confirmPw) {
+      setPwError('New password and confirmation do not match')
+      return
+    }
+    setChangingPw(true)
+    try {
+      const res = await adminChangePassword({ current_password: currentPw, new_password: newPw })
+      setPwSuccess(res?.message || 'Password updated successfully!')
+      setCurrentPw('')
+      setNewPw('')
+      setConfirmPw('')
+      setTimeout(() => {
+        setShowPasswordModal(false)
+        setPwSuccess('')
+      }, 2000)
+    } catch (err) {
+      setPwError(err?.message || 'Failed to update password')
+    } finally {
+      setChangingPw(false)
+    }
+  }
+
   function exportUsersToCSV() {
     if (!usersList.length) return
     const headers = ['ID', 'Full Name', 'Email', 'Role', 'Verified', 'Created At', 'Applications', 'Resumes', 'Feedback']
@@ -270,6 +310,13 @@ export default function AdminPanel() {
           </div>
 
           <div className="flex items-center gap-sm">
+            <button
+              onClick={() => { setShowPasswordModal(true); setPwError(''); setPwSuccess(''); }}
+              className="px-md py-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-semibold font-[Geist] transition-all flex items-center gap-1.5 border border-outline-variant"
+            >
+              <span className="material-symbols-outlined text-[16px]">lock_reset</span>
+              Change Password
+            </button>
             <button
               onClick={loadInitialData}
               disabled={loading}
@@ -910,7 +957,102 @@ export default function AdminPanel() {
         </div>
       )}
 
+      {/* ═══════════════ CHANGE ADMIN PASSWORD MODAL ═══════════════ */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-md">
+          <div className="bg-surface rounded-2xl p-lg max-w-md w-full border border-outline-variant space-y-md animate-fade-in-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">shield_lock</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-on-surface">Change Admin Password</h3>
+                  <p className="text-xs text-on-surface-variant font-[Geist]">Update your root administrator credentials</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="p-1 text-on-surface-variant hover:text-on-surface rounded-lg"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+
+            {pwError && (
+              <div className="p-sm px-md rounded-xl bg-error/15 border border-error/30 text-error text-xs font-semibold font-[Geist]">
+                {pwError}
+              </div>
+            )}
+
+            {pwSuccess && (
+              <div className="p-sm px-md rounded-xl bg-success/15 border border-success/30 text-success text-xs font-semibold font-[Geist] flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                {pwSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePasswordSubmit} className="space-y-sm">
+              <div>
+                <label className="text-[11px] font-bold text-on-surface font-[Geist]">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPw}
+                  onChange={e => setCurrentPw(e.target.value)}
+                  required
+                  placeholder="Enter current admin password"
+                  className="w-full mt-1 px-md py-sm bg-surface-container rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 font-[Geist]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-on-surface font-[Geist]">New Password (min 8 chars)</label>
+                <input
+                  type="password"
+                  value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  required
+                  placeholder="Enter new strong password"
+                  className="w-full mt-1 px-md py-sm bg-surface-container rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 font-[Geist]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-on-surface font-[Geist]">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPw}
+                  onChange={e => setConfirmPw(e.target.value)}
+                  required
+                  placeholder="Re-enter new password"
+                  className="w-full mt-1 px-md py-sm bg-surface-container rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 font-[Geist]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-sm pt-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="px-md py-sm bg-surface-container text-on-surface rounded-xl text-xs font-semibold font-[Geist]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPw}
+                  className="px-md py-sm bg-primary text-on-primary rounded-xl text-xs font-bold font-[Geist] disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {changingPw && <span className="material-symbols-outlined text-xs animate-spin">progress_activity</span>}
+                  {changingPw ? 'Saving...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
+
 

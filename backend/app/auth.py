@@ -69,9 +69,9 @@ def get_user_by_email(db: Session, email: str):
 
 def ensure_admin_user(db: Session):
     """
-    Guarantees the existence and up-to-date credentials for the system admin:
+    Guarantees the existence and permissions for the system admin:
     Username/Email: careerlensadmin / careerlensadmin@careerlens.ai
-    Password: controler_at_careerlens17tj
+    Default initial password: controler_at_careerlens17tj (preserves custom changed passwords)
     Role: admin
     """
     admin_pass = "controler_at_careerlens17tj"
@@ -94,7 +94,7 @@ def ensure_admin_user(db: Session):
     else:
         admin.role = "admin"
         admin.is_verified = True
-        if not verify_password(admin_pass, admin.hashed_password):
+        if not admin.hashed_password:
             admin.hashed_password = get_password_hash(admin_pass)
         db.commit()
     return admin
