@@ -97,6 +97,15 @@ def ensure_admin_user(db: Session):
         if not admin.hashed_password:
             admin.hashed_password = get_password_hash(admin_pass)
         db.commit()
+
+    # Guarantee owner account is marked as admin & verified
+    tanmesh = db.query(models.User).filter(func.lower(models.User.email) == "tanmeshj17@gmail.com").first()
+    if tanmesh:
+        if tanmesh.role != "admin" or not tanmesh.is_verified:
+            tanmesh.role = "admin"
+            tanmesh.is_verified = True
+            db.commit()
+
     return admin
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
