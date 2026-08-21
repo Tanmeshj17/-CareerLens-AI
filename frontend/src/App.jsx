@@ -71,7 +71,27 @@ export default function App() {
     const API_BASE = (import.meta.env.VITE_API_URL || 'https://careerlens-api-f74a.onrender.com').replace(/\/$/, '')
     const pingBackend = () => fetch(`${API_BASE}/health`, { method: 'GET' }).catch(() => {})
     pingBackend() // immediate ping on page load
-    const pingInterval = setInterval(pingBackend, 10 * 60 * 1000) // every 10 min
+    const pingInterval = setInterval(pingBackend, 5 * 60 * 1000) // ping every 5 min to prevent cold starts
+
+    // ── Idle prefetch for core lazy routes to make page transitions instantaneous ──
+    const prefetchIdle = () => {
+      const routesToPrefetch = [
+        () => import('./pages/Dashboard'),
+        () => import('./pages/OpportunitiesHub'),
+        () => import('./pages/ResumeAnalysis'),
+        () => import('./pages/LearnSkills'),
+        () => import('./pages/ApplicationTracker'),
+        () => import('./pages/Profile'),
+      ]
+      routesToPrefetch.forEach(importer => {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(() => importer().catch(() => {}))
+        } else {
+          setTimeout(() => importer().catch(() => {}), 1500)
+        }
+      })
+    }
+    prefetchIdle()
 
     const handleUnauthorized = () => {
       if (isMounted) {

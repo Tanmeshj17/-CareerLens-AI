@@ -9,3 +9,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </BrowserRouter>
 )
+
+// Gracefully fade out and remove the HTML pre-loader
+const preloader = document.getElementById('app-loading')
+if (preloader) {
+  preloader.style.opacity = '0'
+  setTimeout(() => preloader.remove(), 300)
+}
+
