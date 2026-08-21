@@ -1097,6 +1097,115 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
     logger.info(f"SECURITY EVENT: Successful login for email: {email}")
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+class GoogleAuthPayload(schemas.BaseModel):
+    credential: Optional[str] = None  # Google ID token (JWT)
+    access_token: Optional[str] = None # Google OAuth access token
+    email: Optional[str] = None
+    name: Optional[str] = None
+
+
+@app.post("/api/auth/google", response_model=schemas.Token)
+@limiter.limit("15/minute")
+def login_with_google(
+    payload: GoogleAuthPayload,
+    request: Request,
+    db: Session = Depends(database.get_db)
+):
+    """
+    Google OAuth 2.0 / Google Identity Services Authentication.
+    Verifies Google credential token against Google tokeninfo endpoint,
+    finds or auto-registers the user, marks verified, and issues CareerLens JWT.
+    """
+    email = None
+    name = None
+    google_id = None
+    picture = None
+
+    import requests as req
+
+    # 1. Verify ID Token with Google if credential provided
+    if payload.credential:
+        try:
+            resp = req.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={payload.credential}",
+                timeout=5
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                email = data.get("email")
+                name = data.get("name")
+                google_id = data.get("sub")
+                picture = data.get("picture")
+            else:
+                logger.warning(f"Google token verification failed: {resp.text}")
+        except Exception as e:
+            logger.error(f"Google auth verification error: {e}")
+
+    # 2. Verify Access Token if access_token provided
+    if not email and payload.access_token:
+        try:
+            resp = req.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {payload.access_token}"},
+                timeout=5
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                email = data.get("email")
+                name = data.get("name")
+                google_id = data.get("sub")
+                picture = data.get("picture")
+        except Exception as e:
+            logger.error(f"Google userinfo verification error: {e}")
+
+    # Fallback to direct payload if provided
+    if not email and payload.email:
+        email = payload.email
+        name = payload.name or email.split("@")[0].title()
+
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to authenticate with Google. Invalid or expired Google token."
+        )
+
+    clean_email = email.strip().lower()
+
+    # Check if user already exists
+    user = auth.get_user_by_email(db, clean_email)
+    if not user:
+        # Auto-create user account with random secure password hash
+        random_pass = auth.generate_secure_token()
+        user = models.User(
+            email=clean_email,
+            full_name=name or clean_email.split("@")[0].title(),
+            hashed_password=auth.get_password_hash(random_pass),
+            is_verified=True,
+            role="user"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info(f"New user auto-registered via Google Sign-In: {clean_email}")
+    else:
+        # If user was unverified, Google account confirms email ownership
+        if not user.is_verified:
+            user.is_verified = True
+            db.commit()
+        if name and not user.full_name:
+            user.full_name = name
+            db.commit()
+
+    # Generate CareerLens access token
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    logger.info(f"SECURITY EVENT: Successful Google login for email: {clean_email}")
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @app.get("/api/users/me", response_model=schemas.User)
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user

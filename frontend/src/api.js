@@ -156,6 +156,24 @@ export async function loginUser(email, password) {
   return data;
 }
 
+export async function loginWithGoogle({ credential, access_token, email, name } = {}) {
+  const res = await fetch(`${API_BASE}/api/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential, access_token, email, name }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Google sign-in failed');
+  }
+
+  const data = await res.json();
+  _cache.clear();
+  setToken(data.access_token);
+  return data;
+}
+
 export function logoutUser() {
   clearToken(); // clearToken already clears the cache
 }

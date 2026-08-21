@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../App'
 import { loginUser, getCurrentUser, resendVerificationEmail } from '../api'
 import CareerLensLogo from '../components/CareerLensLogo'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 /* ─── Floating label input ─────────────────────────────────────────────── */
 function FloatingInput({ id, label, type = 'text', value, onChange, required, rightEl }) {
@@ -137,6 +138,25 @@ export default function Login() {
               )}
             </div>
           )}
+
+          {/* Continue with Google */}
+          <div className="mb-4">
+            <GoogleSignInButton
+              text="Continue with Google"
+              onSuccess={(user) => {
+                login(user)
+              }}
+              onError={(err) => setErrorMsg(err)}
+            />
+          </div>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 font-[Geist]">
+              or sign in with email
+            </span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <FloatingInput
