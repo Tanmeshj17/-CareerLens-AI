@@ -342,9 +342,9 @@ export default function AdminPanel() {
           {/* Total Registered Users */}
           <div className="p-md sm:p-lg rounded-2xl bg-surface-container-low border border-outline-variant/70 relative overflow-hidden">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Total Users</span>
+              <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Registered Accounts</span>
               <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg">group</span>
+                <span className="material-symbols-outlined text-lg">how_to_reg</span>
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-on-surface mt-sm">
@@ -352,7 +352,7 @@ export default function AdminPanel() {
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-[Geist] text-success mt-xs font-medium">
               <span className="material-symbols-outlined text-[14px]">verified</span>
-              <span>{summary.users?.verified || 0} Verified ({summary.users?.verification_rate || 100}%)</span>
+              <span>{summary.users?.verified || 0} Verified Accounts ({summary.users?.verification_rate || 100}%)</span>
             </div>
           </div>
 
