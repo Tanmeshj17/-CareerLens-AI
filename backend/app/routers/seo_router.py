@@ -264,19 +264,33 @@ COMPANY_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
             {"slug": "remote-india", "label": "Remote India"}
         ]
     },
-    "google": {
-        "company_name": "Google",
-        "search_pattern": "%Google%",
-        "h1": "Google Careers & Job Openings",
-        "description": "Browse active technology job openings and internships at Google. Explore software engineering, cloud, and AI development roles.",
+    "okta": {
+        "company_name": "Okta",
+        "search_pattern": "%Okta%",
+        "h1": "Okta Careers & Engineering Job Openings",
+        "description": "Explore current engineering vacancies and cloud security roles at Okta. Discover active software engineering, IAM, and infrastructure opportunities.",
         "related_roles": [
             {"slug": "software-engineer", "label": "Software Engineer"},
-            {"slug": "machine-learning", "label": "Machine Learning"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
             {"slug": "devops-engineer", "label": "DevOps Engineer"}
         ],
         "related_locations": [
             {"slug": "bengaluru", "label": "Bengaluru"},
-            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "remote-india", "label": "Remote India"}
+        ]
+    },
+    "stripe": {
+        "company_name": "Stripe",
+        "search_pattern": "%Stripe%",
+        "h1": "Stripe Careers & Engineering Job Openings",
+        "description": "Browse active engineering openings and developer opportunities at Stripe. Discover current software development, payments infrastructure, and backend roles.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "full-stack-developer", "label": "Full Stack Developer"}
+        ],
+        "related_locations": [
+            {"slug": "bengaluru", "label": "Bengaluru"},
             {"slug": "remote-india", "label": "Remote India"}
         ]
     },
