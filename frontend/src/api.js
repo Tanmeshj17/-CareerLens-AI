@@ -574,6 +574,11 @@ export async function adminGetCollectorsHealth() {
   return request('/api/admin/collectors/health');
 }
 
+// ── Programmatic SEO API ──────────────────────────────────────
+export async function getRoleSeoData(slug) {
+  return request(`/api/seo/role/${slug}`);
+}
+
 // ── Utility Exports ───────────────────────────────────────────
 export { getToken, setToken, API_BASE };
 

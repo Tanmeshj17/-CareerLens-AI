@@ -17,7 +17,7 @@ from slowapi.errors import RateLimitExceeded
 from . import models, schemas, auth, database
 from .config_validator import validate_environment
 from .resume_parser import parse_resume
-from .routers import match_router, dashboard_router, data_intelligence_router, career_profile_router, skills_router, admin_router
+from .routers import match_router, dashboard_router, data_intelligence_router, career_profile_router, skills_router, admin_router, seo_router
 from .routers.history_router import router as history_router, dashboard_router as history_dash_router
 
 # Validate environment settings on startup
@@ -44,6 +44,7 @@ app.include_router(skills_router.router)
 app.include_router(history_router)
 app.include_router(history_dash_router)
 app.include_router(admin_router.router)
+app.include_router(seo_router.router)
 
 # Attach rate limiter to app
 app.state.limiter = limiter

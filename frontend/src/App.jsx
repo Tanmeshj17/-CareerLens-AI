@@ -26,6 +26,7 @@ const Feedback = React.lazy(() => import('./pages/Feedback'))
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'))
 const InsightsDashboard = React.lazy(() => import('./pages/InsightsDashboard'))
 const DataIntelligenceDashboard = React.lazy(() => import('./pages/DataIntelligenceDashboard'))
+const JobCategoryPage = React.lazy(() => import('./pages/JobCategoryPage'))
 
 export const AuthContext = createContext()
 
@@ -169,6 +170,9 @@ export default function App() {
             <Route path="insights" element={<InsightsDashboard />} />
             <Route path="data-intelligence" element={<DataIntelligenceDashboard />} />
           </Route>
+
+          {/* Public SEO Landing Pages — unauthenticated, indexable */}
+          <Route path="/jobs/role/:slug" element={<JobCategoryPage />} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
