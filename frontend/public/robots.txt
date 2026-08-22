@@ -1,0 +1,30 @@
+# Robots.txt for CareerLens AI
+User-agent: *
+Allow: /
+Allow: /app/opportunities
+Allow: /app/resume
+Allow: /app/learn
+Allow: /app/careers
+Allow: /app/resources
+Allow: /app/certifications
+Allow: /app/interview-prep
+Allow: /llms.txt
+Disallow: /app/admin
+
+# AI Search Crawlers & Agents
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: https://career-lens-ai-wheat.vercel.app/sitemap.xml

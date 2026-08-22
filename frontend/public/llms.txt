@@ -1,0 +1,22 @@
+# CareerLens AI
+
+> CareerLens AI is an AI-powered career intelligence and job search acceleration platform. It provides high-precision ATS resume analysis, real-time verified job aggregation across 500+ top tech companies, skill gap diagnostic roadmaps, structured interview prep, and end-to-end application tracking.
+
+CareerLens AI helps software engineers, data scientists, product managers, and early-career professionals identify matching job opportunities, optimize their resumes for Applicant Tracking Systems (ATS), and navigate structured career growth.
+
+## Core Platform Resources
+
+- [CareerLens AI Home](https://career-lens-ai-wheat.vercel.app/): AI-driven career acceleration platform overview, live features, and platform capabilities.
+- [Opportunities Hub](https://career-lens-ai-wheat.vercel.app/app/opportunities): Real-time verified job listings with multi-source aggregation, salary insights, experience filtering, and direct application links.
+- [ATS Resume Analyzer](https://career-lens-ai-wheat.vercel.app/app/resume): Instant AI resume parser and scoring engine. Provides ATS compatibility scoring, keyword matching against job descriptions, and actionable bullet-point rewrite suggestions.
+- [Learn Skills & Roadmaps](https://career-lens-ai-wheat.vercel.app/app/learn): Structured career roadmaps for Software Engineering, AI/ML, DevOps, and Product Management with curated free learning resources.
+- [Career Explorer](https://career-lens-ai-wheat.vercel.app/app/careers): Role exploration engine with salary benchmarks, required technical skills, and market demand analytics.
+- [Application Tracker](https://career-lens-ai-wheat.vercel.app/app/tracker): Kanban-style application management tool with status tracking, interview dates, and offer negotiations.
+- [Interview Preparation](https://career-lens-ai-wheat.vercel.app/app/interview-prep): Curated technical and behavioral interview question bank with AI-assisted response structuring.
+- [Free Learning Resources](https://career-lens-ai-wheat.vercel.app/app/resources): Handpicked free developer cheat sheets, system design primers, and open-source learning repositories.
+
+## Optional & Community Resources
+
+- [User Registration](https://career-lens-ai-wheat.vercel.app/register): Create a free CareerLens AI account to track applications and save resume analyses.
+- [Platform Login](https://career-lens-ai-wheat.vercel.app/login): Sign in with email or Continue with Google.
+- [Platform Feedback](https://career-lens-ai-wheat.vercel.app/app/feedback): Submit feature requests, bug reports, and user feedback directly to the engineering team.
