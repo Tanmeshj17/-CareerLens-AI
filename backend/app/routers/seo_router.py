@@ -10,8 +10,12 @@ from sqlalchemy import func, or_, text
 from datetime import datetime
 import re
 
-from app.database import get_db
-from app import models
+try:
+    from app import models, database
+    from app.database import get_db
+except ImportError:
+    from .. import models, database
+    from ..database import get_db
 
 router = APIRouter(prefix="/api/seo", tags=["Programmatic SEO"])
 
