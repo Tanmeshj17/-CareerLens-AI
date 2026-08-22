@@ -572,20 +572,6 @@ def get_company_seo_data(slug: str, db: Session = Depends(get_db)):
     )
 
 
-# ── Unified Generic Endpoint for Frontend Convenience ─────────
-@router.get("/{category_type}/{slug}")
-def get_generic_seo_data(category_type: str, slug: str, db: Session = Depends(get_db)):
-    cat = category_type.strip().lower()
-    if cat == "role":
-        return get_role_seo_data(slug, db)
-    elif cat == "location":
-        return get_location_seo_data(slug, db)
-    elif cat == "company":
-        return get_company_seo_data(slug, db)
-    else:
-        raise HTTPException(status_code=404, detail="Invalid SEO category type")
-
-
 # ── Dynamic XML Sitemap Endpoint ──────────────────────────────
 @router.get("/sitemap.xml", response_class=Response)
 def get_dynamic_sitemap(db: Session = Depends(get_db)):
@@ -677,3 +663,17 @@ def get_dynamic_sitemap(db: Session = Depends(get_db)):
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + '\n'.join(xml_entries) + '\n</urlset>'
 
     return Response(content=xml_content, media_type="application/xml")
+
+
+# ── Unified Generic Endpoint for Frontend Convenience ─────────
+@router.get("/{category_type}/{slug}")
+def get_generic_seo_data(category_type: str, slug: str, db: Session = Depends(get_db)):
+    cat = category_type.strip().lower()
+    if cat == "role":
+        return get_role_seo_data(slug, db)
+    elif cat == "location":
+        return get_location_seo_data(slug, db)
+    elif cat == "company":
+        return get_company_seo_data(slug, db)
+    else:
+        raise HTTPException(status_code=404, detail="Invalid SEO category type")
