@@ -22,6 +22,10 @@ const accountItems = [
   { icon: 'notifications', label: 'Notifications', path: '/app/notifications' },
   { icon: 'account_circle', label: 'Profile', path: '/app/profile' },
   { icon: 'rate_review', label: 'Feedback', path: '/app/feedback' },
+]
+
+// Admin-only items — kept completely separate so they never leak into accountItems
+const adminItems = [
   { icon: 'admin_panel_settings', label: 'Admin Panel', path: '/app/admin' },
 ]
 
@@ -104,25 +108,49 @@ export default function DashboardLayout() {
           </div>
 
           <div className="space-y-xs">
-            {accountItems
-              .filter(item => item.path !== '/app/admin' || user?.role === 'admin')
-              .map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-md py-sm px-md transition-all text-sm font-medium rounded-lg ${
-                      isActive
-                        ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-semibold'
-                        : 'text-on-surface-variant hover:bg-surface-container'
-                    }`
-                  }
-                >
-                  <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                  <span className="font-[Geist]">{item.label}</span>
-                </NavLink>
-              ))}
+            {accountItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-md py-sm px-md transition-all text-sm font-medium rounded-lg ${
+                    isActive
+                      ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-semibold'
+                      : 'text-on-surface-variant hover:bg-surface-container'
+                  }`
+                }
+              >
+                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                <span className="font-[Geist]">{item.label}</span>
+              </NavLink>
+            ))}
+
+            {/* Admin-only section — completely invisible to regular users */}
+            {user?.role === 'admin' && (
+              <>
+                <div className="pt-sm pb-xs px-md">
+                  <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest font-[Geist]">Admin</span>
+                </div>
+                {adminItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-md py-sm px-md transition-all text-sm font-medium rounded-lg ${
+                        isActive
+                          ? 'bg-primary/10 text-primary border-l-4 border-primary font-semibold'
+                          : 'text-primary/70 hover:bg-primary/5'
+                      }`
+                    }
+                  >
+                    <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                    <span className="font-[Geist]">{item.label}</span>
+                  </NavLink>
+                ))}
+              </>
+            )}
           </div>
         </nav>
 

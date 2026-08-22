@@ -165,7 +165,7 @@ export default function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="profile" element={<Profile />} />
             <Route path="feedback" element={<Feedback />} />
-            <Route path="admin" element={<AdminPanel />} />
+            <Route path="admin" element={user?.role === 'admin' ? <AdminPanel /> : <Navigate to="/app" replace />} />
             <Route path="insights" element={<InsightsDashboard />} />
             <Route path="data-intelligence" element={<DataIntelligenceDashboard />} />
           </Route>
