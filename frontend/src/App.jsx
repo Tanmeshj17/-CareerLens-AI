@@ -172,7 +172,10 @@ export default function App() {
           </Route>
 
           {/* Public SEO Landing Pages — unauthenticated, indexable */}
+          <Route path="/jobs/:categoryType/:slug" element={<JobCategoryPage />} />
           <Route path="/jobs/role/:slug" element={<JobCategoryPage />} />
+          <Route path="/jobs/location/:slug" element={<JobCategoryPage />} />
+          <Route path="/jobs/company/:slug" element={<JobCategoryPage />} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

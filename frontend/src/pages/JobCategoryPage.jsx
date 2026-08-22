@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { getRoleSeoData } from '../api'
+import { useParams, Link, useLocation } from 'react-router-dom'
+import { getCategorySeoData } from '../api'
 import CareerLensLogo from '../components/CareerLensLogo'
 import Footer from '../components/Footer'
 
 export default function JobCategoryPage() {
-  const { slug } = useParams()
-  const currentSlug = slug || 'software-engineer'
+  const params = useParams()
+  const location = useLocation()
+
+  // Determine categoryType and slug from URL path or params
+  const categoryType = params.categoryType || (
+    location.pathname.includes('/jobs/location/') ? 'location' :
+    location.pathname.includes('/jobs/company/') ? 'company' : 'role'
+  )
+  const currentSlug = params.slug || 'software-engineer'
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -18,7 +25,7 @@ export default function JobCategoryPage() {
     setLoading(true)
     setError(null)
 
-    getRoleSeoData(currentSlug)
+    getCategorySeoData(categoryType, currentSlug)
       .then((res) => {
         if (!isMounted) return
         setData(res)
@@ -65,7 +72,7 @@ export default function JobCategoryPage() {
     return () => {
       isMounted = false
     }
-  }, [currentSlug])
+  }, [categoryType, currentSlug])
 
   // Filter opportunities client-side for immediate responsive UX
   const filteredOpportunities = React.useMemo(() => {
@@ -113,7 +120,7 @@ export default function JobCategoryPage() {
           <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
             <div className="w-12 h-12 border-4 border-[#0050cb] border-t-transparent rounded-full animate-spin" />
             <p className="text-xs text-slate-500 font-medium font-[Geist]">
-              Loading verified {currentSlug.replace('-', ' ')} opportunities...
+              Loading active {currentSlug.replace(/-/g, ' ')} opportunities...
             </p>
           </div>
         ) : error ? (
@@ -123,14 +130,14 @@ export default function JobCategoryPage() {
             </div>
             <h2 className="text-xl font-bold text-slate-800">No Active Category Found</h2>
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-[Geist]">
-              This category does not currently have enough active verified job openings to meet our indexation threshold.
+              This category does not currently have enough active job openings to meet our indexation threshold.
             </p>
             <div className="pt-2">
               <Link
                 to="/app/opportunities"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#0050cb] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#003fa0] transition-all"
               >
-                Browse All 9,800+ Live Jobs
+                Browse All Live Jobs
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </Link>
             </div>
@@ -143,6 +150,8 @@ export default function JobCategoryPage() {
               <span>/</span>
               <Link to="/app/opportunities" className="hover:text-slate-600 transition-colors">Jobs</Link>
               <span>/</span>
+              <span className="capitalize">{categoryType}</span>
+              <span>/</span>
               <span className="text-slate-700 font-semibold">{data.role_name}</span>
             </nav>
 
@@ -153,7 +162,7 @@ export default function JobCategoryPage() {
               <div className="relative max-w-3xl space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#0050cb] text-[11px] font-bold tracking-wide uppercase font-[Geist]">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Verified Hiring Demand
+                  Live Hiring Demand
                 </div>
 
                 <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -173,7 +182,7 @@ export default function JobCategoryPage() {
                     </strong>
                   </div>
                   <div>
-                    <span className="text-slate-400">Hiring Employers: </span>
+                    <span className="text-slate-400">Top Employers: </span>
                     <strong className="text-slate-800 text-sm font-bold">
                       {data.top_companies?.length ? `${data.top_companies.length}+ Companies` : 'Multiple'}
                     </strong>
@@ -238,10 +247,10 @@ export default function JobCategoryPage() {
                           </div>
                         </div>
 
-                        {opp.trust_score && (
+                        {opp.trust_score && opp.trust_score >= 80 && (
                           <div
                             className="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold font-[Geist] flex items-center gap-1"
-                            title="Verified Opportunity Trust Score"
+                            title="Opportunity Score"
                           >
                             <span className="material-symbols-outlined text-[14px]">verified</span>
                             <span>{opp.trust_score}% Trust</span>
@@ -291,7 +300,7 @@ export default function JobCategoryPage() {
                   </p>
                   <div className="pt-2">
                     <Link
-                      to={`/app/opportunities?role=${encodeURIComponent(data.role_name)}`}
+                      to={`/app/opportunities?search=${encodeURIComponent(data.role_name)}`}
                       className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0050cb] text-white rounded-xl text-xs font-bold shadow-sm hover:bg-[#003fa0] transition-all"
                     >
                       Open Full Search Filters
@@ -309,7 +318,7 @@ export default function JobCategoryPage() {
                     <span className="material-symbols-outlined text-xl">description</span>
                   </div>
                   <h3 className="text-base font-bold text-slate-800">
-                    Applying to {data.role_name} roles?
+                    Applying to {data.role_name}?
                   </h3>
                   <p className="text-xs text-slate-500 leading-relaxed font-[Geist]">
                     Scan your resume against real {data.role_name} job descriptions to test ATS keyword match and formatting before applying.
@@ -335,6 +344,25 @@ export default function JobCategoryPage() {
                           <span className="font-semibold text-slate-700">{comp.name}</span>
                           <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                             {comp.count} jobs
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Top Locations (for Role/Company pages) */}
+                {data.top_locations?.length > 0 && categoryType !== 'location' && (
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-[Geist]">
+                      Top Job Locations
+                    </h3>
+                    <div className="space-y-2">
+                      {data.top_locations.map((loc, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-slate-700">{loc.name}</span>
+                          <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {loc.count} jobs
                           </span>
                         </div>
                       ))}
@@ -375,6 +403,28 @@ export default function JobCategoryPage() {
                             className="text-xs font-semibold text-[#0050cb] hover:underline flex items-center justify-between"
                           >
                             <span>{rel.label} Jobs</span>
+                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Related Qualified Locations (Internal SEO Mesh) */}
+                {data.related_locations?.length > 0 && (
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-[Geist]">
+                      Explore Top Locations
+                    </h3>
+                    <ul className="space-y-2">
+                      {data.related_locations.map((loc) => (
+                        <li key={loc.slug}>
+                          <Link
+                            to={`/jobs/location/${loc.slug}`}
+                            className="text-xs font-semibold text-[#0050cb] hover:underline flex items-center justify-between"
+                          >
+                            <span>Jobs in {loc.label}</span>
                             <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                           </Link>
                         </li>

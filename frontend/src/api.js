@@ -575,6 +575,10 @@ export async function adminGetCollectorsHealth() {
 }
 
 // ── Programmatic SEO API ──────────────────────────────────────
+export async function getCategorySeoData(categoryType = 'role', slug = 'software-engineer') {
+  return request(`/api/seo/${categoryType}/${slug}`);
+}
+
 export async function getRoleSeoData(slug) {
   return request(`/api/seo/role/${slug}`);
 }

@@ -1,14 +1,13 @@
 """
-CareerLens AI — Programmatic SEO Router
-Provides dynamic, aggregation-driven metadata, category statistics,
-and database-generated XML sitemaps strictly for high-density, verified opportunities.
+CareerLens AI — Programmatic SEO Router (Phase 3 Controlled Expansion)
+Provides dynamic, database-driven metadata, category statistics,
+and automated XML sitemaps strictly for high-density, qualified opportunities.
 """
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, text
 from datetime import datetime
-import re
 
 try:
     from app import models, database
@@ -20,37 +19,36 @@ except ImportError:
 router = APIRouter(prefix="/api/seo", tags=["Programmatic SEO"])
 
 # ── Global SEO Minimum Threshold ──────────────────────────────
-# Configurable minimum number of active listings required for a category to be indexed / served
+# Minimum number of active listings required for a category to be indexed / served
 SEO_MIN_ACTIVE_LISTINGS = 5
 
-# Canonical Supported Slugs & Configurations (Mapped to verified database patterns)
+# ── 1. Qualified Roles Configuration ──────────────────────────
 ROLE_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
     "software-engineer": {
         "title_name": "Software Engineer",
         "search_pattern": "%Software Engineer%",
-        "h1": "Software Engineer Jobs & Internships",
-        "description": "Explore verified Software Engineering job openings and internships. Discover current vacancies, top hiring companies, experience requirements, and direct application links across India and Remote.",
+        "h1": "Software Engineer Job Openings & Internships",
+        "description": "Explore active Software Engineering job openings and internships. Discover current vacancies, hiring employers, experience requirements, and direct application links across India and Remote.",
         "skills": ["Data Structures", "Algorithms", "Python", "Java", "C++", "System Design", "Git", "REST APIs"],
         "related_roles": [
             {"slug": "backend-developer", "label": "Backend Developer"},
             {"slug": "full-stack-developer", "label": "Full Stack Developer"},
             {"slug": "frontend-developer", "label": "Frontend Developer"},
-            {"slug": "product-manager", "label": "Product Manager"},
             {"slug": "devops-engineer", "label": "DevOps Engineer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
-            {"slug": "noida", "label": "Noida"},
             {"slug": "pune", "label": "Pune"},
-            {"slug": "hyderabad", "label": "Hyderabad"}
+            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "noida", "label": "Noida"}
         ]
     },
     "backend-developer": {
         "title_name": "Backend Developer",
         "search_pattern": "%Backend%",
-        "h1": "Backend Developer Jobs & Openings",
-        "description": "Find active Backend Engineering roles across top technology employers. Browse verified server-side, distributed systems, and API engineering vacancies.",
+        "h1": "Backend Developer Job Openings",
+        "description": "Find active Backend Engineering roles across top technology employers. Browse current server-side, distributed systems, and API engineering vacancies.",
         "skills": ["Node.js", "Python", "Java", "Go", "PostgreSQL", "MongoDB", "Redis", "Microservices", "Docker"],
         "related_roles": [
             {"slug": "software-engineer", "label": "Software Engineer"},
@@ -58,16 +56,17 @@ ROLE_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
             {"slug": "devops-engineer", "label": "DevOps Engineer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "pune", "label": "Pune"},
             {"slug": "hyderabad", "label": "Hyderabad"}
         ]
     },
     "full-stack-developer": {
         "title_name": "Full Stack Developer",
         "search_pattern": "%Full Stack%",
-        "h1": "Full Stack Developer Jobs & Openings",
-        "description": "Browse active Full Stack Developer positions. Explore opportunities spanning modern frontend frameworks and scalable backend architectures.",
+        "h1": "Full Stack Developer Job Openings",
+        "description": "Browse active Full Stack Developer positions. Explore current opportunities spanning modern frontend frameworks and scalable backend architectures.",
         "skills": ["React", "TypeScript", "Node.js", "Python", "PostgreSQL", "REST APIs", "AWS", "Docker"],
         "related_roles": [
             {"slug": "software-engineer", "label": "Software Engineer"},
@@ -75,7 +74,7 @@ ROLE_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
             {"slug": "backend-developer", "label": "Backend Developer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
             {"slug": "pune", "label": "Pune"}
         ]
@@ -83,146 +82,236 @@ ROLE_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
     "frontend-developer": {
         "title_name": "Frontend Developer",
         "search_pattern": "%Frontend%",
-        "h1": "Frontend Developer Jobs & Openings",
-        "description": "Discover verified Frontend Engineering vacancies. Compare UI/UX engineering, React, TypeScript, and modern web application opportunities.",
+        "h1": "Frontend Developer Job Openings",
+        "description": "Discover current Frontend Engineering vacancies. Compare UI/UX engineering, React, TypeScript, and modern web application opportunities.",
         "skills": ["React", "JavaScript", "TypeScript", "HTML5", "CSS3", "Tailwind CSS", "Next.js", "Redux"],
         "related_roles": [
             {"slug": "full-stack-developer", "label": "Full Stack Developer"},
             {"slug": "software-engineer", "label": "Software Engineer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
-            {"slug": "bengaluru", "label": "Bengaluru"}
-        ]
-    },
-    "product-manager": {
-        "title_name": "Product Manager",
-        "search_pattern": "%Product Manager%",
-        "h1": "Product Manager Jobs & Openings",
-        "description": "Explore verified Product Management openings. Discover Associate PM, Technical PM, and Senior Product Manager roles at leading tech companies.",
-        "skills": ["Product Strategy", "Roadmapping", "Agile", "User Research", "Data Analytics", "SQL", "A/B Testing"],
-        "related_roles": [
-            {"slug": "software-engineer", "label": "Software Engineer"},
-            {"slug": "data-analyst", "label": "Data Analyst"}
-        ],
-        "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
-            {"slug": "mumbai", "label": "Mumbai"}
+            {"slug": "noida", "label": "Noida"}
         ]
     },
     "data-analyst": {
         "title_name": "Data Analyst",
         "search_pattern": "%Data Analyst%",
         "h1": "Data Analyst Jobs & Internships",
-        "description": "Find verified Data Analytics jobs and internships. Browse openings requiring SQL, Python, business intelligence tools, and data visualization.",
+        "description": "Find active Data Analytics jobs and internships. Browse current openings requiring SQL, Python, business intelligence tools, and data modeling.",
         "skills": ["SQL", "Python", "Tableau", "Power BI", "Excel", "Data Modeling", "Statistics"],
         "related_roles": [
-            {"slug": "data-scientist", "label": "Data Scientist"},
+            {"slug": "machine-learning", "label": "Machine Learning Engineer"},
             {"slug": "software-engineer", "label": "Software Engineer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
             {"slug": "noida", "label": "Noida"}
-        ]
-    },
-    "data-scientist": {
-        "title_name": "Data Scientist",
-        "search_pattern": "%Data Scientist%",
-        "h1": "Data Scientist Jobs & Openings",
-        "description": "Explore verified Data Science and Machine Learning roles. Discover career opportunities in statistical modeling, predictive analytics, and AI.",
-        "skills": ["Python", "Machine Learning", "R", "SQL", "TensorFlow", "PyTorch", "Pandas", "Statistics"],
-        "related_roles": [
-            {"slug": "machine-learning", "label": "Machine Learning Engineer"},
-            {"slug": "data-analyst", "label": "Data Analyst"}
-        ],
-        "related_locations": [
-            {"slug": "remote", "label": "Remote"},
-            {"slug": "bengaluru", "label": "Bengaluru"}
         ]
     },
     "machine-learning": {
         "title_name": "Machine Learning Engineer",
         "search_pattern": "%Machine Learning%",
-        "h1": "Machine Learning Engineer Jobs",
-        "description": "Browse active Machine Learning, Deep Learning, and AI Engineer openings across innovative tech companies.",
+        "h1": "Machine Learning & AI Job Openings",
+        "description": "Browse active Machine Learning, Deep Learning, and AI Engineer openings across tech companies and AI laboratories.",
         "skills": ["Python", "PyTorch", "TensorFlow", "NLP", "Computer Vision", "LLMs", "MLOps", "Docker"],
         "related_roles": [
-            {"slug": "data-scientist", "label": "Data Scientist"},
-            {"slug": "software-engineer", "label": "Software Engineer"}
+            {"slug": "data-analyst", "label": "Data Analyst"},
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
-            {"slug": "bengaluru", "label": "Bengaluru"}
+            {"slug": "remote-india", "label": "Remote India"},
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "hyderabad", "label": "Hyderabad"}
         ]
     },
     "devops-engineer": {
         "title_name": "DevOps Engineer",
         "search_pattern": "%DevOps%",
         "h1": "DevOps & Cloud Infrastructure Jobs",
-        "description": "Discover verified DevOps, Site Reliability, and Cloud Infrastructure vacancies. Browse roles focused on CI/CD, Kubernetes, and AWS.",
+        "description": "Discover current DevOps, Site Reliability, and Cloud Infrastructure vacancies. Browse roles focused on CI/CD pipelines, Kubernetes, and cloud platforms.",
         "skills": ["Docker", "Kubernetes", "AWS", "CI/CD", "Linux", "Terraform", "GitHub Actions", "Python"],
         "related_roles": [
             {"slug": "software-engineer", "label": "Software Engineer"},
             {"slug": "backend-developer", "label": "Backend Developer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"},
             {"slug": "pune", "label": "Pune"}
         ]
-    },
-    "security-engineer": {
-        "title_name": "Security Engineer",
-        "search_pattern": "%Security Engineer%",
-        "h1": "Security Engineer Jobs & Openings",
-        "description": "Explore verified Cybersecurity, Application Security, and Cloud Security Engineer opportunities at top tech organizations.",
-        "skills": ["Application Security", "Penetration Testing", "Cloud Security", "Vulnerability Management", "Python", "Network Security"],
+    }
+}
+
+# ── 2. Qualified Locations Configuration ──────────────────────
+LOCATION_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
+    "remote-india": {
+        "location_name": "Remote (India)",
+        "search_pattern": "%Remote%",
+        "h1": "Remote Tech Jobs & Internships in India",
+        "description": "Discover active remote tech jobs and internships across India. Browse current software engineering, data, and developer roles with work-from-anywhere flexibility.",
         "related_roles": [
-            {"slug": "devops-engineer", "label": "DevOps Engineer"},
-            {"slug": "software-engineer", "label": "Software Engineer"}
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "full-stack-developer", "label": "Full Stack Developer"},
+            {"slug": "frontend-developer", "label": "Frontend Developer"}
         ],
         "related_locations": [
-            {"slug": "remote", "label": "Remote"},
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "pune", "label": "Pune"},
+            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "noida", "label": "Noida"}
+        ]
+    },
+    "bengaluru": {
+        "location_name": "Bengaluru",
+        "search_pattern": "%Bengaluru%",
+        "h1": "Tech Jobs & Internships in Bengaluru",
+        "description": "Explore current tech jobs and engineering vacancies in Bengaluru. Find software engineering, cloud, and product opportunities across leading technology companies in Bangalore.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "data-analyst", "label": "Data Analyst"},
+            {"slug": "machine-learning", "label": "Machine Learning"}
+        ],
+        "related_locations": [
+            {"slug": "remote-india", "label": "Remote India"},
+            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "pune", "label": "Pune"}
+        ]
+    },
+    "pune": {
+        "location_name": "Pune",
+        "search_pattern": "%Pune%",
+        "h1": "Tech Jobs & Engineering Openings in Pune",
+        "description": "Browse active software developer and engineering jobs in Pune, Maharashtra. Find current full-time openings and internships across top technology employers.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "full-stack-developer", "label": "Full Stack Developer"}
+        ],
+        "related_locations": [
+            {"slug": "remote-india", "label": "Remote India"},
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "mumbai", "label": "Mumbai"}
+        ]
+    },
+    "hyderabad": {
+        "location_name": "Hyderabad",
+        "search_pattern": "%Hyderabad%",
+        "h1": "Tech Jobs & Engineering Openings in Hyderabad",
+        "description": "Discover current technology and software development vacancies in Hyderabad. Explore opportunities across enterprise tech employers and fast-growing startups.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "machine-learning", "label": "Machine Learning"}
+        ],
+        "related_locations": [
+            {"slug": "remote-india", "label": "Remote India"},
+            {"slug": "bengaluru", "label": "Bengaluru"}
+        ]
+    },
+    "noida": {
+        "location_name": "Noida",
+        "search_pattern": "%Noida%",
+        "h1": "Tech Jobs & Engineering Openings in Noida (Delhi NCR)",
+        "description": "Explore active software engineering, IT, and data analytics job openings in Noida and Delhi NCR. Browse current vacancies with direct application links.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "frontend-developer", "label": "Frontend Developer"},
+            {"slug": "data-analyst", "label": "Data Analyst"}
+        ],
+        "related_locations": [
+            {"slug": "remote-india", "label": "Remote India"},
             {"slug": "bengaluru", "label": "Bengaluru"}
         ]
     }
 }
 
+# ── 3. Qualified Companies Configuration ──────────────────────
+COMPANY_SLUG_CONFIG: Dict[str, Dict[str, Any]] = {
+    "databricks": {
+        "company_name": "Databricks",
+        "search_pattern": "%Databricks%",
+        "h1": "Databricks Careers & Job Openings",
+        "description": "Explore active career opportunities and engineering vacancies at Databricks. Browse current software engineering, data platform, and infrastructure roles with direct apply links.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "machine-learning", "label": "Machine Learning"}
+        ],
+        "related_locations": [
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "remote-india", "label": "Remote India"}
+        ]
+    },
+    "paytm": {
+        "company_name": "Paytm",
+        "search_pattern": "%Paytm%",
+        "h1": "Paytm Careers & Job Openings",
+        "description": "Find current job vacancies and internships at Paytm. Discover software development, financial technology engineering, and backend roles across India.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "full-stack-developer", "label": "Full Stack Developer"}
+        ],
+        "related_locations": [
+            {"slug": "noida", "label": "Noida"},
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "remote-india", "label": "Remote India"}
+        ]
+    },
+    "google": {
+        "company_name": "Google",
+        "search_pattern": "%Google%",
+        "h1": "Google Careers & Job Openings",
+        "description": "Browse active technology job openings and internships at Google. Explore software engineering, cloud, and AI development roles.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "machine-learning", "label": "Machine Learning"},
+            {"slug": "devops-engineer", "label": "DevOps Engineer"}
+        ],
+        "related_locations": [
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "remote-india", "label": "Remote India"}
+        ]
+    },
+    "microsoft": {
+        "company_name": "Microsoft",
+        "search_pattern": "%Microsoft%",
+        "h1": "Microsoft Careers & Job Openings",
+        "description": "Discover current engineering openings and career opportunities at Microsoft. Find software engineering, Azure cloud, and research roles.",
+        "related_roles": [
+            {"slug": "software-engineer", "label": "Software Engineer"},
+            {"slug": "backend-developer", "label": "Backend Developer"},
+            {"slug": "devops-engineer", "label": "DevOps Engineer"}
+        ],
+        "related_locations": [
+            {"slug": "bengaluru", "label": "Bengaluru"},
+            {"slug": "hyderabad", "label": "Hyderabad"},
+            {"slug": "noida", "label": "Noida"}
+        ]
+    }
+}
 
-@router.get("/role/{slug}")
-def get_role_seo_data(
+
+def _build_seo_response(
+    category_type: str,
     slug: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Returns aggregated SEO metadata, live count, top hiring employers,
-    location distribution, and initial listings for a role landing page.
-    Enforces SEO_MIN_ACTIVE_LISTINGS threshold.
-    """
-    clean_slug = slug.strip().lower()
-    config = ROLE_SLUG_CONFIG.get(clean_slug)
-    
-    if not config:
-        # Check if slug can be dynamically matched
-        formatted_name = clean_slug.replace("-", " ").title()
-        pattern = f"%{formatted_name}%"
-    else:
-        formatted_name = config["title_name"]
-        pattern = config["search_pattern"]
-
-    # Active filter matching existing main.py standard
-    base_filter = [
-        models.Opportunity.is_active == True,
-        or_(
-            models.Opportunity.status == "ACTIVE",
-            models.Opportunity.status == "Active",
-            models.Opportunity.status.is_(None)
-        ),
-        models.Opportunity.title.ilike(pattern)
-    ]
-
+    title_display: str,
+    h1_text: str,
+    description_seo: str,
+    curated_skills: List[str],
+    related_roles: List[Dict[str, str]],
+    related_locations: List[Dict[str, str]],
+    base_filter: list,
+    db: Session
+) -> Dict[str, Any]:
+    """Helper function to execute database aggregations and build Schema.org response."""
     # 1. Total matching count
     total_count = db.query(func.count(models.Opportunity.id)).filter(*base_filter).scalar() or 0
 
@@ -230,10 +319,10 @@ def get_role_seo_data(
     if total_count < SEO_MIN_ACTIVE_LISTINGS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Category '{slug}' does not currently meet the minimum active listing threshold ({SEO_MIN_ACTIVE_LISTINGS})."
+            detail=f"Category '{category_type}/{slug}' does not currently meet the minimum active listing threshold ({SEO_MIN_ACTIVE_LISTINGS})."
         )
 
-    # 3. Top Hiring Companies for this role
+    # 3. Top Hiring Companies
     top_companies_query = db.query(
         models.Opportunity.company,
         func.count(models.Opportunity.id).label("count")
@@ -268,7 +357,7 @@ def get_role_seo_data(
 
     job_types = [{"name": j[0] or "Full-time", "count": j[1]} for j in job_type_query if j[0]]
 
-    # 6. Latest Opportunities Sample (Top 20 high-quality verified listings)
+    # 6. Latest Opportunities Sample (Top 20 active listings)
     opportunities_query = db.query(models.Opportunity)\
         .filter(*base_filter)\
         .order_by(models.Opportunity.posted_date.desc(), models.Opportunity.id.desc())\
@@ -290,16 +379,8 @@ def get_role_seo_data(
             "is_india_job": opp.is_india_job
         })
 
-    # Metadata & Schema
-    title_seo = f"{formatted_name} Jobs & Internships (2026) | CareerLens AI"
-    description_seo = (
-        config["description"] if config else 
-        f"Explore {total_count}+ verified {formatted_name} job openings and internships. Discover current vacancies, top hiring companies, and direct apply links on CareerLens AI."
-    )
-    h1_text = config["h1"] if config else f"{formatted_name} Jobs & Internships"
-    curated_skills = config.get("skills", ["Problem Solving", "System Architecture", "Git", "REST APIs"]) if config else []
-    related_roles = config.get("related_roles", []) if config else []
-    related_locations = config.get("related_locations", []) if config else []
+    title_seo = f"{title_display} (2026) | CareerLens AI"
+    canonical_url = f"https://career-lens-ai-wheat.vercel.app/jobs/{category_type}/{slug}"
 
     # Schema.org ItemList JSON-LD
     schema_item_list = {
@@ -326,7 +407,7 @@ def get_role_seo_data(
                     "datePosted": opp["posted_date"] or datetime.utcnow().isoformat(),
                     "employmentType": "FULL_TIME" if "Full" in str(opp["job_type"]) else "INTERN",
                     "directApply": True if opp["apply_url"] else False,
-                    "url": opp["apply_url"] or f"https://career-lens-ai-wheat.vercel.app/jobs/role/{clean_slug}"
+                    "url": opp["apply_url"] or canonical_url
                 }
             }
             for idx, opp in enumerate(recent_opportunities[:10])
@@ -334,12 +415,13 @@ def get_role_seo_data(
     }
 
     return {
-        "slug": clean_slug,
-        "role_name": formatted_name,
+        "category_type": category_type,
+        "slug": slug,
+        "role_name": title_display,
         "h1": h1_text,
         "meta_title": title_seo,
         "meta_description": description_seo,
-        "canonical_url": f"https://career-lens-ai-wheat.vercel.app/jobs/role/{clean_slug}",
+        "canonical_url": canonical_url,
         "total_active_listings": total_count,
         "last_updated": datetime.utcnow().isoformat(),
         "top_companies": top_companies,
@@ -353,6 +435,158 @@ def get_role_seo_data(
     }
 
 
+# ── Role SEO Endpoint ─────────────────────────────────────────
+@router.get("/role/{slug}")
+def get_role_seo_data(slug: str, db: Session = Depends(get_db)):
+    clean_slug = slug.strip().lower()
+    config = ROLE_SLUG_CONFIG.get(clean_slug)
+    
+    if not config:
+        formatted_name = clean_slug.replace("-", " ").title()
+        pattern = f"%{formatted_name}%"
+        h1 = f"{formatted_name} Job Openings"
+        desc = f"Explore active {formatted_name} job openings and internships on CareerLens AI."
+        skills = ["Problem Solving", "System Architecture", "Git", "REST APIs"]
+        roles = []
+        locs = []
+    else:
+        formatted_name = config["title_name"]
+        pattern = config["search_pattern"]
+        h1 = config["h1"]
+        desc = config["description"]
+        skills = config.get("skills", [])
+        roles = config.get("related_roles", [])
+        locs = config.get("related_locations", [])
+
+    base_filter = [
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        ),
+        models.Opportunity.title.ilike(pattern)
+    ]
+
+    return _build_seo_response(
+        category_type="role",
+        slug=clean_slug,
+        title_display=formatted_name + " Jobs & Internships",
+        h1_text=h1,
+        description_seo=desc,
+        curated_skills=skills,
+        related_roles=roles,
+        related_locations=locs,
+        base_filter=base_filter,
+        db=db
+    )
+
+
+# ── Location SEO Endpoint ─────────────────────────────────────
+@router.get("/location/{slug}")
+def get_location_seo_data(slug: str, db: Session = Depends(get_db)):
+    clean_slug = slug.strip().lower()
+    config = LOCATION_SLUG_CONFIG.get(clean_slug)
+    
+    if not config:
+        formatted_name = clean_slug.replace("-", " ").title()
+        pattern = f"%{formatted_name}%"
+        h1 = f"Tech Jobs & Openings in {formatted_name}"
+        desc = f"Explore active technology jobs and internships in {formatted_name} on CareerLens AI."
+        roles = []
+        locs = []
+    else:
+        formatted_name = config["location_name"]
+        pattern = config["search_pattern"]
+        h1 = config["h1"]
+        desc = config["description"]
+        roles = config.get("related_roles", [])
+        locs = config.get("related_locations", [])
+
+    base_filter = [
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        ),
+        models.Opportunity.location.ilike(pattern)
+    ]
+
+    return _build_seo_response(
+        category_type="location",
+        slug=clean_slug,
+        title_display=f"Tech Jobs in {formatted_name}",
+        h1_text=h1,
+        description_seo=desc,
+        curated_skills=["Software Engineering", "Full Stack", "Backend", "Data Analytics", "Cloud"],
+        related_roles=roles,
+        related_locations=locs,
+        base_filter=base_filter,
+        db=db
+    )
+
+
+# ── Company SEO Endpoint ──────────────────────────────────────
+@router.get("/company/{slug}")
+def get_company_seo_data(slug: str, db: Session = Depends(get_db)):
+    clean_slug = slug.strip().lower()
+    config = COMPANY_SLUG_CONFIG.get(clean_slug)
+    
+    if not config:
+        formatted_name = clean_slug.replace("-", " ").title()
+        pattern = f"%{formatted_name}%"
+        h1 = f"{formatted_name} Careers & Job Openings"
+        desc = f"Browse current job openings and vacancies at {formatted_name} on CareerLens AI."
+        roles = []
+        locs = []
+    else:
+        formatted_name = config["company_name"]
+        pattern = config["search_pattern"]
+        h1 = config["h1"]
+        desc = config["description"]
+        roles = config.get("related_roles", [])
+        locs = config.get("related_locations", [])
+
+    base_filter = [
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        ),
+        models.Opportunity.company.ilike(pattern)
+    ]
+
+    return _build_seo_response(
+        category_type="company",
+        slug=clean_slug,
+        title_display=f"{formatted_name} Careers & Jobs",
+        h1_text=h1,
+        description_seo=desc,
+        curated_skills=["Software Engineering", "Distributed Systems", "Cloud", "Agile", "APIs"],
+        related_roles=roles,
+        related_locations=locs,
+        base_filter=base_filter,
+        db=db
+    )
+
+
+# ── Unified Generic Endpoint for Frontend Convenience ─────────
+@router.get("/{category_type}/{slug}")
+def get_generic_seo_data(category_type: str, slug: str, db: Session = Depends(get_db)):
+    cat = category_type.strip().lower()
+    if cat == "role":
+        return get_role_seo_data(slug, db)
+    elif cat == "location":
+        return get_location_seo_data(slug, db)
+    elif cat == "company":
+        return get_company_seo_data(slug, db)
+    else:
+        raise HTTPException(status_code=404, detail="Invalid SEO category type")
+
+
+# ── Dynamic XML Sitemap Endpoint ──────────────────────────────
 @router.get("/sitemap.xml", response_class=Response)
 def get_dynamic_sitemap(db: Session = Depends(get_db)):
     """
@@ -392,21 +626,50 @@ def get_dynamic_sitemap(db: Session = Depends(get_db)):
   </url>"""
     ]
 
-    # Evaluate each configured role slug dynamically against database threshold
+    base_active_filter = [
+        models.Opportunity.is_active == True,
+        or_(
+            models.Opportunity.status == "ACTIVE",
+            models.Opportunity.status == "Active",
+            models.Opportunity.status.is_(None)
+        )
+    ]
+
+    # 1. Qualified Roles
     for slug, config in ROLE_SLUG_CONFIG.items():
-        base_filter = [
-            models.Opportunity.is_active == True,
-            or_(
-                models.Opportunity.status == "ACTIVE",
-                models.Opportunity.status == "Active",
-                models.Opportunity.status.is_(None)
-            ),
+        count = db.query(func.count(models.Opportunity.id)).filter(
+            *base_active_filter,
             models.Opportunity.title.ilike(config["search_pattern"])
-        ]
-        count = db.query(func.count(models.Opportunity.id)).filter(*base_filter).scalar() or 0
+        ).scalar() or 0
         if count >= SEO_MIN_ACTIVE_LISTINGS:
             xml_entries.append(f"""  <url>
     <loc>https://career-lens-ai-wheat.vercel.app/jobs/role/{slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>""")
+
+    # 2. Qualified Locations
+    for slug, config in LOCATION_SLUG_CONFIG.items():
+        count = db.query(func.count(models.Opportunity.id)).filter(
+            *base_active_filter,
+            models.Opportunity.location.ilike(config["search_pattern"])
+        ).scalar() or 0
+        if count >= SEO_MIN_ACTIVE_LISTINGS:
+            xml_entries.append(f"""  <url>
+    <loc>https://career-lens-ai-wheat.vercel.app/jobs/location/{slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>""")
+
+    # 3. Qualified Companies
+    for slug, config in COMPANY_SLUG_CONFIG.items():
+        count = db.query(func.count(models.Opportunity.id)).filter(
+            *base_active_filter,
+            models.Opportunity.company.ilike(config["search_pattern"])
+        ).scalar() or 0
+        if count >= SEO_MIN_ACTIVE_LISTINGS:
+            xml_entries.append(f"""  <url>
+    <loc>https://career-lens-ai-wheat.vercel.app/jobs/company/{slug}</loc>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>""")
