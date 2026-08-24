@@ -1,6 +1,48 @@
 # Role Taxonomy Mapping
 
 ROLE_TAXONOMY = {
+    "qa engineer": [
+        "qa engineer",
+        "quality assurance engineer",
+        "sdet",
+        "software development engineer in test",
+        "software test engineer",
+        "test automation engineer",
+        "automation tester",
+        "qa automation engineer",
+        "qa tester",
+        "test engineer",
+        "quality analyst",
+        "quality engineer",
+        "qa specialist",
+        "qa lead",
+        "test lead"
+    ],
+    "performance tester": [
+        "performance tester",
+        "performance test engineer",
+        "performance engineer",
+        "load tester",
+        "load testing engineer",
+        "stress testing engineer",
+        "performance qa engineer",
+        "performance testing analyst",
+        "jmeter engineer",
+        "performance lead"
+    ],
+    "manual tester": [
+        "manual tester",
+        "manual qa tester",
+        "qa tester",
+        "functional tester",
+        "software tester",
+        "quality assurance tester",
+        "qa analyst",
+        "manual test engineer",
+        "test associate",
+        "user acceptance tester",
+        "uat tester"
+    ],
     "data analyst": [
         "data analyst",
         "junior data analyst",
@@ -71,6 +113,26 @@ ROLE_TAXONOMY = {
         "apm",
         "senior product manager",
         "product owner"
+    ],
+    "devops engineer": [
+        "devops engineer",
+        "site reliability engineer",
+        "sre",
+        "platform engineer",
+        "cloud engineer",
+        "infrastructure engineer",
+        "build and release engineer",
+        "ci/cd engineer"
+    ],
+    "cybersecurity analyst": [
+        "cybersecurity analyst",
+        "security analyst",
+        "information security analyst",
+        "soc analyst",
+        "penetration tester",
+        "pen tester",
+        "security engineer",
+        "vulnerability analyst"
     ]
 }
 
@@ -81,9 +143,9 @@ def expand_role(normalized_query: str) -> list[str]:
     if q in ROLE_TAXONOMY:
         return ROLE_TAXONOMY[q]
         
-    # Reverse lookup (if user types 'etl developer', expand to data engineer family)
+    # Reverse lookup (if user types 'sdet' or 'load tester', expand to testing family)
     for family, roles in ROLE_TAXONOMY.items():
-        if q in roles:
+        if q in roles or any(q in r or r in q for r in roles):
             return roles
             
     # Default fallback - return the query itself

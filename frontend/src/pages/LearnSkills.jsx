@@ -54,6 +54,9 @@ export default function LearnSkills() {
             <option value="Machine Learning Engineer">Machine Learning Engineer</option>
             <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
             <option value="QA Engineer / SDET">QA Engineer / SDET</option>
+            <option value="Performance Test Engineer">Performance Test Engineer</option>
+            <option value="QA Automation Engineer">QA Automation Engineer</option>
+            <option value="Manual QA Tester">Manual QA Tester</option>
             <option value="Android Developer">Android Developer</option>
             <option value="iOS Developer">iOS Developer</option>
             <option value="Cross-Platform Mobile Developer">Cross-Platform Mobile Developer</option>

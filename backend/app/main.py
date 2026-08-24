@@ -312,7 +312,67 @@ def _safe_seed(db):
             ("Data Analyst", "Pandas", "Required", "Data Science"),
             ("Data Analyst", "Statistics", "Required", "Core"),
             ("Data Analyst", "Data Visualization", "Required", "Core"),
-            ("Data Analyst", "A/B Testing", "Preferred", "Core")
+            ("Data Analyst", "A/B Testing", "Preferred", "Core"),
+
+            # QA Engineer / SDET
+            ("QA Engineer / SDET", "Selenium", "Required", "Automation"),
+            ("QA Engineer / SDET", "Cypress", "Preferred", "Automation"),
+            ("QA Engineer / SDET", "Playwright", "Preferred", "Automation"),
+            ("QA Engineer / SDET", "Java", "Required", "Programming"),
+            ("QA Engineer / SDET", "Python", "Required", "Programming"),
+            ("QA Engineer / SDET", "Postman", "Required", "API Testing"),
+            ("QA Engineer / SDET", "REST Assured", "Required", "API Testing"),
+            ("QA Engineer / SDET", "TestNG", "Required", "Framework"),
+            ("QA Engineer / SDET", "JUnit", "Preferred", "Framework"),
+            ("QA Engineer / SDET", "PyTest", "Preferred", "Framework"),
+            ("QA Engineer / SDET", "SQL", "Required", "Database"),
+            ("QA Engineer / SDET", "Git", "Required", "Tools"),
+            ("QA Engineer / SDET", "Jira", "Required", "Bug Tracking"),
+            ("QA Engineer / SDET", "CI/CD", "Required", "DevOps"),
+            ("QA Engineer / SDET", "Cucumber", "Preferred", "BDD"),
+            ("QA Engineer / SDET", "Test Automation", "Required", "Core Testing"),
+            ("QA Engineer / SDET", "API Testing", "Required", "Core Testing"),
+
+            # Performance Test Engineer
+            ("Performance Test Engineer", "JMeter", "Required", "Performance Tools"),
+            ("Performance Test Engineer", "LoadRunner", "Required", "Performance Tools"),
+            ("Performance Test Engineer", "k6", "Preferred", "Performance Tools"),
+            ("Performance Test Engineer", "Locust", "Preferred", "Performance Tools"),
+            ("Performance Test Engineer", "Performance Testing", "Required", "Core Testing"),
+            ("Performance Test Engineer", "Load Testing", "Required", "Core Testing"),
+            ("Performance Test Engineer", "Stress Testing", "Required", "Core Testing"),
+            ("Performance Test Engineer", "API Testing", "Required", "API Testing"),
+            ("Performance Test Engineer", "Postman", "Required", "API Testing"),
+            ("Performance Test Engineer", "Python", "Preferred", "Scripting"),
+            ("Performance Test Engineer", "Java", "Preferred", "Programming"),
+            ("Performance Test Engineer", "SQL", "Required", "Database"),
+            ("Performance Test Engineer", "Grafana", "Preferred", "Monitoring"),
+            ("Performance Test Engineer", "Prometheus", "Preferred", "Monitoring"),
+
+            # QA Automation Engineer
+            ("QA Automation Engineer", "Selenium", "Required", "Automation"),
+            ("QA Automation Engineer", "Cypress", "Required", "Automation"),
+            ("QA Automation Engineer", "Playwright", "Preferred", "Automation"),
+            ("QA Automation Engineer", "Java", "Required", "Programming"),
+            ("QA Automation Engineer", "Python", "Required", "Programming"),
+            ("QA Automation Engineer", "Postman", "Required", "API Testing"),
+            ("QA Automation Engineer", "REST Assured", "Required", "API Testing"),
+            ("QA Automation Engineer", "Test Automation", "Required", "Core Testing"),
+            ("QA Automation Engineer", "Git", "Required", "Tools"),
+            ("QA Automation Engineer", "CI/CD", "Required", "DevOps"),
+            ("QA Automation Engineer", "Jenkins", "Preferred", "DevOps"),
+
+            # Manual QA Tester
+            ("Manual QA Tester", "Manual Testing", "Required", "Core Testing"),
+            ("Manual QA Tester", "Functional Testing", "Required", "Core Testing"),
+            ("Manual QA Tester", "Regression Testing", "Required", "Core Testing"),
+            ("Manual QA Tester", "Smoke Testing", "Required", "Core Testing"),
+            ("Manual QA Tester", "Postman", "Required", "API Testing"),
+            ("Manual QA Tester", "API Testing", "Required", "API Testing"),
+            ("Manual QA Tester", "Jira", "Required", "Bug Tracking"),
+            ("Manual QA Tester", "TestRail", "Preferred", "Test Management"),
+            ("Manual QA Tester", "SQL", "Required", "Database"),
+            ("Manual QA Tester", "Agile", "Required", "Methodology")
         ]
         for r, s, imp, cat in role_skills_data:
             db.add(models.RoleSkillMap(role=r, skill=s, importance=imp, category=cat))
@@ -365,8 +425,15 @@ def _safe_seed(db):
             models.LearningResource(title="Docker Tutorial for Beginners", provider="CodeStepByStep", category="YouTube Playlist", url="https://www.youtube.com/playlist?list=PL8p2I9GklV44w-rQyG0HkU2pCgUaU9h_T", difficulty="Beginner", duration="4 Hours", is_free=True, skills_covered=["Docker", "Containers", "DevOps Engineer", "Backend Developer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Full Stack Developer"], country="India"),
             models.LearningResource(title="Linux Operating System - Crash Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=sWbUDq4S6Y8", difficulty="Beginner", duration="2 Hours", is_free=True, skills_covered=["Linux", "Bash", "Terminal", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer", "Software Engineer"], country="Global"),
             models.LearningResource(title="Harvard CS50 - Introduction to Computer Science", provider="Harvard University", category="Course", url="https://www.youtube.com/watch?v=8mAITcNt710", difficulty="Beginner", duration="24 Hours", is_free=True, skills_covered=["CS Fundamentals", "C", "Python", "Algorithms", "Software Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Frontend Developer", "Backend Developer", "Full Stack Developer", "Data Scientist", "Data Analyst", "Machine Learning Engineer", "DevOps Engineer"], country="Global"),
-            models.LearningResource(title="Swayam Online Courses (Government of India)", provider="Swayam", category="Course", url="https://swayam.gov.in/", difficulty="Beginner", duration="Variable", is_free=True, skills_covered=["CS Fundamentals", "Engineering", "Algorithms", "Software Engineer"], source="Swayam", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Software Engineer", "Frontend Developer", "Backend Developer", "Full Stack Developer", "Data Scientist", "Data Analyst", "Machine Learning Engineer", "DevOps Engineer"], country="India"),
-            models.LearningResource(title="Kubernetes Course - Full Tutorial", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=X48VuDVv0do", difficulty="Intermediate", duration="4 Hours", is_free=True, skills_covered=["Kubernetes", "Containers", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer"], country="Global")
+            models.LearningResource(title="Kubernetes Course - Full Tutorial", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=X48VuDVv0do", difficulty="Intermediate", duration="4 Hours", is_free=True, skills_covered=["Kubernetes", "Containers", "DevOps Engineer"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["DevOps Engineer", "Backend Developer"], country="Global"),
+
+            # --- QA, TEST AUTOMATION & PERFORMANCE TESTING ---
+            models.LearningResource(title="Software Testing Full Course In Hindi", provider="CodeWithHarry", category="YouTube Course", url="https://www.youtube.com/watch?v=sO8eGL6QVUw", difficulty="Beginner", duration="8 Hours", is_free=True, skills_covered=["Manual Testing", "QA Testing", "Test Cases", "Bug Tracking", "SDLC", "STLC"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Manual QA Tester", "QA Engineer / SDET", "QA Tester"], country="India"),
+            models.LearningResource(title="Selenium Java Full Course for Beginners", provider="Edureka", category="YouTube Course", url="https://www.youtube.com/watch?v=8bH60q5dF80", difficulty="Intermediate", duration="10 Hours", is_free=True, skills_covered=["Selenium", "Java", "TestNG", "Test Automation", "Automation Testing"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["QA Automation Engineer", "QA Engineer / SDET"], country="India"),
+            models.LearningResource(title="JMeter Performance Testing Full Tutorial", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=mD_xYQ4uT_E", difficulty="Intermediate", duration="6 Hours", is_free=True, skills_covered=["JMeter", "Performance Testing", "Load Testing", "Stress Testing", "API Testing"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Performance Test Engineer", "QA Engineer / SDET"], country="Global"),
+            models.LearningResource(title="Postman API Testing Complete Course", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=VywxIQ2ZXw4", difficulty="Beginner", duration="5 Hours", is_free=True, skills_covered=["Postman", "API Testing", "REST API", "Automation Testing"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["QA Engineer / SDET", "QA Automation Engineer", "Backend Developer", "Performance Test Engineer"], country="Global"),
+            models.LearningResource(title="Cypress End-to-End Testing Masterclass", provider="freeCodeCamp", category="YouTube Course", url="https://www.youtube.com/watch?v=u8vMu78S46Q", difficulty="Intermediate", duration="6 Hours", is_free=True, skills_covered=["Cypress", "JavaScript", "Automation Testing", "E2E Testing", "Frontend"], source="YouTube", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["QA Automation Engineer", "QA Engineer / SDET", "Frontend Developer"], country="Global"),
+            models.LearningResource(title="k6 Modern Load & Performance Testing Course", provider="Grafana Labs / k6", category="Course", url="https://k6.io/docs/", difficulty="Intermediate", duration="4 Hours", is_free=True, skills_covered=["k6", "Performance Testing", "Load Testing", "API Testing", "JavaScript"], source="k6 Docs", availability_status="VERIFIED", status="VERIFIED", affordability="FREE", roles=["Performance Test Engineer", "DevOps Engineer", "QA Engineer / SDET"], country="Global")
         ]
 
         db.add_all(learning_resources_data)
@@ -487,6 +554,32 @@ def _safe_seed(db):
                 skills_covered=["Databricks Lakehouse Platform", "Apache Spark", "Delta Lake", "Data Pipelines"],
                 roles=["Data Engineer", "Data Scientist"],
                 availability_status="VERIFIED", price_inr=16600, affordability="PAID", free_learning_available=True
+            ),
+
+            # QA, Test Automation & Performance Testing Certifications
+            models.Certification(
+                name="ISTQB Certified Tester Foundation Level (CTFL)", provider="ISTQB / Indian Testing Board",
+                url="https://www.istqb.org/certifications/certified-tester-foundation-level", is_free=False, cost="INR 5,600",
+                difficulty="Beginner", estimated_hours=40,
+                skills_covered=["Software Testing Fundamentals", "Test Design Techniques", "Defect Management", "Test Tools"],
+                roles=["QA Engineer / SDET", "Manual QA Tester", "QA Automation Engineer"],
+                availability_status="VERIFIED", price_inr=5600, affordability="AFFORDABLE", free_learning_available=True
+            ),
+            models.Certification(
+                name="ISTQB Performance Testing Specialist", provider="ISTQB",
+                url="https://www.istqb.org/certifications/performance-testing", is_free=False, cost="INR 6,500",
+                difficulty="Intermediate", estimated_hours=50,
+                skills_covered=["JMeter", "Load Testing", "Performance Metrics", "Stress Testing", "Monitoring"],
+                roles=["Performance Test Engineer", "QA Engineer / SDET"],
+                availability_status="VERIFIED", price_inr=6500, affordability="AFFORDABLE", free_learning_available=True
+            ),
+            models.Certification(
+                name="Selenium Automation Certified Associate", provider="Vskills / LambdaTest",
+                url="https://www.vskills.in/certification/testing/certified-selenium-automation-tester", is_free=False, cost="INR 3,499",
+                difficulty="Intermediate", estimated_hours=35,
+                skills_covered=["Selenium WebDriver", "Java", "TestNG", "Page Object Model", "CI/CD"],
+                roles=["QA Automation Engineer", "QA Engineer / SDET"],
+                availability_status="VERIFIED", price_inr=3499, affordability="AFFORDABLE", free_learning_available=True
             ),
 
             # Agile & Management
@@ -1371,42 +1464,74 @@ def read_opportunities(
         "has_more": len(results) == limit
     }
 
-@app.get("/api/opportunities/autocomplete", response_model=schemas.SearchSuggestion)
-def autocomplete_search(q: str, db: Session = Depends(database.get_db)):
-    """Multi-type autocomplete returning titles, companies, skills, and locations."""
-    if not q or len(q) < 2:
-        return {"suggestions": [], "message": ""}
+@app.get("/api/search/suggestions")
+@app.get("/api/opportunities/autocomplete")
+def get_search_suggestions(q: str, db: Session = Depends(database.get_db)):
+    """
+    Multi-type autocomplete returning roles, skills, and companies with intelligent matching.
+    """
+    if not q or len(q.strip()) < 2:
+        return {
+            "suggestions": {
+                "roles": ["Software Engineer", "QA Engineer / SDET", "Performance Test Engineer", "Data Engineer"],
+                "skills": ["Python", "Selenium", "JMeter", "SQL"],
+                "companies": []
+            },
+            "flat_suggestions": []
+        }
         
-    q_lower = q.lower()
-    suggestions = set()
+    q_lower = q.lower().strip()
     
-    # 1. Job Titles
-    titles = db.query(models.Opportunity.title).filter(func.lower(models.Opportunity.title).like(f"%{q_lower}%")).limit(5).all()
-    for t in titles:
-        if t[0]: suggestions.add(t[0])
-        
-    # 2. Companies
-    companies = db.query(models.CompanyRegistry.company_name).filter(func.lower(models.CompanyRegistry.company_name).like(f"%{q_lower}%")).limit(3).all()
-    for c in companies:
-        if c[0]: suggestions.add(c[0])
-        
-    # 3. Locations
-    locations = db.query(models.NormalizedLocation.city).filter(func.lower(models.NormalizedLocation.city).like(f"%{q_lower}%")).limit(3).all()
-    for l in locations:
-        if l[0]: suggestions.add(l[0])
-        
-    # 4. Skills
-    skills = db.query(models.RoleSkillMap.skill).filter(func.lower(models.RoleSkillMap.skill).like(f"%{q_lower}%")).limit(3).all()
-    for s in skills:
-        if s[0]: suggestions.add(s[0])
-        
-    sorted_suggestions = sorted(list(suggestions), key=lambda x: (not x.lower().startswith(q_lower), len(x)))[:10]
+    # 1. Matching Roles / Titles
+    titles = db.query(models.Opportunity.title).filter(
+        func.lower(models.Opportunity.title).like(f"%{q_lower}%"),
+        models.Opportunity.is_active == True
+    ).distinct().limit(5).all()
     
-    # If no suggestions, provide "Did you mean?"
-    if not sorted_suggestions:
-        return {"suggestions": ["Data Engineer", "Software Engineer", "Product Manager", "Data Analyst"], "message": "Did you mean?"}
-        
-    return {"suggestions": sorted_suggestions, "message": ""}
+    matched_roles = [t[0] for t in titles if t[0]]
+    
+    # Include from Role Taxonomy
+    from app.role_taxonomy import ROLE_TAXONOMY
+    for family, roles in ROLE_TAXONOMY.items():
+        for r in roles:
+            if q_lower in r.lower() and r.title() not in matched_roles:
+                matched_roles.append(r.title())
+                if len(matched_roles) >= 6:
+                    break
+                    
+    # 2. Matching Skills
+    matched_skills = []
+    skills_db = db.query(models.RoleSkillMap.skill).filter(
+        func.lower(models.RoleSkillMap.skill).like(f"%{q_lower}%")
+    ).distinct().limit(6).all()
+    for s in skills_db:
+        if s[0] and s[0] not in matched_skills:
+            matched_skills.append(s[0])
+            
+    from app.skill_taxonomy import SKILL_TO_ROLE_MAPPING
+    for sk in SKILL_TO_ROLE_MAPPING.keys():
+        if q_lower in sk and sk.title() not in matched_skills and sk.upper() not in matched_skills:
+            matched_skills.append(sk.title())
+            if len(matched_skills) >= 6:
+                break
+                
+    # 3. Matching Companies
+    companies = db.query(models.CompanyRegistry.company_name).filter(
+        func.lower(models.CompanyRegistry.company_name).like(f"%{q_lower}%")
+    ).limit(4).all()
+    matched_companies = [c[0] for c in companies if c[0]]
+    
+    flat = list(set(matched_roles[:4] + matched_skills[:4] + matched_companies[:2]))
+    
+    return {
+        "suggestions": {
+            "roles": matched_roles[:5],
+            "skills": matched_skills[:5],
+            "companies": matched_companies[:3]
+        },
+        "flat_suggestions": flat,
+        "message": ""
+    }
 
 @app.post("/api/opportunities", response_model=schemas.Opportunity)
 def create_opportunity(opportunity: schemas.OpportunityCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
@@ -1611,7 +1736,13 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
 
     # 1. Filename explicit overrides
     target_role = None
-    if "data" in filename_lower and ("engineer" in filename_lower or "engineering" in filename_lower or "de" in filename_lower):
+    if "performance" in filename_lower or "jmeter" in filename_lower or "load" in filename_lower:
+        target_role = "Performance Test Engineer"
+    elif "sdet" in filename_lower or "automation" in filename_lower:
+        target_role = "QA Engineer / SDET"
+    elif "qa" in filename_lower or "test" in filename_lower:
+        target_role = "QA Engineer / SDET"
+    elif "data" in filename_lower and ("engineer" in filename_lower or "engineering" in filename_lower or "de" in filename_lower):
         target_role = "Data Engineer"
     elif "devops" in filename_lower or "sre" in filename_lower:
         target_role = "DevOps Engineer"
@@ -1624,6 +1755,9 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
 
     if not target_role:
         # 2. Weighted Domain Skill Matching
+        perf_skills = {"jmeter", "apache jmeter", "loadrunner", "k6", "locust", "gatling", "blazemeter", "performance testing", "load testing", "stress testing", "endurance testing", "spike testing"}
+        qa_auto_skills = {"selenium", "cypress", "playwright", "appium", "testng", "pytest", "postman", "restassured", "rest assured", "test automation", "automation testing", "cucumber", "bdd", "tdd", "sdet", "robot framework"}
+        qa_manual_skills = {"manual testing", "functional testing", "regression testing", "smoke testing", "sanity testing", "test cases", "jira", "bug tracking", "testrail", "zephyr", "uat", "user acceptance testing"}
         de_skills = {"apache spark", "spark", "airflow", "kafka", "dbt", "snowflake", "redshift", "bigquery", "databricks", "hadoop", "etl", "data modeling", "data pipeline", "pyspark", "azure", "gcp"}
         fe_skills = {"react", "next.js", "vue", "angular", "html", "css", "tailwind", "redux", "zustand", "frontend", "webpack", "vite"}
         devops_skills = {"docker", "kubernetes", "k8s", "terraform", "ansible", "jenkins", "prometheus", "grafana", "bash", "ci/cd"}
@@ -1631,6 +1765,9 @@ def get_resume_gap_analysis(request: Request, resume_id: int, db: Session = Depe
         be_skills = {"fastapi", "django", "flask", "express.js", "node.js", "nest.js", "spring boot", "microservices", "redis", "mongodb"}
 
         scores = {
+            "Performance Test Engineer": len(user_skills_set.intersection(perf_skills)) * 3.5,
+            "QA Engineer / SDET": len(user_skills_set.intersection(qa_auto_skills)) * 3.0,
+            "Manual QA Tester": len(user_skills_set.intersection(qa_manual_skills)) * 2.5,
             "Data Engineer": len(user_skills_set.intersection(de_skills)) * 3.0,
             "Frontend Engineer": len(user_skills_set.intersection(fe_skills)) * 2.0,
             "DevOps Engineer": len(user_skills_set.intersection(devops_skills)) * 2.0,

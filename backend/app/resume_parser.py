@@ -24,8 +24,8 @@ SKILLS_DB = {
     "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras", "opencv", "nltk", "spacy", "spark", "hadoop", "hive", "airflow", "kafka", "dbt", "tableau", "power bi", "matplotlib", "seaborn", "pyspark", "databricks", "hugging face", "transformers", "langchain", "llamaindex", "llm", "genai", "generative ai", "computer vision", "nlp", "xgboost", "lightgbm", "mlflow", "data analysis", "data mining", "machine learning", "deep learning", "neural networks", "data visualization", "predictive modeling", "business intelligence",
     # Mobile
     "react native", "flutter", "ios", "android", "xcode", "android studio", "jetpack compose", "swiftui", "cordova", "ionic",
-    # Testing & QA
-    "selenium", "cypress", "jest", "mocha", "chai", "playwright", "puppeteer", "junit", "pytest", "test-driven development", "tdd", "postman", "jmeter", "appium", "loadrunner", "unit testing", "integration testing", "automation testing",
+    # Testing, QA & Performance Testing
+    "selenium", "cypress", "jest", "mocha", "chai", "playwright", "puppeteer", "junit", "pytest", "test-driven development", "tdd", "behavior-driven development", "bdd", "postman", "jmeter", "apache jmeter", "appium", "loadrunner", "gatling", "locust", "k6", "blazemeter", "unit testing", "integration testing", "automation testing", "test automation", "qa testing", "quality assurance", "manual testing", "functional testing", "regression testing", "smoke testing", "sanity testing", "performance testing", "load testing", "stress testing", "endurance testing", "spike testing", "scalability testing", "api testing", "rest assured", "restassured", "soapui", "testng", "robot framework", "cucumber", "specflow", "karate", "testrail", "zephyr", "xray", "browserstack", "saucelabs", "charles proxy", "fiddler", "bug tracking", "defect lifecycle", "test plan", "test strategy", "test cases", "uat", "user acceptance testing", "black box testing", "white box testing", "cross-browser testing", "mobile testing", "sdet",
     # Security
     "penetration testing", "pentesting", "cryptography", "oauth", "jwt", "saml", "owasp", "burp suite", "wireshark", "nmap", "metasploit", "iam", "siem", "soc", "firewall", "ids/ips", "kali linux", "zero trust", "devsecops", "cybersecurity",
     # Core CS & Architecture
@@ -40,7 +40,9 @@ CERT_KEYWORDS = [
     "CompTIA Security+", "CompTIA Network+", "CompTIA A+", "PMP", "Project Management Professional",
     "Certified Scrum Master", "CSM", "CKA", "Certified Kubernetes Administrator", "CKAD",
     "Terraform Associate", "Cisco Certified", "CCNA", "CCNP", "CISSP", "CEH", "Certified Ethical Hacker",
-    "CISA", "CISM", "ITIL", "Salesforce Certified", "Oracle Certified", "Microsoft Certified"
+    "CISA", "CISM", "ITIL", "Salesforce Certified", "Oracle Certified", "Microsoft Certified",
+    "ISTQB Certified Tester", "ISTQB CTFL", "ISTQB Foundation", "ISTQB Agile Tester", "ISTQB Performance Testing",
+    "ISTQB Advanced Level", "Certified Software Quality Analyst", "CSQA", "CAST", "Selenium Certified"
 ]
 
 DEGREE_KEYWORDS = [
@@ -96,6 +98,15 @@ def format_skill_name(skill: str) -> str:
         "linux": "Linux", "unix": "Unix", "api": "API", "rest api": "REST API",
         "git": "Git", "jira": "Jira", "agile": "Agile", "scrum": "Scrum",
         "oop": "OOP", "dsa": "Data Structures & Algorithms",
+        "jmeter": "JMeter", "apache jmeter": "Apache JMeter", "loadrunner": "LoadRunner",
+        "playwright": "Playwright", "cypress": "Cypress", "selenium": "Selenium",
+        "postman": "Postman", "testng": "TestNG", "junit": "JUnit", "pytest": "PyTest",
+        "restassured": "REST Assured", "rest assured": "REST Assured", "k6": "k6",
+        "locust": "Locust", "gatling": "Gatling", "testrail": "TestRail",
+        "charles proxy": "Charles Proxy", "bdd": "BDD", "tdd": "TDD", "qa": "QA",
+        "sdet": "SDET", "istqb": "ISTQB", "uat": "UAT",
+        "performance testing": "Performance Testing", "automation testing": "Automation Testing",
+        "manual testing": "Manual Testing", "api testing": "API Testing",
     }
     return formatting_map.get(skill, skill.title())
 
@@ -290,35 +301,53 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     import json, os
     matched_role = "Software Engineer"
     missing_skills = []
+    
+    DEFAULT_ROLE_TAXONOMY = [
+        {"title": "Performance Test Engineer", "core_skills": ["JMeter", "LoadRunner", "Performance Testing", "Load Testing", "k6", "Postman", "API Testing", "Python", "SQL"]},
+        {"title": "QA Engineer / SDET", "core_skills": ["Selenium", "Cypress", "Playwright", "Test Automation", "Java", "Python", "API Testing", "Postman", "TestNG", "Jira", "CI/CD", "SQL"]},
+        {"title": "Manual QA Tester", "core_skills": ["Manual Testing", "Functional Testing", "Regression Testing", "Test Cases", "Jira", "Bug Tracking", "API Testing", "Postman", "SQL"]},
+        {"title": "Data Engineer", "core_skills": ["Python", "SQL", "Apache Spark", "Airflow", "Kafka", "dbt", "Snowflake", "Databricks", "AWS"]},
+        {"title": "Frontend Engineer", "core_skills": ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Tailwind", "Next.js", "Redux", "Git"]},
+        {"title": "Backend Engineer", "core_skills": ["Python", "Node.js", "Java", "SQL", "PostgreSQL", "Redis", "Docker", "REST API", "Microservices"]},
+        {"title": "DevOps Engineer", "core_skills": ["Docker", "Kubernetes", "Terraform", "Ansible", "AWS", "CI/CD", "Jenkins", "Linux", "Bash"]},
+        {"title": "Data Analyst", "core_skills": ["SQL", "Python", "Excel", "Tableau", "Power BI", "Pandas", "Statistics"]},
+        {"title": "Machine Learning Engineer", "core_skills": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Scikit-learn"]},
+        {"title": "Software Engineer", "core_skills": ["Python", "Java", "Data Structures", "Algorithms", "System Design", "SQL", "Git", "REST API"]}
+    ]
+    
+    roles = DEFAULT_ROLE_TAXONOMY
     try:
         data_file = os.path.join(os.path.dirname(__file__), "..", "data", "roles.json")
         if os.path.exists(data_file):
             with open(data_file, 'r', encoding='utf-8') as f:
                 roles = json.load(f)
-            
-            best_match = None
-            max_overlap = 0
-            user_skills_lower = [s.lower() for s in extracted_skills]
-            
-            for r in roles:
-                core_skills = r.get("core_skills", [])
-                core_skills_lower = [s.lower() for s in core_skills]
-                overlap = len(set(user_skills_lower).intersection(set(core_skills_lower)))
-                if overlap > max_overlap:
-                    max_overlap = overlap
-                    best_match = r
-                    
-            if best_match:
-                matched_role = best_match["title"]
-                core_skills_lower = [s.lower() for s in best_match["core_skills"]]
-                missing = set(core_skills_lower) - set(user_skills_lower)
+    except Exception:
+        roles = DEFAULT_ROLE_TAXONOMY
+
+    try:
+        best_match = None
+        max_overlap = 0
+        user_skills_lower = [s.lower() for s in extracted_skills]
+        
+        for r in roles:
+            core_skills = r.get("core_skills", [])
+            core_skills_lower = [s.lower() for s in core_skills]
+            overlap = len(set(user_skills_lower).intersection(set(core_skills_lower)))
+            if overlap > max_overlap:
+                max_overlap = overlap
+                best_match = r
                 
-                for cs in best_match["core_skills"]:
-                    if cs.lower() in missing:
-                        missing_skills.append(cs)
-                
-                if missing_skills:
-                    suggestions.append(f"To boost alignment for {matched_role} roles, add: {', '.join(missing_skills[:3])}")
+        if best_match:
+            matched_role = best_match["title"]
+            core_skills_lower = [s.lower() for s in best_match["core_skills"]]
+            missing = set(core_skills_lower) - set(user_skills_lower)
+            
+            for cs in best_match["core_skills"]:
+                if cs.lower() in missing:
+                    missing_skills.append(cs)
+            
+            if missing_skills:
+                suggestions.append(f"To boost alignment for {matched_role} roles, add: {', '.join(missing_skills[:3])}")
     except Exception as e:
         print(f"Error in gap analysis: {e}")
 
