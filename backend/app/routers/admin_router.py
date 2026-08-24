@@ -482,6 +482,38 @@ def get_opportunities_audit(
         or_(models.Opportunity.first_seen >= one_month_ago, models.Opportunity.posted_date >= one_month_ago)
     ).scalar() or 0
 
+    # 2. Country Breakdown: India vs Global (active listings only)
+    active_base = [
+        models.Opportunity.is_active == True,
+        or_(models.Opportunity.status == "ACTIVE", models.Opportunity.status == "Active", models.Opportunity.status.is_(None))
+    ]
+    india_active = db.query(func.count(models.Opportunity.id)).filter(
+        *active_base,
+        models.Opportunity.is_india_job == True
+    ).scalar() or 0
+    global_active = active_count - india_active
+
+    # India vs Global new additions (24h)
+    india_24h = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_day_ago, models.Opportunity.posted_date >= one_day_ago),
+        models.Opportunity.is_india_job == True
+    ).scalar() or 0
+    global_24h = added_24h_count - india_24h
+
+    # India vs Global new additions (7d)
+    india_7d = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_week_ago, models.Opportunity.posted_date >= one_week_ago),
+        models.Opportunity.is_india_job == True
+    ).scalar() or 0
+    global_7d = added_7d_count - india_7d
+
+    # India vs Global new additions (30d)
+    india_30d = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_month_ago, models.Opportunity.posted_date >= one_month_ago),
+        models.Opportunity.is_india_job == True
+    ).scalar() or 0
+    global_30d = added_30d_count - india_30d
+
     # 2. Build Filtered Query
     query = db.query(models.Opportunity)
 
@@ -573,6 +605,28 @@ def get_opportunities_audit(
             "added_24h": added_24h_count,
             "added_7d": added_7d_count,
             "added_30d": added_30d_count,
+        },
+        "country_breakdown": {
+            "active": {
+                "india": india_active,
+                "global": global_active,
+                "india_pct": round(india_active / active_count * 100, 1) if active_count > 0 else 0,
+            },
+            "added_24h": {
+                "india": india_24h,
+                "global": global_24h,
+                "india_pct": round(india_24h / added_24h_count * 100, 1) if added_24h_count > 0 else 0,
+            },
+            "added_7d": {
+                "india": india_7d,
+                "global": global_7d,
+                "india_pct": round(india_7d / added_7d_count * 100, 1) if added_7d_count > 0 else 0,
+            },
+            "added_30d": {
+                "india": india_30d,
+                "global": global_30d,
+                "india_pct": round(india_30d / added_30d_count * 100, 1) if added_30d_count > 0 else 0,
+            },
         },
         "filtered_total": filtered_total,
         "offset": offset,

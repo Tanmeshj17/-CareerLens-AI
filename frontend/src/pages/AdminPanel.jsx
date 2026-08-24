@@ -688,6 +688,128 @@ export default function AdminPanel() {
             </div>
           </div>
 
+          {/* ─── Country Breakdown: India vs Global ─── */}
+          {inventoryData?.country_breakdown && (
+            <div className="p-md sm:p-lg rounded-2xl bg-surface-container-low border border-outline-variant space-y-md">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg text-primary">language</span>
+                  Job Distribution: India vs Global
+                </h3>
+                <span className="text-[11px] font-[Geist] text-on-surface-variant">Active inventory breakdown</span>
+              </div>
+
+              {/* 3-Column breakdown: Active Total | 24h New | 7d New */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
+                {/* Active Jobs Breakdown */}
+                <div className="space-y-sm">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant font-[Geist]">
+                    Total Active Jobs
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🇮🇳</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.active.india.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        India ({inventoryData.country_breakdown.active.india_pct}%)
+                      </div>
+                    </div>
+                  </div>
+                  {/* India bar */}
+                  <div className="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-amber-500 transition-all duration-700"
+                      style={{ width: `${inventoryData.country_breakdown.active.india_pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🌐</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.active.global.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        Global ({(100 - inventoryData.country_breakdown.active.india_pct).toFixed(1)}%)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 24h New Jobs Breakdown */}
+                <div className="space-y-sm">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant font-[Geist]">
+                    Added Last 24 Hours
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🇮🇳</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.added_24h.india.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        India ({inventoryData.country_breakdown.added_24h.india_pct}%)
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-amber-500 transition-all duration-700"
+                      style={{ width: `${inventoryData.country_breakdown.added_24h.india_pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🌐</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.added_24h.global.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        Global ({(100 - inventoryData.country_breakdown.added_24h.india_pct).toFixed(1)}%)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7d New Jobs Breakdown */}
+                <div className="space-y-sm">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant font-[Geist]">
+                    Added Last 7 Days
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🇮🇳</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.added_7d.india.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        India ({inventoryData.country_breakdown.added_7d.india_pct}%)
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-amber-500 transition-all duration-700"
+                      style={{ width: `${inventoryData.country_breakdown.added_7d.india_pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-sm">
+                    <span className="text-2xl">🌐</span>
+                    <div>
+                      <div className="text-xl font-black text-on-surface">
+                        {inventoryData.country_breakdown.added_7d.global.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant font-[Geist]">
+                        Global ({(100 - inventoryData.country_breakdown.added_7d.india_pct).toFixed(1)}%)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Mode Switcher Pills: Newly Added vs Deleted/Inactive vs Expired vs All */}
           <div className="flex items-center gap-xs p-1 bg-surface-container rounded-2xl border border-outline-variant overflow-x-auto custom-scrollbar">
             {[
