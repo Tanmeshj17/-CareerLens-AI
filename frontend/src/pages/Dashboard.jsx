@@ -421,11 +421,6 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
-
-      {/* FAB search */}
-      <Link to="/app/opportunities" className="fixed bottom-lg right-lg w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform z-50">
-        <span className="material-symbols-outlined text-[32px]">search</span>
-      </Link>
     </div>
   )
 }

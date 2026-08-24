@@ -192,16 +192,6 @@ export default function DashboardLayout() {
             <div className="lg:hidden flex items-center shrink-0">
               <CareerLensLogo size="xs" variant="icon" />
             </div>
-
-            {/* Search Input */}
-            <div className="relative w-full max-w-[180px] sm:max-w-xs md:max-w-md">
-              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 sm:py-2 pl-8 sm:pl-10 pr-3 sm:pr-4 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary truncate"
-              />
-            </div>
           </div>
 
           {/* Right Header Actions */}
