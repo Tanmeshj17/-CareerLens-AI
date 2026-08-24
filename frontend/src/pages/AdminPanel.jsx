@@ -11,7 +11,9 @@ import {
   adminTriggerCollector,
   adminGetPageAnalytics,
   adminGetFeedback,
-  adminUpdateFeedback
+  adminUpdateFeedback,
+  adminGetOpportunitiesAudit,
+  adminUpdateOpportunityStatus
 } from '../api'
 
 const RATING_EMOJIS = {
@@ -77,6 +79,16 @@ export default function AdminPanel() {
   const [feedbackList, setFeedbackList] = useState([])
   const [feedbackFilter, setFeedbackFilter] = useState('')
   const [loadingFeedback, setLoadingFeedback] = useState(false)
+
+  // 6. Job Inventory & Audit Data (Added/Deleted/Inactive jobs)
+  const [inventoryData, setInventoryData] = useState(null)
+  const [inventoryLoading, setInventoryLoading] = useState(false)
+  const [inventoryStatusFilter, setInventoryStatusFilter] = useState('active')
+  const [inventoryTimeRange, setInventoryTimeRange] = useState('all')
+  const [inventorySearch, setInventorySearch] = useState('')
+  const [inventorySourceFilter, setInventorySourceFilter] = useState('')
+  const [inventoryOffset, setInventoryOffset] = useState(0)
+  const [updatingOppId, setUpdatingOppId] = useState(null)
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -150,6 +162,56 @@ export default function AdminPanel() {
       console.error(err)
     } finally {
       setLoadingFeedback(false)
+    }
+  }
+
+  // Load Job Inventory & Audit tab data
+  useEffect(() => {
+    if (activeTab === 'inventory' && user?.role === 'admin') {
+      loadInventory(0)
+    }
+  }, [activeTab, inventoryStatusFilter, inventoryTimeRange, inventorySearch, inventorySourceFilter])
+
+  async function loadInventory(offset = inventoryOffset) {
+    setInventoryLoading(true)
+    try {
+      const data = await adminGetOpportunitiesAudit({
+        status_filter: inventoryStatusFilter,
+        q: inventorySearch,
+        source: inventorySourceFilter,
+        time_range: inventoryTimeRange,
+        limit: 50,
+        offset: offset
+      })
+      setInventoryData(data)
+      setInventoryOffset(offset)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setInventoryLoading(false)
+    }
+  }
+
+  async function handleToggleOppStatus(oppId, currentIsActive) {
+    const nextStatus = currentIsActive ? 'INACTIVE' : 'ACTIVE'
+    const actionName = currentIsActive ? 'deactivate / soft-delete' : 'reactivate'
+    if (!window.confirm(`Are you sure you want to ${actionName} this opportunity (#${oppId})?`)) return
+
+    setUpdatingOppId(oppId)
+    try {
+      await adminUpdateOpportunityStatus(oppId, {
+        status: nextStatus,
+        is_active: !currentIsActive,
+        reason: currentIsActive ? 'Admin Manual Deactivation' : null
+      })
+      setActionMessage(`Opportunity #${oppId} successfully updated to ${nextStatus}`)
+      setTimeout(() => setActionMessage(''), 4000)
+      await loadInventory(inventoryOffset)
+      adminGetSummary().then(sum => setSummary(sum)).catch(() => {})
+    } catch (err) {
+      alert(err?.message || 'Failed to update opportunity status')
+    } finally {
+      setUpdatingOppId(null)
     }
   }
 
@@ -410,6 +472,7 @@ export default function AdminPanel() {
       <div className="flex gap-xs border-b border-outline-variant/60 pb-xs overflow-x-auto custom-scrollbar">
         {[
           { id: 'overview', icon: 'dashboard', label: 'Executive Pulse' },
+          { id: 'inventory', icon: 'inventory_2', label: 'Job Inventory & Audits' },
           { id: 'users', icon: 'group', label: `Users (${summary?.users?.total || 0})` },
           { id: 'collector', icon: 'precision_manufacturing', label: 'Collector Ingestion' },
           { id: 'pages', icon: 'analytics', label: 'Feature Popularity' },
@@ -551,6 +614,355 @@ export default function AdminPanel() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════ TAB: JOB INVENTORY & AUDITS (ADDED/DELETED JOBS) ═══════════════ */}
+      {activeTab === 'inventory' && (
+        <div className="space-y-md">
+          {/* 4-KPI Metric Cards for Inventory */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-sm sm:gap-md">
+            {/* Active Jobs */}
+            <div className="p-md rounded-2xl bg-surface-container-low border border-outline-variant/70 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Active Inventory</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">check_circle</span>
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-on-surface mt-sm">
+                {inventoryData?.summary?.active_jobs?.toLocaleString() ?? summary?.collector?.active?.toLocaleString() ?? 0}
+              </div>
+              <div className="text-[11px] font-[Geist] text-emerald-600 mt-xs font-medium">
+                Live opportunities in database
+              </div>
+            </div>
+
+            {/* Deleted / Inactive Jobs */}
+            <div className="p-md rounded-2xl bg-surface-container-low border border-outline-variant/70 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Deleted / Inactive</span>
+                <div className="w-8 h-8 rounded-lg bg-error/10 text-error flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">delete_sweep</span>
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-on-surface mt-sm">
+                {inventoryData?.summary?.inactive_deleted_jobs?.toLocaleString() ?? 0}
+              </div>
+              <div className="text-[11px] font-[Geist] text-error mt-xs font-medium">
+                Deactivated / expired opportunities
+              </div>
+            </div>
+
+            {/* Added in Last 24 Hours */}
+            <div className="p-md rounded-2xl bg-surface-container-low border border-outline-variant/70 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Added Today (24h)</span>
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">bolt</span>
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-on-surface mt-sm">
+                {inventoryData?.summary?.added_24h?.toLocaleString() ?? summary?.collector?.jobs_24h?.toLocaleString() ?? 0}
+              </div>
+              <div className="text-[11px] font-[Geist] text-amber-600 mt-xs font-medium">
+                Newly ingested in last 24h
+              </div>
+            </div>
+
+            {/* Added in Last 7 Days */}
+            <div className="p-md rounded-2xl bg-surface-container-low border border-outline-variant/70 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-semibold font-[Geist] text-on-surface-variant uppercase tracking-wider">Added This Week (7d)</span>
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">calendar_view_week</span>
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-on-surface mt-sm">
+                {inventoryData?.summary?.added_7d?.toLocaleString() ?? summary?.collector?.jobs_7d?.toLocaleString() ?? 0}
+              </div>
+              <div className="text-[11px] font-[Geist] text-primary mt-xs font-medium">
+                New jobs added over 7 days
+              </div>
+            </div>
+          </div>
+
+          {/* Mode Switcher Pills: Newly Added vs Deleted/Inactive vs Expired vs All */}
+          <div className="flex items-center gap-xs p-1 bg-surface-container rounded-2xl border border-outline-variant overflow-x-auto custom-scrollbar">
+            {[
+              { id: 'active', label: '🟢 Active & Newly Ingested Jobs', icon: 'auto_awesome' },
+              { id: 'inactive_deleted', label: '🔴 Inactive / Deleted Jobs', icon: 'remove_circle_outline' },
+              { id: 'expired', label: '🟠 Expired / Closed Postings', icon: 'timer_off' },
+              { id: 'all', label: '⚪ All Database Inventory', icon: 'dataset' },
+            ].map(pill => (
+              <button
+                key={pill.id}
+                onClick={() => {
+                  setInventoryStatusFilter(pill.id)
+                  setInventoryOffset(0)
+                }}
+                className={`px-md py-sm rounded-xl text-xs font-bold font-[Geist] transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  inventoryStatusFilter === pill.id
+                    ? 'bg-surface text-on-surface shadow-xs border border-outline-variant'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{pill.icon}</span>
+                {pill.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Filter Bar: Search, Source, Time Range, Pagination */}
+          <div className="p-md rounded-2xl bg-surface-container-low border border-outline-variant flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-sm">
+            <div className="flex flex-wrap items-center gap-sm flex-1">
+              {/* Search Bar */}
+              <div className="relative flex-1 min-w-[200px]">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={inventorySearch}
+                  onChange={e => {
+                    setInventorySearch(e.target.value)
+                    setInventoryOffset(0)
+                  }}
+                  placeholder="Search by Job Title, Company, or Location..."
+                  className="w-full pl-9 pr-md py-sm bg-surface rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 font-[Geist]"
+                />
+              </div>
+
+              {/* Time Range Filter */}
+              <select
+                value={inventoryTimeRange}
+                onChange={e => {
+                  setInventoryTimeRange(e.target.value)
+                  setInventoryOffset(0)
+                }}
+                className="px-md py-sm bg-surface rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none font-[Geist]"
+              >
+                <option value="all">All Ingestion Time</option>
+                <option value="24h">Added Last 24 Hours</option>
+                <option value="7d">Added Last 7 Days</option>
+                <option value="30d">Added Last 30 Days</option>
+              </select>
+
+              {/* Primary Source Filter */}
+              <select
+                value={inventorySourceFilter}
+                onChange={e => {
+                  setInventorySourceFilter(e.target.value)
+                  setInventoryOffset(0)
+                }}
+                className="px-md py-sm bg-surface rounded-xl border border-outline-variant text-xs text-on-surface focus:outline-none font-[Geist]"
+              >
+                <option value="">All ATS Sources</option>
+                <option value="Greenhouse">Greenhouse</option>
+                <option value="Lever">Lever</option>
+                <option value="Unstop">Unstop</option>
+                <option value="Remotive">Remotive</option>
+                <option value="Workday">Workday</option>
+                <option value="Direct ATS">Direct ATS</option>
+              </select>
+            </div>
+
+            {/* Quick Actions & Counter */}
+            <div className="flex items-center gap-sm shrink-0">
+              <span className="text-xs font-[Geist] text-on-surface-variant">
+                Matching: <strong className="text-on-surface">{inventoryData?.filtered_total?.toLocaleString() ?? 0}</strong>
+              </span>
+              <button
+                onClick={() => loadInventory(inventoryOffset)}
+                disabled={inventoryLoading}
+                className="px-md py-sm bg-surface hover:bg-surface-container border border-outline-variant text-on-surface rounded-xl text-xs font-semibold font-[Geist] flex items-center gap-1.5 transition-all"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${inventoryLoading ? 'animate-spin' : ''}`}>refresh</span>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Opportunities Audit Data Table */}
+          <div className="glass-effect rounded-2xl overflow-hidden border border-outline-variant">
+            {inventoryLoading ? (
+              <div className="text-center py-xl text-xs font-[Geist] text-on-surface-variant flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                Loading opportunity inventory & audit stream...
+              </div>
+            ) : !inventoryData?.opportunities?.length ? (
+              <div className="text-center py-xl text-xs font-[Geist] text-on-surface-variant space-y-2">
+                <span className="material-symbols-outlined text-3xl text-on-surface-variant/50">search_off</span>
+                <p>No opportunities found matching your active filters.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-[Geist]">
+                  <thead className="bg-surface-container-low text-on-surface-variant text-[11px] font-bold uppercase tracking-wider border-b border-outline-variant">
+                    <tr>
+                      <th className="py-md px-md">ID</th>
+                      <th className="py-md px-md">Job Title & Employer</th>
+                      <th className="py-md px-md">Location & Type</th>
+                      <th className="py-md px-md">Status</th>
+                      <th className="py-md px-md">Source & Trust</th>
+                      <th className="py-md px-md">Ingestion / Seen Date</th>
+                      <th className="py-md px-md">Apply Link</th>
+                      <th className="py-md px-md text-right">Lifecycle Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/60">
+                    {inventoryData.opportunities.map(opp => (
+                      <tr key={opp.id} className="hover:bg-surface-container/40 transition-colors">
+                        {/* ID */}
+                        <td className="py-sm px-md font-mono text-on-surface-variant font-medium">
+                          #{opp.id}
+                        </td>
+
+                        {/* Title & Company */}
+                        <td className="py-sm px-md max-w-xs">
+                          <div className="font-bold text-on-surface truncate" title={opp.title}>
+                            {opp.title}
+                          </div>
+                          <div className="text-[11px] text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+                            <span className="font-semibold text-primary">{opp.company || 'Unknown Employer'}</span>
+                            {opp.is_india_job && (
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                                🇮🇳 India
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Location & Job Type */}
+                        <td className="py-sm px-md text-on-surface-variant">
+                          <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">location_on</span>
+                            <span className="truncate max-w-[150px]" title={opp.location}>{opp.location || 'Remote'}</span>
+                          </div>
+                          <div className="text-[11px] text-on-surface-variant/70 mt-0.5">
+                            {opp.job_type} • {opp.opportunity_category}
+                          </div>
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-sm px-md">
+                          {opp.is_active && opp.status === 'ACTIVE' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              Active
+                            </span>
+                          ) : opp.status === 'EXPIRED' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30">
+                              Expired
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-error/15 text-error border border-error/30">
+                              Inactive / Deleted
+                            </span>
+                          )}
+                          {opp.expired_reason && (
+                            <div className="text-[10px] text-error/80 mt-0.5 truncate max-w-[120px]" title={opp.expired_reason}>
+                              {opp.expired_reason}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Source & Trust Score */}
+                        <td className="py-sm px-md">
+                          <div className="font-semibold text-on-surface">{opp.primary_source}</div>
+                          <div className="mt-0.5 flex items-center gap-1">
+                            <span className={`text-[11px] font-bold ${
+                              opp.trust_score >= 80 ? 'text-emerald-600' : opp.trust_score >= 50 ? 'text-amber-600' : 'text-on-surface-variant'
+                            }`}>
+                              {opp.trust_score}% Trust
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Ingestion & Checked Dates */}
+                        <td className="py-sm px-md text-on-surface-variant text-[11px]">
+                          <div>
+                            <span className="text-on-surface-variant/60">First Seen: </span>
+                            <span className="font-medium text-on-surface">
+                              {opp.first_seen ? new Date(opp.first_seen).toLocaleDateString() : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-on-surface-variant/60 mt-0.5">
+                            Checked: {opp.last_checked ? new Date(opp.last_checked).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </td>
+
+                        {/* Apply Link Test */}
+                        <td className="py-sm px-md">
+                          {opp.apply_url ? (
+                            <a
+                              href={opp.apply_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-surface-container hover:bg-primary/10 hover:text-primary rounded-lg text-[11px] font-semibold font-[Geist] transition-colors border border-outline-variant"
+                              title="Test direct apply URL"
+                            >
+                              <span>Inspect</span>
+                              <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                            </a>
+                          ) : (
+                            <span className="text-on-surface-variant/50 text-[11px]">No URL</span>
+                          )}
+                        </td>
+
+                        {/* Lifecycle Actions */}
+                        <td className="py-sm px-md text-right">
+                          <button
+                            onClick={() => handleToggleOppStatus(opp.id, opp.is_active)}
+                            disabled={updatingOppId === opp.id}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-[Geist] transition-all disabled:opacity-50 inline-flex items-center gap-1 ${
+                              opp.is_active
+                                ? 'bg-error/10 text-error hover:bg-error/20 border border-error/30'
+                                : 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 border border-emerald-500/30'
+                            }`}
+                          >
+                            {updatingOppId === opp.id ? (
+                              <span className="material-symbols-outlined text-[12px] animate-spin">progress_activity</span>
+                            ) : (
+                              <span className="material-symbols-outlined text-[13px]">
+                                {opp.is_active ? 'delete' : 'replay'}
+                              </span>
+                            )}
+                            <span>{opp.is_active ? 'Deactivate' : 'Reactivate'}</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {inventoryData && inventoryData.filtered_total > 50 && (
+              <div className="p-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between font-[Geist] text-xs">
+                <span className="text-on-surface-variant">
+                  Showing {inventoryOffset + 1} to {Math.min(inventoryOffset + 50, inventoryData.filtered_total)} of {inventoryData.filtered_total.toLocaleString()} opportunities
+                </span>
+                <div className="flex items-center gap-xs">
+                  <button
+                    onClick={() => loadInventory(Math.max(0, inventoryOffset - 50))}
+                    disabled={inventoryOffset === 0 || inventoryLoading}
+                    className="px-md py-xs bg-surface border border-outline-variant text-on-surface rounded-lg disabled:opacity-40 font-semibold"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => loadInventory(inventoryOffset + 50)}
+                    disabled={inventoryOffset + 50 >= inventoryData.filtered_total || inventoryLoading}
+                    className="px-md py-xs bg-surface border border-outline-variant text-on-surface rounded-lg disabled:opacity-40 font-semibold"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

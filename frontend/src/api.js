@@ -537,6 +537,32 @@ export async function adminTriggerCollector() {
   });
 }
 
+export async function adminGetOpportunitiesAudit({
+  status_filter = 'active',
+  q = '',
+  source = '',
+  time_range = 'all',
+  limit = 50,
+  offset = 0
+} = {}) {
+  const params = new URLSearchParams();
+  if (status_filter) params.append('status_filter', status_filter);
+  if (q) params.append('q', q);
+  if (source) params.append('source', source);
+  if (time_range) params.append('time_range', time_range);
+  params.append('limit', limit);
+  params.append('offset', offset);
+  return request(`/api/admin/opportunities/audit?${params.toString()}`);
+}
+
+export async function adminUpdateOpportunityStatus(oppId, payload) {
+  invalidateCache('/api/admin/opportunities');
+  return request(`/api/admin/opportunities/${oppId}/status`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
 export async function adminGetPageAnalytics(days = 30) {
   return request(`/api/admin/analytics/pages?days=${days}`);
 }

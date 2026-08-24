@@ -428,6 +428,206 @@ def trigger_manual_collection(
 
 
 # ─────────────────────────────────────────────────────────────
+# 3.1 Job Inventory, Inactive/Deleted Audits & Ingestion Streams
+# ─────────────────────────────────────────────────────────────
+
+@router.get("/opportunities/audit")
+def get_opportunities_audit(
+    status_filter: str = Query("active", description="Filter by status: 'active', 'inactive', 'deleted', 'expired', 'all'"),
+    q: Optional[str] = Query(None, description="Search query across job title or company"),
+    source: Optional[str] = Query(None, description="Filter by primary_source ATS"),
+    time_range: str = Query("all", description="Timeframe: '24h', '7d', '30d', 'all'"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin)
+):
+    """
+    Provides comprehensive inventory and audit tracking for opportunities:
+    - Counters: Active, Inactive/Deleted, Expired, Added in 24h, Added in 7d, Added in 30d
+    - Detailed, filterable list of newly added jobs or deleted/inactive jobs
+    """
+    now = datetime.utcnow()
+    one_day_ago = now - timedelta(days=1)
+    one_week_ago = now - timedelta(days=7)
+    one_month_ago = now - timedelta(days=30)
+
+    # 1. Global KPI Metrics
+    total_count = db.query(func.count(models.Opportunity.id)).scalar() or 0
+    active_count = db.query(func.count(models.Opportunity.id)).filter(
+        models.Opportunity.is_active == True,
+        or_(models.Opportunity.status == "ACTIVE", models.Opportunity.status == "Active", models.Opportunity.status.is_(None))
+    ).scalar() or 0
+
+    inactive_deleted_count = db.query(func.count(models.Opportunity.id)).filter(
+        or_(
+            models.Opportunity.is_active == False,
+            models.Opportunity.status.in_(["INACTIVE", "DELETED", "EXPIRED", "Inactive", "Deleted", "Expired"])
+        )
+    ).scalar() or 0
+
+    expired_count = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.status == "EXPIRED", models.Opportunity.validation_status == "CLOSED")
+    ).scalar() or 0
+
+    added_24h_count = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_day_ago, models.Opportunity.posted_date >= one_day_ago)
+    ).scalar() or 0
+
+    added_7d_count = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_week_ago, models.Opportunity.posted_date >= one_week_ago)
+    ).scalar() or 0
+
+    added_30d_count = db.query(func.count(models.Opportunity.id)).filter(
+        or_(models.Opportunity.first_seen >= one_month_ago, models.Opportunity.posted_date >= one_month_ago)
+    ).scalar() or 0
+
+    # 2. Build Filtered Query
+    query = db.query(models.Opportunity)
+
+    # Status filtering
+    clean_status = status_filter.lower().strip()
+    if clean_status == "active":
+        query = query.filter(
+            models.Opportunity.is_active == True,
+            or_(models.Opportunity.status == "ACTIVE", models.Opportunity.status == "Active", models.Opportunity.status.is_(None))
+        )
+    elif clean_status in ("inactive", "deleted", "inactive_deleted"):
+        query = query.filter(
+            or_(
+                models.Opportunity.is_active == False,
+                models.Opportunity.status.in_(["INACTIVE", "DELETED", "EXPIRED", "Inactive", "Deleted", "Expired"])
+            )
+        )
+    elif clean_status == "expired":
+        query = query.filter(
+            or_(models.Opportunity.status == "EXPIRED", models.Opportunity.validation_status == "CLOSED")
+        )
+
+    # Timeframe filtering
+    clean_time = time_range.lower().strip()
+    if clean_time == "24h":
+        query = query.filter(
+            or_(models.Opportunity.first_seen >= one_day_ago, models.Opportunity.posted_date >= one_day_ago)
+        )
+    elif clean_time == "7d":
+        query = query.filter(
+            or_(models.Opportunity.first_seen >= one_week_ago, models.Opportunity.posted_date >= one_week_ago)
+        )
+    elif clean_time == "30d":
+        query = query.filter(
+            or_(models.Opportunity.first_seen >= one_month_ago, models.Opportunity.posted_date >= one_month_ago)
+        )
+
+    # Text search
+    if q:
+        search = f"%{q.strip().lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(models.Opportunity.title).like(search),
+                func.lower(models.Opportunity.company).like(search),
+                func.lower(models.Opportunity.location).like(search)
+            )
+        )
+
+    # Source filter
+    if source and source.lower() != "all":
+        query = query.filter(models.Opportunity.primary_source.ilike(f"%{source.strip()}%"))
+
+    filtered_total = query.count()
+    opportunities = query.order_by(
+        models.Opportunity.posted_date.desc(),
+        models.Opportunity.first_seen.desc(),
+        models.Opportunity.id.desc()
+    ).offset(offset).limit(limit).all()
+
+    # Format result items
+    results = []
+    for opp in opportunities:
+        results.append({
+            "id": opp.id,
+            "title": opp.title,
+            "company": opp.company,
+            "location": opp.location,
+            "job_type": opp.job_type or "Full-time",
+            "opportunity_category": opp.opportunity_category or "Job",
+            "status": opp.status or ("ACTIVE" if opp.is_active else "INACTIVE"),
+            "is_active": bool(opp.is_active),
+            "trust_score": opp.trust_score or 0,
+            "apply_url": opp.verified_apply_url or opp.apply_url,
+            "primary_source": opp.primary_source or "Direct ATS",
+            "first_seen": opp.first_seen.isoformat() if opp.first_seen else None,
+            "posted_date": opp.posted_date.isoformat() if opp.posted_date else None,
+            "last_checked": opp.last_checked.isoformat() if opp.last_checked else None,
+            "expired_reason": opp.expired_reason or opp.validation_reason,
+            "data_origin": opp.data_origin or "LIVE_SCRAPE",
+            "is_india_job": bool(opp.is_india_job)
+        })
+
+    return {
+        "summary": {
+            "total_jobs": total_count,
+            "active_jobs": active_count,
+            "inactive_deleted_jobs": inactive_deleted_count,
+            "expired_jobs": expired_count,
+            "added_24h": added_24h_count,
+            "added_7d": added_7d_count,
+            "added_30d": added_30d_count,
+        },
+        "filtered_total": filtered_total,
+        "offset": offset,
+        "limit": limit,
+        "opportunities": results
+    }
+
+
+class OpportunityStatusPayload(schemas.BaseModel):
+    status: str
+    is_active: Optional[bool] = None
+    reason: Optional[str] = None
+
+
+@router.put("/opportunities/{opp_id}/status")
+def update_opportunity_status(
+    opp_id: int,
+    payload: OpportunityStatusPayload,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(require_admin)
+):
+    """
+    Allows admin to soft-delete (deactivate) or reactivate any opportunity.
+    """
+    opp = db.query(models.Opportunity).filter(models.Opportunity.id == opp_id).first()
+    if not opp:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+
+    new_status = payload.status.upper().strip()
+    if new_status not in ("ACTIVE", "INACTIVE", "DELETED", "EXPIRED"):
+        raise HTTPException(status_code=400, detail="Invalid status. Must be ACTIVE, INACTIVE, DELETED, or EXPIRED.")
+
+    opp.status = new_status
+    if payload.is_active is not None:
+        opp.is_active = payload.is_active
+    else:
+        opp.is_active = (new_status == "ACTIVE")
+
+    if payload.reason:
+        opp.expired_reason = payload.reason
+    opp.last_checked = datetime.utcnow()
+
+    db.commit()
+    db.refresh(opp)
+
+    return {
+        "message": f"Opportunity #{opp.id} ('{opp.title}') status updated to {new_status}",
+        "id": opp.id,
+        "status": opp.status,
+        "is_active": opp.is_active,
+        "success": True
+    }
+
+
+# ─────────────────────────────────────────────────────────────
 # 4. Page & Feature Usage Analytics ("Which page used most")
 # ─────────────────────────────────────────────────────────────
 
