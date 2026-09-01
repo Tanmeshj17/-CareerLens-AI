@@ -1358,29 +1358,29 @@ def read_opportunities(
     limit: int = 30,
     db: Session = Depends(database.get_db),
 ):
-    from sqlalchemy import or_, func as sqla_func
+    from sqlalchemy import or_, and_, func as sqla_func
+    from app.search_engine import build_job_type_filter, build_location_filter, _build_multi_token_filter
     
     # Build filter conditions once, reuse for count + results
     filters = []
     
-    if search:
-        search_term = f"%{search.strip()}%"
-        filters.append(or_(
-            models.Opportunity.title.ilike(search_term),
-            models.Opportunity.company.ilike(search_term),
-            models.Opportunity.location.ilike(search_term),
-            models.Opportunity.required_skills.ilike(search_term),
-            models.Opportunity.description.ilike(search_term)
-        ))
+    if search and search.strip():
+        search_filter = _build_multi_token_filter(search.strip())
+        if search_filter is not None:
+            filters.append(search_filter)
         
     if role and role != "All" and role.strip():
         filters.append(models.Opportunity.title.ilike(f"%{role.strip()}%"))
         
     if location and location != "All" and location.strip():
-        filters.append(models.Opportunity.location.ilike(f"%{location.strip()}%"))
+        loc_filter = build_location_filter(location)
+        if loc_filter is not None:
+            filters.append(loc_filter)
         
     if type and type != "All" and type.strip():
-        filters.append(models.Opportunity.job_type.ilike(f"%{type.strip()}%"))
+        jt_filter = build_job_type_filter(type)
+        if jt_filter is not None:
+            filters.append(jt_filter)
 
     # Phase 8.55: Enforce Direct-Apply Verified Sources ONLY
     filters.append(
