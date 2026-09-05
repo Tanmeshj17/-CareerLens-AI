@@ -194,10 +194,10 @@ logging.getLogger("uvicorn.access").addFilter(UvicornAccessFilter())
 # Configure endpoints and middleware
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error(f"Unhandled exception on {request.url.path}: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal Server Error. Please try again later."},
+        content={"detail": f"Internal Server Error: [{type(exc).__name__}] {str(exc)}"},
     )
 
 # ── Health check endpoint (keeps Render backend warm) ──────────
