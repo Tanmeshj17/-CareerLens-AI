@@ -69,10 +69,19 @@ async function request(path, options = {}) {
     if (cached) return cached
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (res.status === 401) {
     const hadToken = !!getToken()

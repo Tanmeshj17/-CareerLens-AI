@@ -23,8 +23,11 @@ from .routers.history_router import router as history_router, dashboard_router a
 # Validate environment settings on startup
 validate_environment()
 
-# Create database tables
-models.Base.metadata.create_all(bind=database.engine)
+# Create database tables (deferred safely if DB unavailable during import)
+try:
+    models.Base.metadata.create_all(bind=database.engine)
+except Exception as _e:
+    pass
 
 # --- Rate Limiter Setup ---
 limiter = Limiter(key_func=get_remote_address)
@@ -743,29 +746,37 @@ def startup_event():
             logger.warning(f"India-First location normalization error (non-fatal): {india_err}")
             db.rollback()
 
-        # 2c. Run live API collector to fetch/refresh real jobs
-        try:
-            from .auto_collector import run_auto_collection
-            result = run_auto_collection(db)
-            logger.info(
-                f"Live API collector completed: "
-                f"inserted={result['inserted']}, "
-                f"active_jobs={result['active_jobs']}, "
-                f"sources={result.get('sources', {})}"
-            )
-        except Exception as coll_err:
-            logger.warning(f"Live API collector failed (non-fatal): {coll_err}")
+        # 2c. Run live API collector & seed in background thread (non-blocking for instant server boot)
+        def _bg_startup_tasks():
+            try:
+                bg_db = database.SessionLocal()
+                try:
+                    from .auto_collector import run_auto_collection
+                    result = run_auto_collection(bg_db)
+                    logger.info(
+                        f"Live API collector completed in background: "
+                        f"inserted={result.get('inserted', 0)}, "
+                        f"active_jobs={result.get('active_jobs', 0)}"
+                    )
+                except Exception as coll_err:
+                    logger.warning(f"Live API collector failed (non-fatal): {coll_err}")
 
-        # 2d. Refresh learning resources and certifications
-        try:
-            db.query(models.LearningResource).delete()
-            db.query(models.Certification).delete()
-            db.commit()
-            _safe_seed(db)
-            logger.info("Refreshed learning resources and certifications with verified URLs.")
-        except Exception as res_err:
-            logger.warning(f"Learning resource refresh failed (non-fatal): {res_err}")
-            db.rollback()
+                try:
+                    bg_db.query(models.LearningResource).delete()
+                    bg_db.query(models.Certification).delete()
+                    bg_db.commit()
+                    _safe_seed(bg_db)
+                    logger.info("Refreshed learning resources and certifications with verified URLs.")
+                except Exception as res_err:
+                    logger.warning(f"Learning resource refresh failed (non-fatal): {res_err}")
+                    bg_db.rollback()
+                finally:
+                    bg_db.close()
+            except Exception as thread_err:
+                logger.warning(f"Background startup tasks error: {thread_err}")
+
+        import threading
+        threading.Thread(target=_bg_startup_tasks, daemon=True).start()
 
         db.close()
     except Exception as db_err:

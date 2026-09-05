@@ -16,13 +16,17 @@ if not SQLALCHEMY_DATABASE_URL:
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     raise RuntimeError("SQLite is no longer supported for CareerLens AI. You must configure a PostgreSQL DATABASE_URL.")
 
-engine = create_engine(
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-        SQLALCHEMY_DATABASE_URL, 
-        pool_size=100, 
-        max_overflow=200,
-        pool_pre_ping=True
-    )
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, 
+    pool_size=10, 
+    max_overflow=20,
+    pool_recycle=300,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 10}
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
