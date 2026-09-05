@@ -1382,111 +1382,111 @@ def read_opportunities(
     limit: int = 30,
     db: Session = Depends(database.get_db),
 ):
-    from sqlalchemy import or_, and_, func as sqla_func
-    from app.search_engine import build_job_type_filter, build_location_filter, _build_multi_token_filter
-    
-    # Build filter conditions once, reuse for count + results
-    filters = []
-    
-    if search and search.strip():
-        search_filter = _build_multi_token_filter(search.strip())
-        if search_filter is not None:
-            filters.append(search_filter)
+    try:
+        from sqlalchemy import or_, and_, func as sqla_func
+        from app.search_engine import build_job_type_filter, build_location_filter, _build_multi_token_filter
         
-    if role and role != "All" and role.strip():
-        filters.append(models.Opportunity.title.ilike(f"%{role.strip()}%"))
+        # Build filter conditions once, reuse for count + results
+        filters = []
         
-    if location and location != "All" and location.strip():
-        loc_filter = build_location_filter(location)
-        if loc_filter is not None:
-            filters.append(loc_filter)
-        
-    if type and type != "All" and type.strip():
-        jt_filter = build_job_type_filter(type)
-        if jt_filter is not None:
-            filters.append(jt_filter)
+        if search and search.strip():
+            search_filter = _build_multi_token_filter(search.strip())
+            if search_filter is not None:
+                filters.append(search_filter)
+            
+        if role and role != "All" and role.strip():
+            filters.append(models.Opportunity.title.ilike(f"%{role.strip()}%"))
+            
+        if location and location != "All" and location.strip():
+            loc_filter = build_location_filter(location)
+            if loc_filter is not None:
+                filters.append(loc_filter)
+            
+        if type and type != "All" and type.strip():
+            jt_filter = build_job_type_filter(type)
+            if jt_filter is not None:
+                filters.append(jt_filter)
 
-    # Phase 8.55: Enforce Direct-Apply Verified Sources ONLY
-    filters.append(
-        or_(
-            models.Opportunity.data_origin == "LIVE_API",
-            models.Opportunity.data_origin == "LIVE_SCRAPE",
-            models.Opportunity.data_origin == "CURATED_FALLBACK",
-            models.Opportunity.data_origin.is_(None)
-        )
-    )
-    filters.append(
-        or_(
-            models.Opportunity.link_quality_score > 0,
-            models.Opportunity.link_quality_score == None # fallback for untested ones
-        )
-    )
-    
-    # Lightweight count query (no ORDER BY, no joins)
-    count_q = db.query(sqla_func.count(models.Opportunity.id)).filter(
-        models.Opportunity.is_active == True,
-        or_(
-            models.Opportunity.status == "ACTIVE",
-            models.Opportunity.status == "Active",
-            models.Opportunity.status.is_(None)
-        )
-    )
-    if filters:
-        count_q = count_q.filter(*filters)
-    total = count_q.scalar()
-    
-    # Results query with ordering and pagination
-    skip = (page - 1) * limit
-    results_q = db.query(models.Opportunity).filter(
-        models.Opportunity.is_active == True,
-        or_(
-            models.Opportunity.status == "ACTIVE",
-            models.Opportunity.status == "Active",
-            models.Opportunity.status.is_(None)
-        )
-    )
-    if filters:
-        results_q = results_q.filter(*filters)
-
-    # Dynamic sort handling
-    if sort == "newest":
-        results_q = results_q.order_by(
-            models.Opportunity.posted_date.desc().nulls_last(),
-            models.Opportunity.id.desc()
-        )
-    elif sort == "quality":
-        results_q = results_q.order_by(
-            models.Opportunity.link_quality_score.desc().nulls_last(),
-            models.Opportunity.trust_score.desc().nulls_last()
-        )
-    else:  # relevance
-        results_q = results_q.order_by(
-            models.Opportunity.computed_rank_score.desc().nulls_last(),
-            models.Opportunity.last_seen.desc().nulls_last()
-        )
-
-    results = results_q.offset(skip).limit(limit).all()
-    
-    # Async search logging (non-blocking)
-    if search:
-        try:
-            log = models.SearchLog(
-                query=search,
-                results_count=total,
-                filters_used={"type": type, "location": location, "role": role}
+        filters.append(
+            or_(
+                models.Opportunity.data_origin == "LIVE_API",
+                models.Opportunity.data_origin == "LIVE_SCRAPE",
+                models.Opportunity.data_origin == "CURATED_FALLBACK",
+                models.Opportunity.data_origin.is_(None)
             )
-            db.add(log)
-            db.commit()
-        except Exception as e:
-            logger.error(f"Failed to log search: {e}")
-            db.rollback()
+        )
+        
+        # Lightweight count query (no ORDER BY, no joins)
+        count_q = db.query(sqla_func.count(models.Opportunity.id)).filter(
+            or_(
+                models.Opportunity.status == "ACTIVE",
+                models.Opportunity.status == "Active",
+                models.Opportunity.status.is_(None)
+            )
+        )
+        if filters:
+            count_q = count_q.filter(*filters)
+        total = count_q.scalar() or 0
+        
+        # Results query with ordering and pagination
+        skip = (page - 1) * limit
+        results_q = db.query(models.Opportunity).filter(
+            or_(
+                models.Opportunity.status == "ACTIVE",
+                models.Opportunity.status == "Active",
+                models.Opportunity.status.is_(None)
+            )
+        )
+        if filters:
+            results_q = results_q.filter(*filters)
 
-    return {
-        "total": total,
-        "page": page,
-        "opportunities": results,
-        "has_more": len(results) == limit
-    }
+        # Dynamic sort handling
+        if sort == "newest":
+            results_q = results_q.order_by(
+                models.Opportunity.posted_date.desc().nulls_last(),
+                models.Opportunity.id.desc()
+            )
+        elif sort == "quality":
+            results_q = results_q.order_by(
+                models.Opportunity.trust_score.desc().nulls_last()
+            )
+        else:  # relevance
+            results_q = results_q.order_by(
+                models.Opportunity.computed_rank_score.desc().nulls_last(),
+                models.Opportunity.last_seen.desc().nulls_last()
+            )
+
+        results = results_q.offset(skip).limit(limit).all()
+        
+        # Async search logging (non-blocking)
+        if search:
+            try:
+                log = models.SearchLog(
+                    query=search,
+                    results_count=total,
+                    filters_used={"type": type, "location": location, "role": role}
+                )
+                db.add(log)
+                db.commit()
+            except Exception as e:
+                logger.error(f"Failed to log search: {e}")
+                db.rollback()
+
+        return {
+            "total": total,
+            "page": page,
+            "opportunities": results,
+            "has_more": len(results) == limit
+        }
+    except Exception as exc:
+        logger.error(f"read_opportunities error: {exc}", exc_info=True)
+        return {
+            "total": 0,
+            "page": page,
+            "opportunities": [],
+            "has_more": False,
+            "error": str(exc)
+        }
 
 @app.get("/api/search/suggestions")
 @app.get("/api/opportunities/autocomplete")
