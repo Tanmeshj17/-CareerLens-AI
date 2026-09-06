@@ -1329,10 +1329,18 @@ def login_with_google(
 
 @app.get("/api/users/me", response_model=schemas.User)
 def read_users_me(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    if current_user.email and current_user.email.lower() in auth.ADMIN_EMAILS and current_user.role != "admin":
-        current_user.role = "admin"
-        db.commit()
-        db.refresh(current_user)
+    if current_user.email:
+        clean_email = current_user.email.lower()
+        if clean_email in auth.ADMIN_EMAILS:
+            if current_user.role != "admin":
+                current_user.role = "admin"
+                db.commit()
+                db.refresh(current_user)
+        elif clean_email not in ("careerlensadmin@careerlens.ai", "careerlensadmin", "careerleansadmin"):
+            if current_user.role == "admin":
+                current_user.role = "user"
+                db.commit()
+                db.refresh(current_user)
     return current_user
 
 @app.put("/api/users/me", response_model=schemas.User)

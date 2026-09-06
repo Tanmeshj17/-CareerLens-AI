@@ -50,10 +50,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 ADMIN_EMAILS = [
-    e.strip().lower()
-    for e in os.getenv("ADMIN_EMAILS", "tanmeshofficial@gmail.com").split(",")
-    if e.strip()
+    "tanmeshj@17",
+    "tanmeshj17@gmail.com",
+    "tanmeshj17",
+    "tanmeshofficial@gmail.com",
 ]
+
+# Merge any additional admin emails from env if present
+_env_admins = os.getenv("ADMIN_EMAILS", "")
+if _env_admins:
+    for _e in _env_admins.split(","):
+        _clean = _e.strip().lower()
+        if _clean and _clean not in ADMIN_EMAILS:
+            ADMIN_EMAILS.append(_clean)
 
 def get_user_by_email(db: Session, email: str):
     if not email:
@@ -78,9 +87,18 @@ def get_user_by_email(db: Session, email: str):
         return ensure_admin_user(db)
 
     user = db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
-    if user and clean_email in ADMIN_EMAILS and user.role != "admin":
-        user.role = "admin"
-        db.commit()
+    if user:
+        if clean_email in ADMIN_EMAILS:
+            if user.role != "admin":
+                user.role = "admin"
+                db.commit()
+        else:
+            # Strictly enforce: NO others can ever have admin role
+            if user.role == "admin" and clean_email not in (
+                "careerlensadmin@careerlens.ai", "careerlensadmin", "careerleansadmin"
+            ):
+                user.role = "user"
+                db.commit()
     return user
 
 def ensure_admin_user(db: Session):
