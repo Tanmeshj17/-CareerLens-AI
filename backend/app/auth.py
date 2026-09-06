@@ -49,14 +49,25 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-from sqlalchemy import func
+ADMIN_EMAILS = [
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "tanmeshofficial@gmail.com").split(",")
+    if e.strip()
+]
 
 def get_user_by_email(db: Session, email: str):
     if not email:
         return None
     clean_email = email.strip().lower()
-    # Support logging in with 'careerlensadmin' or 'careerlensadmin@careerlens.ai'
-    if clean_email in ("careerlensadmin", "careerlensadmin@careerlens.ai", "careerlensadmin@gmail.com"):
+    # Support logging in with 'careerlensadmin' or typo 'careerleansadmin' or standard aliases
+    if clean_email in (
+        "careerlensadmin",
+        "careerleansadmin",
+        "careerlensadmin@careerlens.ai",
+        "careerleansadmin@careerlens.ai",
+        "careerlensadmin@gmail.com",
+        "careerleansadmin@gmail.com"
+    ):
         admin = db.query(models.User).filter(
             (func.lower(models.User.email) == "careerlensadmin@careerlens.ai") |
             (func.lower(models.User.email) == "careerlensadmin")
@@ -65,7 +76,12 @@ def get_user_by_email(db: Session, email: str):
             return admin
         # Auto-create if not yet created
         return ensure_admin_user(db)
-    return db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
+
+    user = db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
+    if user and clean_email in ADMIN_EMAILS and user.role != "admin":
+        user.role = "admin"
+        db.commit()
+    return user
 
 def ensure_admin_user(db: Session):
     """

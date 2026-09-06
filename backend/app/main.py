@@ -1293,22 +1293,24 @@ def login_with_google(
 
     # Check if user already exists
     user = auth.get_user_by_email(db, clean_email)
+    assigned_role = "admin" if clean_email in auth.ADMIN_EMAILS else "user"
     if not user:
-        # Auto-create account — always role='user', never admin
         random_pass = auth.generate_secure_token()
         user = models.User(
             email=clean_email,
             full_name=name or clean_email.split("@")[0].title(),
             hashed_password=auth.get_password_hash(random_pass),
             is_verified=True,
-            role="user"
+            role=assigned_role
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-        logger.info(f"New user auto-registered via Google Sign-In: {clean_email}")
+        logger.info(f"New user auto-registered via Google Sign-In: {clean_email} (role={assigned_role})")
     else:
-        # Mark verified (Google confirmed email ownership)
+        if clean_email in auth.ADMIN_EMAILS and user.role != "admin":
+            user.role = "admin"
+            db.commit()
         if not user.is_verified:
             user.is_verified = True
             db.commit()
@@ -1326,7 +1328,11 @@ def login_with_google(
 
 
 @app.get("/api/users/me", response_model=schemas.User)
-def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
+def read_users_me(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.email and current_user.email.lower() in auth.ADMIN_EMAILS and current_user.role != "admin":
+        current_user.role = "admin"
+        db.commit()
+        db.refresh(current_user)
     return current_user
 
 @app.put("/api/users/me", response_model=schemas.User)
