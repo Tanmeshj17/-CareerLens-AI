@@ -796,7 +796,7 @@ def startup_event():
         logger.warning(f"Startup database check failed (non-fatal): {db_err}")
 
     # 3. Start embedded scheduler
-    enable_scheduler = os.environ.get("ENABLE_SCHEDULER", "false").lower() == "true"
+    enable_scheduler = os.environ.get("ENABLE_SCHEDULER", "true").lower() == "true"
     if enable_scheduler:
         try:
             from scheduler import start_scheduler

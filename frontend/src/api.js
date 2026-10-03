@@ -546,6 +546,14 @@ export async function adminTriggerCollector() {
   });
 }
 
+export async function adminCleanupOldJobs({ days = 30, delete_stale = true } = {}) {
+  invalidateCache('/api/admin/collector');
+  invalidateCache('/api/admin/opportunities');
+  return request(`/api/admin/collector/cleanup-old?days=${days}&delete_stale=${delete_stale}`, {
+    method: 'POST'
+  });
+}
+
 export async function adminGetOpportunitiesAudit({
   status_filter = 'active',
   q = '',

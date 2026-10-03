@@ -9,6 +9,7 @@ import {
   adminChangePassword,
   adminGetCollectorStats,
   adminTriggerCollector,
+  adminCleanupOldJobs,
   adminGetPageAnalytics,
   adminGetFeedback,
   adminUpdateFeedback,
@@ -246,23 +247,52 @@ export default function AdminPanel() {
     }
   }
 
+  const [cleaningUpJobs, setCleaningUpJobs] = useState(false)
+
   async function handleTriggerCollector() {
     setTriggeringCollector(true)
     setCollectorResult(null)
     try {
       const res = await adminTriggerCollector()
       setCollectorResult(res)
-      setActionMessage(res?.message || 'Collector executed successfully!')
-      // Refresh metrics
-      const col = await adminGetCollectorStats()
-      setCollectorStats(col)
-      const sum = await adminGetSummary()
-      setSummary(sum)
-      setTimeout(() => setActionMessage(''), 6000)
+      setActionMessage(res?.message || 'Collector started in background!')
+      // Refresh metrics after background process runs
+      setTimeout(async () => {
+        try {
+          const col = await adminGetCollectorStats()
+          setCollectorStats(col)
+          const sum = await adminGetSummary()
+          setSummary(sum)
+        } catch (_) {}
+      }, 5000)
+      setTimeout(() => setActionMessage(''), 7000)
     } catch (err) {
       alert(err?.message || 'Collector execution failed')
     } finally {
       setTriggeringCollector(false)
+    }
+  }
+
+  async function handleCleanupOldJobs(days = 30) {
+    if (!window.confirm(`Are you sure you want to permanently delete jobs older than ${days} days and inactive/stale postings?`)) {
+      return
+    }
+    setCleaningUpJobs(true)
+    try {
+      const res = await adminCleanupOldJobs({ days, delete_stale: true })
+      setActionMessage(res?.message || `Successfully purged ${res?.deleted_count || 0} old jobs!`)
+      const col = await adminGetCollectorStats()
+      setCollectorStats(col)
+      const sum = await adminGetSummary()
+      setSummary(sum)
+      if (activeTab === 'inventory') {
+        await loadInventory(0)
+      }
+      setTimeout(() => setActionMessage(''), 6000)
+    } catch (err) {
+      alert(err?.message || 'Job cleanup failed')
+    } finally {
+      setCleaningUpJobs(false)
     }
   }
 
@@ -510,16 +540,30 @@ export default function AdminPanel() {
               </div>
             </div>
 
-            <button
-              onClick={handleTriggerCollector}
-              disabled={triggeringCollector}
-              className="px-lg py-sm bg-primary hover:brightness-110 text-on-primary rounded-xl text-xs font-bold font-[Geist] transition-all disabled:opacity-50 flex items-center gap-2 shrink-0 shadow-md shadow-primary/20"
-            >
-              <span className={`material-symbols-outlined text-base ${triggeringCollector ? 'animate-spin' : ''}`}>
-                {triggeringCollector ? 'autorenew' : 'play_arrow'}
-              </span>
-              {triggeringCollector ? 'Collecting Live Jobs...' : 'Trigger Collector Now'}
-            </button>
+            <div className="flex flex-wrap items-center gap-sm shrink-0">
+              <button
+                onClick={handleTriggerCollector}
+                disabled={triggeringCollector}
+                className="px-lg py-sm bg-primary hover:brightness-110 text-on-primary rounded-xl text-xs font-bold font-[Geist] transition-all disabled:opacity-50 flex items-center gap-2 shadow-md shadow-primary/20"
+              >
+                <span className={`material-symbols-outlined text-base ${triggeringCollector ? 'animate-spin' : ''}`}>
+                  {triggeringCollector ? 'autorenew' : 'play_arrow'}
+                </span>
+                {triggeringCollector ? 'Starting Collector...' : 'Trigger Collector Now'}
+              </button>
+
+              <button
+                onClick={() => handleCleanupOldJobs(30)}
+                disabled={cleaningUpJobs}
+                className="px-lg py-sm bg-error/10 hover:bg-error/20 text-error border border-error/30 rounded-xl text-xs font-bold font-[Geist] transition-all disabled:opacity-50 flex items-center gap-2"
+                title="Permanently remove jobs older than 30 days and inactive/stale postings"
+              >
+                <span className={`material-symbols-outlined text-base ${cleaningUpJobs ? 'animate-spin' : ''}`}>
+                  {cleaningUpJobs ? 'autorenew' : 'delete_sweep'}
+                </span>
+                {cleaningUpJobs ? 'Purging Old Jobs...' : 'Purge Old Jobs (>30d)'}
+              </button>
+            </div>
           </div>
 
           {collectorResult && (

@@ -48,7 +48,7 @@ def _hash(title: str, company: str, location: str) -> str:
     return hashlib.md5(raw.encode("utf-8")).hexdigest()
 
 
-def _api_get(url: str, timeout: int = 15):
+def _api_get(url: str, timeout: int = 6):
     """Make a GET request and return parsed JSON, or None on failure."""
     try:
         req = urllib.request.Request(url, headers=_HEADERS)
@@ -434,10 +434,13 @@ def collect_unstop_jobs() -> list:
     jobs = []
 
     categories = [
-        ("internships", "Internship", 15),
-        ("jobs", "Full-time", 15),
-        ("hackathons", "Hackathon", 5),
-        ("hiring-challenges", "Hiring Challenge", 5),
+        ("internships", "Internship", 6),
+        ("jobs", "Full-time", 6),
+        ("hackathons", "Hackathon", 3),
+        ("hiring-challenges", "Hiring Challenge", 3),
+        ("jobs&q=software+developer", "Full-time", 3),
+        ("internships&q=software+developer", "Internship", 3),
+        ("jobs&q=data+analyst", "Full-time", 2),
     ]
 
     for opp_type, default_type, max_pages in categories:
@@ -606,7 +609,7 @@ def _insert_jobs(db, jobs: list) -> int:
             existing.location = location
             existing.last_seen = datetime.utcnow()
             existing.is_active = True
-            existing.status = "Active"
+            existing.status = "ACTIVE"
             existing.lifecycle_status = "ACTIVE"
             existing.apply_url_status = "VERIFIED_DIRECT"
             existing.data_origin = opp_data.get("data_origin", "LIVE_API")
@@ -633,7 +636,7 @@ def _insert_jobs(db, jobs: list) -> int:
             posted_date=datetime.utcnow(),
             first_seen=datetime.utcnow(),
             last_seen=datetime.utcnow(),
-            status="Active",
+            status="ACTIVE",
             is_active=True,
             lifecycle_status="ACTIVE",
             apply_url_status="VERIFIED_DIRECT",
@@ -659,14 +662,14 @@ def _insert_jobs(db, jobs: list) -> int:
     return inserted
 
 
-def _expire_old_jobs(db) -> int:
+def _expire_old_jobs(db, days: int = 30) -> int:
     """Mark jobs not seen in 30 days as STALE."""
     try:
         from app import models
     except ImportError:
         from backend.app import models
 
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     stale_count = db.query(models.Opportunity).filter(
         models.Opportunity.is_active == True,
         models.Opportunity.last_seen < cutoff,
@@ -674,10 +677,62 @@ def _expire_old_jobs(db) -> int:
     ).update({
         "lifecycle_status": "STALE",
         "is_active": False,
-        "status": "Stale"
+        "status": "STALE"
     }, synchronize_session=False)
     db.commit()
     return stale_count
+
+
+def purge_old_and_stale_jobs(db, days: int = 30, delete_stale: bool = True) -> int:
+    """
+    Permanently deletes old and stale jobs from the database.
+    Clears child foreign keys first to ensure database integrity.
+    Works identically on PostgreSQL and SQLite.
+    """
+    try:
+        from sqlalchemy import text
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        if delete_stale:
+            find_stmt = text("""
+                SELECT id FROM opportunities
+                WHERE posted_date < :cutoff
+                   OR last_seen < :cutoff
+                   OR is_active = 0
+                   OR is_active = FALSE
+                   OR status IN ('Stale', 'STALE', 'Inactive', 'INACTIVE', 'Expired', 'EXPIRED')
+            """)
+        else:
+            find_stmt = text("SELECT id FROM opportunities WHERE posted_date < :cutoff")
+
+        target_ids = [row[0] for row in db.execute(find_stmt, {"cutoff": cutoff}).fetchall()]
+        if not target_ids:
+            logger.info("purge_old_and_stale_jobs: No target jobs to purge.")
+            return 0
+
+        total_deleted = 0
+        chunk_size = 200
+        for i in range(0, len(target_ids), chunk_size):
+            chunk = target_ids[i:i + chunk_size]
+            id_str = ",".join(str(cid) for cid in chunk)
+
+            # Clear child references first
+            for child_table in ["job_match_scores", "applications", "opportunity_sources", "job_quality_metrics", "collection_lineage"]:
+                try:
+                    db.execute(text(f"DELETE FROM {child_table} WHERE opportunity_id IN ({id_str})"))
+                except Exception as child_err:
+                    logger.debug(f"Child table {child_table} cleanup skipped: {child_err}")
+
+            res = db.execute(text(f"DELETE FROM opportunities WHERE id IN ({id_str})"))
+            db.commit()
+            total_deleted += res.rowcount
+
+        logger.info(f"Purged {total_deleted} old/stale opportunities (> {days} days)")
+        return total_deleted
+    except Exception as e:
+        logger.error(f"Error purging old jobs: {e}")
+        db.rollback()
+        return 0
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -691,6 +746,7 @@ def run_auto_collection(db, target: int = 9000) -> dict:
     2. Collect pure Indian opportunities across Unstop, Lever, Greenhouse, Remotive, Arbeitnow
     3. Insert with strict integrity checks and India-first flags
     4. Expire stale listings
+    5. Clean up old expired records (>60 days)
     """
     try:
         from app import models
@@ -732,9 +788,13 @@ def run_auto_collection(db, target: int = 9000) -> dict:
             logger.error(f"{source_name} collection failed: {e}")
             source_stats[source_name] = {"error": str(e)}
 
-    # Expire stale jobs
-    stale = _expire_old_jobs(db)
+    # Expire stale jobs (>30 days)
+    stale = _expire_old_jobs(db, days=30)
     logger.info(f"Marked {stale} stale jobs (not seen in 30 days)")
+
+    # Purge old records (>60 days)
+    purged_old = purge_old_and_stale_jobs(db, days=60, delete_stale=False)
+    logger.info(f"Purged {purged_old} old records (> 60 days)")
 
     final_count = db.query(models.Opportunity).filter(
         models.Opportunity.is_active == True
@@ -746,6 +806,7 @@ def run_auto_collection(db, target: int = 9000) -> dict:
         "purged_overseas": purged,
         "inserted": total_inserted,
         "stale_marked": stale,
+        "purged_old": purged_old,
         "active_jobs": final_count,
         "sources": source_stats,
         "synthetic_jobs": 0,

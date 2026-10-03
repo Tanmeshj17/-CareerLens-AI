@@ -60,12 +60,12 @@ def real_api_scrape_task():
     logger.info("[Task] real_api_scrape_task started")
     try:
         from app.database import SessionLocal
-        from app.auto_collector import _fetch_remotive_jobs, _fetch_arbeitnow_jobs, _insert_jobs
+        from app.auto_collector import collect_remotive_jobs, collect_arbeitnow_jobs, _insert_jobs
         db = SessionLocal()
         try:
             jobs = []
-            jobs.extend(_fetch_remotive_jobs(db))
-            jobs.extend(_fetch_arbeitnow_jobs())
+            jobs.extend(collect_remotive_jobs())
+            jobs.extend(collect_arbeitnow_jobs())
             if jobs:
                 n = _insert_jobs(db, jobs)
                 logger.info(f"[Task] real_api_scrape_task: inserted {n} jobs from live APIs")
@@ -80,15 +80,16 @@ def real_api_scrape_task():
 # ─── Task 3: Expire Stale Jobs — jobs older than 45 days ────────────────────
 
 def expire_stale_jobs_task():
-    """Mark jobs older than 45 days as STALE. Runs every 24 hours."""
+    """Mark jobs older than 30 days as STALE and purge jobs older than 45 days. Runs every 24 hours."""
     logger.info("[Task] expire_stale_jobs_task started")
     try:
         from app.database import SessionLocal
-        from app.auto_collector import _expire_old_jobs
+        from app.auto_collector import _expire_old_jobs, purge_old_and_stale_jobs
         db = SessionLocal()
         try:
-            stale = _expire_old_jobs(db)
-            logger.info(f"[Task] expire_stale_jobs_task: marked {stale} jobs as STALE")
+            stale = _expire_old_jobs(db, days=30)
+            purged = purge_old_and_stale_jobs(db, days=45, delete_stale=True)
+            logger.info(f"[Task] expire_stale_jobs_task: marked {stale} jobs as STALE, purged {purged} old jobs")
         finally:
             db.close()
     except Exception as e:

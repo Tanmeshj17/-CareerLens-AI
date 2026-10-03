@@ -332,20 +332,26 @@ def get_collector_ingestion_stats(
         models.Opportunity.first_seen < one_month_ago
     ).scalar() or 0
 
-    total_active = db.query(func.count(models.Opportunity.id)).filter(models.Opportunity.status == "ACTIVE").scalar() or 0
+    active_filter = or_(
+        func.upper(models.Opportunity.status) == "ACTIVE",
+        models.Opportunity.status == "Active",
+        models.Opportunity.is_active == True
+    )
+
+    total_active = db.query(func.count(models.Opportunity.id)).filter(active_filter).scalar() or 0
     total_verified = db.query(func.count(models.Opportunity.id)).filter(
-        models.Opportunity.status == "ACTIVE",
+        active_filter,
         models.Opportunity.trust_score >= 80
     ).scalar() or 0
     india_jobs = db.query(func.count(models.Opportunity.id)).filter(
-        models.Opportunity.status == "ACTIVE",
+        active_filter,
         models.Opportunity.is_india_job == True
     ).scalar() or 0
 
     # Source / ATS Breakdown
     source_query = (
         db.query(models.Opportunity.primary_source, func.count(models.Opportunity.id).label("count"))
-        .filter(models.Opportunity.status == "ACTIVE")
+        .filter(active_filter)
         .group_by(models.Opportunity.primary_source)
         .order_by(desc("count"))
         .all()
@@ -358,7 +364,7 @@ def get_collector_ingestion_stats(
     # Category Breakdown
     cat_query = (
         db.query(models.Opportunity.opportunity_category, func.count(models.Opportunity.id).label("count"))
-        .filter(models.Opportunity.status == "ACTIVE")
+        .filter(active_filter)
         .group_by(models.Opportunity.opportunity_category)
         .order_by(desc("count"))
         .all()
@@ -407,24 +413,58 @@ def get_collector_ingestion_stats(
 
 @router.post("/collector/trigger")
 def trigger_manual_collection(
-    background_tasks: BackgroundTasks,
+    admin: models.User = Depends(require_admin)
+):
+    """
+    Triggers the India-First Live Job Collector asynchronously in the background.
+    Returns immediately with 200 OK so the browser / client never hits a timeout.
+    """
+    import threading
+    from app.database import SessionLocal
+    from app.auto_collector import run_auto_collection
+
+    def _run_bg():
+        db = SessionLocal()
+        try:
+            res = run_auto_collection(db)
+            logger.info(f"Background collector execution finished: {res}")
+        except Exception as ex:
+            logger.error(f"Background collector execution failed: {ex}")
+        finally:
+            db.close()
+
+    threading.Thread(target=_run_bg, daemon=True, name="ManualCollectorThread").start()
+
+    return {
+        "status": "STARTED",
+        "message": "Live Job Collector started in the background! Fresh jobs will be ingested within 30-60 seconds.",
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@router.post("/collector/cleanup-old")
+def cleanup_old_jobs(
+    days: int = Query(30, ge=7, le=365, description="Delete jobs older than N days"),
+    delete_stale: bool = Query(True, description="Also delete jobs marked as Stale or Inactive"),
     db: Session = Depends(get_db),
     admin: models.User = Depends(require_admin)
 ):
     """
-    Manually triggers the India-First Live Job Collector immediately.
+    Permanently purges stale, expired, and old opportunities from the database.
+    Cleans child foreign key references first to guarantee database integrity.
     """
-    from app.auto_collector import run_auto_collection
+    from app.auto_collector import purge_old_and_stale_jobs
     try:
-        res = run_auto_collection(db)
+        deleted_count = purge_old_and_stale_jobs(db, days=days, delete_stale=delete_stale)
         return {
             "status": "SUCCESS",
-            "message": f"Collector completed: {res.get('inserted', 0)} new jobs inserted, {res.get('active_jobs', 0)} active.",
-            "results": res,
+            "deleted_count": deleted_count,
+            "message": f"Successfully deleted {deleted_count} old/stale opportunities.",
             "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Collector execution failed: {str(e)}")
+        logger.error(f"Cleanup old jobs failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
 
 
 # ─────────────────────────────────────────────────────────────
